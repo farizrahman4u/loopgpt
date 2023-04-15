@@ -10,10 +10,6 @@ class GoogleSearch(BaseTool):
         self.google_cx_id = os.getenv("GOOGLE_CX_ID")
 
     @property
-    def desc(self):
-        return "Search Google for a given query"
-
-    @property
     def args(self):
         return {"query": "The query to search for"}
 

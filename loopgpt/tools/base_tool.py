@@ -32,7 +32,7 @@ class BaseTool:
     def prompt(self):
         return json.dumps(
             {
-                "name:": self.id,
+                "name": self.id,
                 "description": self.desc,
                 "args": self.args,
                 "response_format": self.resp,

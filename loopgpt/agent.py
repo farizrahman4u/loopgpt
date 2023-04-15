@@ -10,6 +10,7 @@ from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
 from loopgpt.tools import deserialize as deserialize_tool
 from loopgpt.models.openai_ import chat
+from loopgpt.tools.google_search import GoogleSearch
 import json
 
 
@@ -19,8 +20,8 @@ class Agent:
         self.model = model
         self.sub_agents = {}
         self.tools = {}
-        self.constraints = set(DEFAULT_CONSTRAINTS)
-        self.evaluations = set(DEFAULT_EVALUATIONS)
+        self.constraints = DEFAULT_CONSTRAINTS[:]
+        self.evaluations = DEFAULT_EVALUATIONS[:]
         self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
         self._register_default_tools()
@@ -29,6 +30,7 @@ class Agent:
         yield Shell()
         yield Browser()
         yield ExecutePythonFile()
+        yield GoogleSearch()
         for tool_cls in FileSystemTools:
             yield tool_cls()
         for tool_cls in AgentManagerTools:
@@ -41,9 +43,6 @@ class Agent:
         for tool in self._default_tools():
             self.register_tool(tool)
 
-    def add_constraint(self, constraint: str):
-        self.constraints.add(constraint)
-
     def _get_full_prompt(self):
         prompt = {"role": "system", "content": self._get_seed_prompt()}
         return [prompt] + self.history
@@ -51,9 +50,7 @@ class Agent:
     def chat(self, message: str):
         self.history.append({"role": "user", "content": message})
         try:
-            p = self._get_full_prompt()
-            print(p)
-            resp = chat(p, model=self.model)
+            resp = chat(self._get_full_prompt(), model=self.model)
         except Exception:
             self.history.pop()
             raise
@@ -69,9 +66,6 @@ class Agent:
     def clear_state(self):
         self.clear_history()
         self.clear_sub_agents()
-
-    def add_evaluation(self, evaluation):
-        self.evaluations.add(evaluation)
 
     def _get_seed_prompt(self):
         prompt = []
@@ -111,8 +105,8 @@ class Agent:
         agent.name = config["name"]
         agent.mdoel = config["model"]
         agent.tools = {k: deserialize_tool(v) for k, v in config["tools"].items()}
-        agent.constraints = set(config["constraints"][:])
-        agent.evaluations = set(config["evaluations"][:])
+        agent.constraints = config["constraints"][:]
+        agent.evaluations = config["evaluations"][:]
         agent.response_format = config["response_format"]
         agent.sub_agents = {
             k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()

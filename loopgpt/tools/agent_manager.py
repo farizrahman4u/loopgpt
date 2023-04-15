@@ -1,5 +1,4 @@
 from loopgpt.tools.base_tool import BaseTool
-from loopgpt.models.openai_ import chat
 from typing import *
 from uuid import uuid4
 
@@ -14,7 +13,7 @@ class CreateAgent(_AgentMangerTool):
     def args(self):
         return {
             "name": "Name of the agent",
-            "tool": "Specific tool for this agent",
+            "task": "Specific task for this agent",
             "prompt": "The prompt",
         }
 
@@ -25,14 +24,14 @@ class CreateAgent(_AgentMangerTool):
             "resp": "Response from the newly created agent.",
         }
 
-    def run(self, name, tool, prompt):
+    def run(self, name, task, prompt):
         from loopgpt.agent import Agent
 
         agent = Agent(name=name)
         agent.tools.clear()
         agent.constraints.clear()
         id = uuid4(), hex[:8]
-        self.agent_map[id] = (Agent, tool)
+        self.agent_map[id] = (Agent, task)
         resp = agent.chat(prompt)
         return {"id": id, "resp": resp}
 
@@ -84,7 +83,7 @@ class ListAgents(_AgentMangerTool):
     @property
     def resp(self):
         return {
-            "agents": "List of available agents, where each item is of the form [agent id, tool]"
+            "agents": "List of available agents, where each item is of the form [agent id, task]"
         }
 
     def run(self):
