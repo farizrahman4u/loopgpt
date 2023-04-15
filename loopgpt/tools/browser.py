@@ -1,4 +1,6 @@
-# Adapted from Auto-GPT (https://github.com/Torantulino/Auto-GPT)
+"""
+Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
+"""
 
 
 from selenium.webdriver.chrome.options import Options

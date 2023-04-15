@@ -15,11 +15,9 @@ class Agent:
         self.tools = {}
         self.constraints = set(DEFAULT_CONSTRAINTS)
         self.evaluations = set(DEFAULT_EVALUATIONS)
+        self.response_format = RESPONSE_FORMAT
         self.history = []
         self._register_default_tools()
-
-    def _seed(self):
-        prompt = self._get_master_prompt()
 
     def _default_tools(self):
         yield Shell()
@@ -64,9 +62,6 @@ class Agent:
         self.clear_history()
         self.clear_sub_agents()
 
-    def _response_format(self):
-        return RESPONSE_FORMAT
-
     def add_evaluation(self, evaluation):
         self.evaluations.add(evaluation)
 
@@ -84,6 +79,6 @@ class Agent:
         for i, evaln in enumerate(self.evaluations):
             prompt.append(f"{i + 1}. {evaln}")
         prompt.append(
-            f"You should only respond in JSON format as described below\nResponse Format:\n{self._response_format()}\nEnsure the response can be parsed by Python json.loads."
+            f"You should only respond in JSON format as described below\nResponse Format:\n{self.response_format}\nEnsure the response can be parsed by Python json.loads."
         )
         return "\n".join(prompt)
