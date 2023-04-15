@@ -1,3 +1,4 @@
+from loopgpt.constants import DEFAULT_CONSTRAINTS, RESPONSE_FORMAT, DEFAULT_EVALUATIONS
 from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.filesystem import FileSystemTools
@@ -12,12 +13,10 @@ class Agent:
         self.model = model
         self.sub_agents = {}
         self.tools = {}
-        self.constraints = set()
-        self.evaluations = set()
+        self.constraints = set(DEFAULT_CONSTRAINTS)
+        self.evaluations = set(DEFAULT_EVALUATIONS)
         self.history = []
         self._register_default_tools()
-        self._add_default_constraints()
-        self._add_default_evaluations()
 
     def _seed(self):
         prompt = self._get_master_prompt()
@@ -38,18 +37,8 @@ class Agent:
         for tool in self._default_tools():
             self.register_tool(tool)
 
-    def _default_constraints(self):
-        yield "~4000 word limit for short term memory. Your short term memory is short, so immediately save important information to files."
-        yield "If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember."
-        yield "No user assistance"
-        yield 'Exclusively use the commands listed in double quotes e.g. "command_name"'
-
     def add_constraint(self, constraint: str):
         self.constraints.add(constraint)
-
-    def _add_default_constraints(self):
-        for constraint in self._default_constraints():
-            self.add_constraint(constraint)
 
     def _get_full_prompt(self):
         prompt = {"role": "system", "content": self._get_seed_prompt()}
@@ -76,29 +65,10 @@ class Agent:
         self.clear_sub_agents()
 
     def _response_format(self):
-        return {
-            "thoughts": {
-                "text": "thought",
-                "reasoning": "reasoning",
-                "plan": "- short bulleted\n- list that conveys\n- long-term plan",
-                "criticism": "constructive self-criticism",
-                "speak": "thoughts summary to say to user",
-            },
-            "command": {"name": "command name", "args": {"arg name": "value"}},
-        }
-
-    def _default_evaluations(self):
-        yield "Continuously review and analyze your actions to ensure you are performing to the best of your abilities."
-        yield "Constructively self-criticize your big-picture behavior constantly."
-        yield "Reflect on past decisions and strategies to refine your approach."
-        yield "Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps."
+        return RESPONSE_FORMAT
 
     def add_evaluation(self, evaluation):
         self.evaluations.add(evaluation)
-
-    def _add_default_evaluations(self):
-        for evaln in self._default_evaluations():
-            self.add_evaluation(evaln)
 
     def _get_seed_prompt(self):
         prompt = []
