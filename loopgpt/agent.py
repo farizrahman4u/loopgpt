@@ -1,10 +1,16 @@
-from loopgpt.constants import DEFAULT_CONSTRAINTS, RESPONSE_FORMAT, DEFAULT_EVALUATIONS
+from loopgpt.constants import (
+    DEFAULT_CONSTRAINTS,
+    DEFAULT_RESPONSE_FORMAT,
+    DEFAULT_EVALUATIONS,
+)
 from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.filesystem import FileSystemTools
 from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
+from loopgpt.tools import deserialize as deserialize_tool
 from loopgpt.models.openai_ import chat
+import json
 
 
 class Agent:
@@ -15,7 +21,7 @@ class Agent:
         self.tools = {}
         self.constraints = set(DEFAULT_CONSTRAINTS)
         self.evaluations = set(DEFAULT_EVALUATIONS)
-        self.response_format = RESPONSE_FORMAT
+        self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
         self._register_default_tools()
 
@@ -82,3 +88,54 @@ class Agent:
             f"You should only respond in JSON format as described below\nResponse Format:\n{self.response_format}\nEnsure the response can be parsed by Python json.loads."
         )
         return "\n".join(prompt)
+
+    def config(self, include_state=True):
+        cfg = {
+            "class": self.__class__.__name__,
+            "name": self.name,
+            "model": self.model,
+            "tools": {k: v.serialize() for k, v in self.tools.items()},
+            "constraints": list(self.constraints),
+            "evaluations": list(self.evaluations),
+            "response_format": self.response_format,
+        }
+        if include_state:
+            cfg["sub_agents"] = {k: v.config() for k, v in self.sub_agents.items()}
+            cfg["history"] = self.history[:]
+        return cfg
+
+    @classmethod
+    def from_config(cls, config):
+        agent = cls()
+        agent.name = config["name"]
+        agent.mdoel = config["model"]
+        agent.tools = {k: deserialize_tool(v) for k, v in config["tools"].items()}
+        agent.constraints = set(config["constraints"][:])
+        agent.evaluations = set(config["evaluations"][:])
+        agent.response_format = config["response_format"]
+        agent.sub_agents = {
+            k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()
+        }
+        agent.history = config.get("history", [])
+        return agent
+
+    def save(self, file, include_state=True):
+        cfg = self.config(include_state=include_state)
+        if hasattr(file, "write"):
+            json.dump(cfg, file)
+        elif isinstance(file, str):
+            with open(file, "w") as f:
+                json.dump(cfg, f)
+        else:
+            raise TypeError(f"Expected str or file like object. Received {type(f)}.")
+
+    @classmethod
+    def load(cls, file):
+        if hasattr(file, "read"):
+            cfg = json.load(file)
+        elif isinstance(file, str):
+            with open(file, "r") as f:
+                cfg = json.load(f)
+        else:
+            raise TypeError(f"Expected str or file like object. Received {type(f)}.")
+        return cls.from_config(cfg)

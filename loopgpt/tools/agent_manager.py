@@ -5,8 +5,8 @@ from uuid import uuid4
 
 
 class _AgentMangerTool(BaseTool):
-    def __init__(self, agent_map: Dict):
-        self.agent_map = agent_map
+    def __init__(self, agent_map: Optional[Dict] = None):
+        self.agent_map = agent_map or {}
 
 
 class CreateAgent(_AgentMangerTool):

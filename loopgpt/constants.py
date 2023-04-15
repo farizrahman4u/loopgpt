@@ -9,7 +9,7 @@ DEFAULT_CONSTRAINTS = [
     'Exclusively use the commands listed in double quotes e.g. "command_name"',
 ]
 
-RESPONSE_FORMAT = {
+DEFAULT_RESPONSE_FORMAT = {
     "thoughts": {
         "text": "thought",
         "reasoning": "reasoning",
