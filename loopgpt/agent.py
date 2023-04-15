@@ -11,6 +11,7 @@ from loopgpt.tools.agent_manager import AgentManagerTools
 from loopgpt.tools import deserialize as deserialize_tool
 from loopgpt.models.openai_ import chat
 from loopgpt.tools.google_search import GoogleSearch
+from loopgpt.utils import token_counter
 import json
 
 
@@ -50,7 +51,13 @@ class Agent:
     def chat(self, message: str):
         self.history.append({"role": "user", "content": message})
         try:
-            resp = chat(self._get_full_prompt(), model=self.model)
+            prompt = self._get_full_prompt()
+            tokens_used = token_counter.count_message_tokens(prompt)
+            while tokens_used > 4000:
+                self.history.pop(0)
+                prompt = self._get_full_prompt()
+                tokens_used = token_counter.count_message_tokens(prompt)
+            resp = chat(prompt, model=self.model)
         except Exception:
             self.history.pop()
             raise

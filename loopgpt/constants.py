@@ -1,8 +1,8 @@
-import json
-
 """
 Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
+
+import json
 
 DEFAULT_CONSTRAINTS = [
     "~4000 word limit for short term memory. Your short term memory is short, so immediately save important information to files.",
