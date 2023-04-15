@@ -1,2 +1,1 @@
-# autodolly
-Free alternative for AutoGPT
+# LoopGPT
