@@ -30,8 +30,13 @@ class BaseTool:
         raise NotImplementedError()
 
     def prompt(self):
-        return f"{self.id}: " + json.dumps(
-            {"description": self.desc, "args": self.args, "response_format": self.resp}
+        return json.dumps(
+            {
+                "name:": self.id,
+                "description": self.desc,
+                "args": self.args,
+                "response_format": self.resp,
+            }
         )
 
     def config(self):

@@ -1,3 +1,5 @@
+import json
+
 """
 Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
@@ -17,8 +19,10 @@ DEFAULT_RESPONSE_FORMAT = {
         "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
-    "command": {"name": "command name", "args": {"arg name": "value"}},
+    "command": {"name": "command_name", "args": {"arg name": "value"}},
 }
+
+DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below\nResponse Format:\n{json.dumps(DEFAULT_RESPONSE_FORMAT)}\nEnsure the response can be parsed by Python json.loads"
 
 DEFAULT_EVALUATIONS = [
     "Continuously review and analyze your actions to ensure you are performing to the best of your abilities.",

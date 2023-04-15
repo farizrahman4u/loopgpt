@@ -51,7 +51,9 @@ class Agent:
     def chat(self, message: str):
         self.history.append({"role": "user", "content": message})
         try:
-            resp = chat(self._get_full_prompt(), model=self.model)
+            p = self._get_full_prompt()
+            print(p)
+            resp = chat(p, model=self.model)
         except Exception:
             self.history.pop()
             raise
@@ -84,9 +86,8 @@ class Agent:
         prompt.append("Performance Evaluation:")
         for i, evaln in enumerate(self.evaluations):
             prompt.append(f"{i + 1}. {evaln}")
-        prompt.append(
-            f"You should only respond in JSON format as described below\nResponse Format:\n{self.response_format}\nEnsure the response can be parsed by Python json.loads."
-        )
+        prompt.append("")
+        prompt.append(self.response_format)
         return "\n".join(prompt)
 
     def config(self, include_state=True):
