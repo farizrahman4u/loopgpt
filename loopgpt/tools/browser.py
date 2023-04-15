@@ -21,7 +21,7 @@ class Browser(BaseTool):
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
         )
-        # options.headless = True
+        options.headless = True
         self.options = options
         self.driver = None
         self.summarizer = Summarizer()

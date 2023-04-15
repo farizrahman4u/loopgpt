@@ -3,6 +3,7 @@ from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.filesystem import FileSystemTools
 from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
+from loopgpt.tools import deserialize as deserialize_tool
 from loopgpt.models.openai_ import chat
 
 
@@ -18,9 +19,6 @@ class Agent:
         self._register_default_tools()
         self._add_default_constraints()
         self._add_default_evaluations()
-
-    def _seed(self):
-        prompt = self._get_master_prompt()
 
     def _default_tools(self):
         yield Shell()
@@ -117,3 +115,32 @@ class Agent:
             f"You should only respond in JSON format as described below\nResponse Format:\n{self._response_format()}\nEnsure the response can be parsed by Python json.loads."
         )
         return "\n".join(prompt)
+
+    def config(self, include_state=True):
+        cfg = {
+            "class": self.__class__.__name__,
+            "name": self.name,
+            "model": self.model,
+            "tools": {k: v.serialize() for k, v in self.tools.items()},
+            "constraints": self.constraints[:],
+            'evaluations': self.evaluations[:],
+            "response_format": self.response_format,
+        }
+        if include_state:
+            cfg["sub_agents"] = {
+                k: v.config() for k, v in self.sub_agents.items()
+            }
+            cfg["history"] = self.history[:]
+        return cfg
+
+    @classmethod
+    def from_config(cls, config):
+        agent = cls()
+        agent.name = config["name"]
+        agent.mdoel = config["model"]
+        agent.tools = {k: deserialize_tool(v) for k, v in config["tools"].items()}
+        agent.constraints = config["constraints"][:]
+        agent.evaluations = config["evaluations"][:]
+        agent.response_format = config["response_format"]
+        agent.sub_agents = {k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()}
+        agent.history = config.get("history", [])
