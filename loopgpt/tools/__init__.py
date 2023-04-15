@@ -1,15 +1,30 @@
-from loopgpt.tools.agent_manager import CreateAgent, MessageAgent, DeleteAgent, ListAgents
+from loopgpt.tools.agent_manager import (
+    CreateAgent,
+    MessageAgent,
+    DeleteAgent,
+    ListAgents,
+)
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile
-from loopgpt.tools.filesystem import ReadFile, WriteFile, AppendFile, DeleteFile, FileSystemTools
+from loopgpt.tools.filesystem import (
+    ReadFile,
+    WriteFile,
+    AppendFile,
+    DeleteFile,
+    CheckIfFileExists,
+    FileSystemTools,
+)
 from loopgpt.tools.shell import Shell
 import pickle
 import base64
 
 
-builtin_tools = [c for c in globals().values() if isinstance(c, type) and issubclass(c, BaseTool)]
+builtin_tools = [
+    c for c in globals().values() if isinstance(c, type) and issubclass(c, BaseTool)
+]
 builtin_tools_names = [c.__name__ for c in builtin_tools]
+
 
 def from_config(config) -> BaseTool:
     class_name = config["class"]
@@ -35,7 +50,9 @@ def is_serde_overridden(tool):
         raise TypeError(f"{tool} is not a type.")
     if not issubclass(tool, BaseTool):
         raise TypeError(f"Class {tool} does not inherit from BaseTool.")
-    return not(tool.from_config == BaseTool.from_config and tool.config == BaseTool.config)
+    return not (
+        tool.from_config == BaseTool.from_config and tool.config == BaseTool.config
+    )
 
 
 def deserialize(config) -> BaseTool:
