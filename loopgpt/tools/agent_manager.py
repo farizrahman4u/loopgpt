@@ -84,7 +84,7 @@ class ListAgents(_AgentMangerTool):
     @property
     def resp(self):
         return {
-            "agents": "List of available agents, where each item is of the for [agent id, tool]"
+            "agents": "List of available agents, where each item is of the form [agent id, tool]"
         }
 
     def run(self):
