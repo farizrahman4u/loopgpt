@@ -45,15 +45,9 @@ class Agent:
         self.history.append({"role": "assistant", "content": resp})
         return resp
 
-    def clear_history(self):
-        self.history.clear()
-
-    def clear_sub_agents(self):
-        self.sub_agents.clear()
-
     def clear_state(self):
-        self.clear_history()
-        self.clear_sub_agents()
+        self.history.clear()
+        self.sub_agents.clear()
 
     def _get_seed_prompt(self):
         prompt = []
