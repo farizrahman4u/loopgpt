@@ -30,7 +30,7 @@ DEFAULT_EVALUATIONS = [
     "Continuously review and analyze your actions to ensure you are performing to the best of your abilities.",
     "Constructively self-criticize your big-picture behavior constantly.",
     "Reflect on past decisions and strategies to refine your approach.",
-    # "Every tool has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.",
+    "Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.",
 ]
 
 SEED_INPUT = (

@@ -107,8 +107,8 @@ class Agent:
             resp = self._load_json(resp)
             if "name" in resp:
                 resp = {"command": resp}
-                self.staging_tool = resp["command"]
-                self.staging_response = resp
+            self.staging_tool = resp["command"]
+            self.staging_response = resp
         except Exception as e:
             pass
         return resp
@@ -125,8 +125,8 @@ class Agent:
             except Exception:
                 try:
                     return json.loads(s + "}")
-                except Exception:
-                    raise Exception()  # TODO use gpt to fix json
+                except Exception as e:
+                    raise Exception(e)  # TODO use gpt to fix json
 
     def last_user_input(self) -> str:
         for msg in self.history[::-1]:
