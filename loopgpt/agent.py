@@ -2,6 +2,7 @@ from loopgpt.constants import (
     DEFAULT_CONSTRAINTS,
     DEFAULT_RESPONSE_FORMAT,
     DEFAULT_EVALUATIONS,
+    SEED_INPUT,
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
@@ -73,7 +74,7 @@ class Agent:
             token_count = count_tokens(prompt, model=self.model)
         return prompt, token_count
 
-    def chat(self, message: str, run_tool=False) -> Union[str, Dict]:
+    def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
         if self.staging_tool:
             if run_tool:
                 output = self.run_staging_tool()
@@ -179,7 +180,7 @@ class Agent:
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
-        return f"You are {self.name}, {self.description}"
+        return f"You are {self.name}, {self.description}."
 
     def goals_prompt(self):
         prompt = []

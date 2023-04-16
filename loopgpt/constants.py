@@ -32,3 +32,8 @@ DEFAULT_EVALUATIONS = [
     "Reflect on past decisions and strategies to refine your approach.",
     # "Every tool has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.",
 ]
+
+SEED_INPUT = (
+    "Determine which next command to use, and respond using the"
+    " format specified above:"
+)
