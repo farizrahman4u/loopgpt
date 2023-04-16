@@ -2,12 +2,11 @@ import loopgpt
 
 
 def cli(agent):
-    inp = None
     while True:
-        if inp is None:
-            resp = agent.chat()
-        else:
-            resp = agent.chat(inp)
+        inp = input("Enter message: ")
+        if inp.lower().strip() == "exit":
+            return
+        resp = agent.chat(inp)
         if isinstance(resp, str):
             print(f"{agent.name}: {resp}")
         else:
@@ -38,6 +37,3 @@ def cli(agent):
                 elif yn == "n":
                     feedback = input("Enter feedback (Why not execute the command?): ")
                     agent.chat(feedback, False)
-        inp = input("Enter message: ")
-        if inp.lower().strip() == "exit":
-            return
