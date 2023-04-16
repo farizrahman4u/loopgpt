@@ -119,7 +119,7 @@ class Agent:
         try:
             return json.loads(s)
         except Exception:
-            s = s[s.index("{"):s.index("}") + 1]
+            s = s[s.find("{"):s[::-1].rfind("}") + 1]
             try:
                 return json.loads(s)
             except Exception:

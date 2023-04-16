@@ -30,7 +30,7 @@ class CreateAgent(_AgentMangerTool):
         agent.tools.clear()
         agent.constraints.clear()
         id = uuid4().hex[:8]
-        self.agent.sub_agents[id] = (Agent, task)
+        self.agent.sub_agents[id] = (Agent(), task)
         resp = agent.chat(prompt)
         return {"uuid": id, "resp": resp}
 
