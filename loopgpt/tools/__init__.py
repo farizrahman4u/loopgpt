@@ -17,12 +17,13 @@ from loopgpt.tools.filesystem import (
     FileSystemTools,
 )
 from loopgpt.tools.shell import Shell
+from loopgpt.tools.memory_manager import AddToMemory
 
 
 user_tools = {}
 
 
-def register_tool(tool):
+def register_tool_type(tool):
     if isinstance(tool, BaseTool):
         tool = tool.__class__
     if not isinstance(tool, type):
@@ -36,3 +37,11 @@ def from_config(config) -> BaseTool:
     class_name = config["class"]
     clss = user_tools.get(class_name) or globals()[class_name]
     return clss.from_config(config)
+
+
+def builtin_tools():
+    return [
+        v
+        for v in globals().values()
+        if isinstance(v, type) and issubclass(v, BaseTool) and v != BaseTool
+    ]

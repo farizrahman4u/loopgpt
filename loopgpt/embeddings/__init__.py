@@ -4,7 +4,7 @@ from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
 user_providers = {}
 
 
-def register_embedding_provider(provider):
+def register_embedding_provider_type(provider):
     if isinstance(provider, BaseEmbeddingProvider):
         provider = provider.__class__
     if not isinstance(provider, type):

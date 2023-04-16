@@ -1,8 +1,6 @@
 from typing import *
 import json
 import re
-import pickle
-import base64
 
 
 def camel_case_split(str):

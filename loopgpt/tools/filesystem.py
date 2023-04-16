@@ -31,7 +31,7 @@ class WriteFile(BaseTool):
 
     @property
     def resp(self):
-        return {"success": "true if the write was successfull, else false"}
+        return {"success": "true or false"}
 
     def run(self, file, content):
         with open(file, "w") as f:
@@ -49,7 +49,7 @@ class AppendFile(BaseTool):
 
     @property
     def resp(self):
-        return {"success": "true if the append was successfull, else false"}
+        return {"success": "true or false"}
 
     def run(self, file, content):
         with open(file, "a") as f:

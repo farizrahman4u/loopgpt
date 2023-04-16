@@ -8,9 +8,14 @@ from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.filesystem import FileSystemTools
 from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
+from loopgpt.tools.memory_manager import MemoryManagerTools
 from loopgpt.tools import from_config as tool_from_config
 from loopgpt.models.openai_ import chat
 from loopgpt.tools.google_search import GoogleSearch
+from loopgpt.tools import builtin_tools
+from loopgpt.memory.local_memory import LocalMemory
+from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
+
 import json
 
 
@@ -19,29 +24,12 @@ class Agent:
         self.name = name
         self.model = model
         self.sub_agents = {}
-        self.tools = {}
+        self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
         self.constraints = DEFAULT_CONSTRAINTS[:]
         self.evaluations = DEFAULT_EVALUATIONS[:]
         self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
-        self._register_default_tools()
-
-    def _default_tools(self):
-        yield Shell()
-        yield Browser()
-        yield ExecutePythonFile()
-        yield GoogleSearch()
-        for tool_cls in FileSystemTools:
-            yield tool_cls()
-        for tool_cls in AgentManagerTools:
-            yield tool_cls(self.sub_agents)
-
-    def register_tool(self, tool):
-        self.tools[tool.id] = tool
-
-    def _register_default_tools(self):
-        for tool in self._default_tools():
-            self.register_tool(tool)
+        self.tools = [tool_type() for tool_type in builtin_tools()]
 
     def _get_full_prompt(self):
         prompt = {"role": "system", "content": self._get_seed_prompt()}
@@ -74,8 +62,14 @@ class Agent:
             prompt.append(f"{i + 1}. {constraint}")
         prompt.append("")
         prompt.append("Commands:")
-        for i, tool in enumerate(self.tools.values()):
+        for i, tool in enumerate(self.tools):
+            tool.agent = self
             prompt.append(f"{i + 1}. {tool.prompt()}")
+        prompt.append("")
+        prompt.append("Resources:")
+        prompt.append("1. Internet access for searches and information gathering.")
+        prompt.append("2. Long Term memory management.")
+        prompt.append("3. GPT-3.5 powered Agents for delegation of simple tasks.")
         prompt.append("")
         prompt.append("Performance Evaluation:")
         for i, evaln in enumerate(self.evaluations):
@@ -89,7 +83,7 @@ class Agent:
             "class": self.__class__.__name__,
             "name": self.name,
             "model": self.model,
-            "tools": {k: v.config() for k, v in self.tools.items()},
+            "tools": [tool.config() for tool in self.tools],
             "constraints": list(self.constraints),
             "evaluations": list(self.evaluations),
             "response_format": self.response_format,
@@ -104,7 +98,7 @@ class Agent:
         agent = cls()
         agent.name = config["name"]
         agent.mdoel = config["model"]
-        agent.tools = {k: tool_from_config(v) for k, v in config["tools"].items()}
+        agent.tools = list(map(tool_from_config, config["tools"]))
         agent.constraints = config["constraints"][:]
         agent.evaluations = config["evaluations"][:]
         agent.response_format = config["response_format"]

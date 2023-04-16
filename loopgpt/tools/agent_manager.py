@@ -4,8 +4,7 @@ from uuid import uuid4
 
 
 class _AgentMangerTool(BaseTool):
-    def __init__(self, agent_map: Optional[Dict] = None):
-        self.agent_map = agent_map or {}
+    pass
 
 
 class CreateAgent(_AgentMangerTool):
@@ -31,7 +30,7 @@ class CreateAgent(_AgentMangerTool):
         agent.tools.clear()
         agent.constraints.clear()
         id = uuid4(), hex[:8]
-        self.agent_map[id] = (Agent, task)
+        self.agent.sub_agents[id] = (Agent, task)
         resp = agent.chat(prompt)
         return {"id": id, "resp": resp}
 
@@ -52,9 +51,9 @@ class MessageAgent(_AgentMangerTool):
 
     @property
     def run(self, id, message):
-        if id not in self.agent_map:
+        if id not in self.agent.sub_agents:
             return {"resp": "AGENT NOT FOUND!"}
-        resp = self.agent_map[id][0].chat(message)
+        resp = self.agent.sub_agents[id][0].chat(message)
         return {"resp": resp}
 
 
@@ -69,7 +68,7 @@ class DeleteAgent(_AgentMangerTool):
 
     def run(self, id):
         try:
-            self.agent_map.pop(id)
+            self.agent.sub_agents.pop(id)
             return {"resp": "Deleted."}
         except KeyError:
             return {f"resp": "Specified agent (id={id} not found.)"}
@@ -87,7 +86,7 @@ class ListAgents(_AgentMangerTool):
         }
 
     def run(self):
-        return [[k, v[1]] for k, v in self.agent_map.items()]
+        return [[k, v[1]] for k, v in self.agent.sub_agents.items()]
 
 
 AgentManagerTools = [CreateAgent, MessageAgent, DeleteAgent, ListAgents]

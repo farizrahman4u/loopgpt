@@ -5,7 +5,7 @@ from loopgpt.memory.local_memory import LocalMemory
 user_providers = {}
 
 
-def register_memory_provider(provider):
+def register_memory_type(provider):
     if isinstance(provider, BaseMemory):
         provider = provider.__class__
     if not isinstance(provider, type):
