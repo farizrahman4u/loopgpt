@@ -20,10 +20,10 @@ DEFAULT_RESPONSE_FORMAT = {
         "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
-    "command": {"name": "next command_name in the plan", "args": {"arg name": "value"}},
+    "command": {"name": "command name", "args": {"arg name": "value"}},
 }
 
-DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below\nResponse Format:\n{json.dumps(DEFAULT_RESPONSE_FORMAT)}\nEnsure the response can be parsed by Python json.loads"
+DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
 DEFAULT_EVALUATIONS = [
     # "Make sure that the tools you use are aligned with your plan. THIS IS VERY IMPORTANT!",

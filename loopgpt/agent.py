@@ -180,7 +180,10 @@ class Agent:
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
-        return f"You are {self.name}, {self.description}."
+        return (f"You are {self.name}, {self.description}."
+                 "Your decisions must always be made independently without"
+                "seeking user assistance. Play to your strengths as an LLM and pursue"
+                " simple strategies with no legal complications.\n")
 
     def goals_prompt(self):
         prompt = []
