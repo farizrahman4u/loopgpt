@@ -49,13 +49,3 @@ class BaseTool:
         config = config.copy()
         config.pop("class", None)
         return cls(**config)
-
-    def serialize(self):
-        from loopgpt.tools import is_builtin_tool, is_serde_overridden
-
-        if is_builtin_tool or is_serde_overridden:
-            return self.config()
-        return {
-            "class": self.__class__.__name__,
-            "pickle": base64.b64encode(pickle.dumps(self)).decode("ascii"),
-        }

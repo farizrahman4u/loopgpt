@@ -1,5 +1,4 @@
 from typing import *
-import openai
 import os
 
 
@@ -13,6 +12,8 @@ def chat(
     api_key: Optional[str] = None,
     max_tokens: Optional[int] = None,
 ):
+    import openai
+
     api_key = _getkey(api_key)
     return openai.ChatCompletion.create(
         model=model, messages=messages, api_key=api_key, max_tokens=max_tokens

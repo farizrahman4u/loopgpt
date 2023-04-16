@@ -8,7 +8,7 @@ from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.filesystem import FileSystemTools
 from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
-from loopgpt.tools import deserialize as deserialize_tool
+from loopgpt.tools import from_config as tool_from_config
 from loopgpt.models.openai_ import chat
 from loopgpt.tools.google_search import GoogleSearch
 import json
@@ -89,7 +89,7 @@ class Agent:
             "class": self.__class__.__name__,
             "name": self.name,
             "model": self.model,
-            "tools": {k: v.serialize() for k, v in self.tools.items()},
+            "tools": {k: v.config() for k, v in self.tools.items()},
             "constraints": list(self.constraints),
             "evaluations": list(self.evaluations),
             "response_format": self.response_format,
@@ -104,7 +104,7 @@ class Agent:
         agent = cls()
         agent.name = config["name"]
         agent.mdoel = config["model"]
-        agent.tools = {k: deserialize_tool(v) for k, v in config["tools"].items()}
+        agent.tools = {k: tool_from_config(v) for k, v in config["tools"].items()}
         agent.constraints = config["constraints"][:]
         agent.evaluations = config["evaluations"][:]
         agent.response_format = config["response_format"]
