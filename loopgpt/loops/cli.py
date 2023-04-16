@@ -2,11 +2,8 @@ import loopgpt
 
 
 def cli(agent):
+    resp = agent.chat()
     while True:
-        inp = input("Enter message: ")
-        if inp.lower().strip() == "exit":
-            return
-        resp = agent.chat(inp)
         if isinstance(resp, str):
             print(f"{agent.name}: {resp}")
         else:
@@ -33,7 +30,12 @@ def cli(agent):
                     if yn in ("y", "n"):
                         break
                 if yn == "y":
-                    agent.chat("GENERATE NEXT COMMAND JSON", True)
+                    resp = agent.chat("GENERATE NEXT COMMAND JSON", True)
                 elif yn == "n":
                     feedback = input("Enter feedback (Why not execute the command?): ")
-                    agent.chat(feedback, False)
+                    resp = agent.chat(feedback, False)
+                continue
+        inp = input("Enter message: ")
+        if inp.lower().strip() == "exit":
+            return
+        resp = agent.chat(inp)

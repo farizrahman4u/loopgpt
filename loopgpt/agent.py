@@ -105,7 +105,8 @@ class Agent:
             if "command" in resp:
                 self.staging_tool = resp.get("command")
                 self.staging_response = resp
-        except:
+        except Exception as e:
+            print("Error parsing json", e)
             pass
         return resp
 
@@ -180,10 +181,12 @@ class Agent:
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
-        return (f"You are {self.name}, {self.description}."
-                 "Your decisions must always be made independently without"
-                "seeking user assistance. Play to your strengths as an LLM and pursue"
-                " simple strategies with no legal complications.\n")
+        return (
+            f"You are {self.name}, {self.description}."
+            "Your decisions must always be made independently without"
+            "seeking user assistance. Play to your strengths as an LLM and pursue"
+            " simple strategies with no legal complications.\n"
+        )
 
     def goals_prompt(self):
         prompt = []

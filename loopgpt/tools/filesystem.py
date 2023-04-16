@@ -2,7 +2,7 @@ from loopgpt.tools.base_tool import BaseTool
 import os
 
 
-class ReadFile(BaseTool):
+class ReadFromFile(BaseTool):
     @property
     def args(self):
         return {"file": "Path to the file to read."}
@@ -21,7 +21,7 @@ class ReadFile(BaseTool):
             return {"content": ""}
 
 
-class WriteFile(BaseTool):
+class WriteToFile(BaseTool):
     @property
     def args(self):
         return {
@@ -39,7 +39,7 @@ class WriteFile(BaseTool):
         return {"success": True}
 
 
-class AppendFile(BaseTool):
+class AppendToFile(BaseTool):
     @property
     def args(self):
         return {
@@ -87,4 +87,10 @@ class CheckIfFileExists(BaseTool):
         return {"exists": os.path.isfile(file)}
 
 
-FileSystemTools = [ReadFile, WriteFile, AppendFile, DeleteFile, CheckIfFileExists]
+FileSystemTools = [
+    ReadFromFile,
+    WriteToFile,
+    AppendToFile,
+    DeleteFile,
+    CheckIfFileExists,
+]

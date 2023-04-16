@@ -9,9 +9,9 @@ from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile
 from loopgpt.tools.google_search import GoogleSearch
 from loopgpt.tools.filesystem import (
-    ReadFile,
-    WriteFile,
-    AppendFile,
+    ReadFromFile,
+    WriteToFile,
+    AppendToFile,
     DeleteFile,
     CheckIfFileExists,
     FileSystemTools,
