@@ -1,5 +1,3 @@
-import loopgpt
-
 
 def cli(agent):
     resp = agent.chat()
@@ -7,19 +5,21 @@ def cli(agent):
         if isinstance(resp, str):
             print(f"{agent.name}: {resp}")
         else:
-            msgs = []
-            if "text" in resp:
-                msgs.append(resp["text"])
-            if "reasoning" in resp:
-                msgs.append(f"Reasoning: {resp['reasoning']}")
-            if "plan" in resp:
-                msgs += resp["plan"].split("\n")
-            if "criticism" in resp:
-                msgs.append(f"Criticism: {resp['criticism']}")
-            if "speak" in resp:
-                msgs.append(f"(voice) {resp['speak']}")
-            for msg in msgs:
-                print(f"{agent.name}: {msg}")
+            if "thoughts" in resp:
+                msgs = []
+                thoughts = resp["thoughts"]
+                if "text" in thoughts:
+                    msgs.append(thoughts["text"])
+                if "reasoning" in thoughts:
+                    msgs.append(f"Reasoning: {thoughts['reasoning']}")
+                if "plan" in thoughts:
+                    msgs += thoughts["plan"].split("\n")
+                if "criticism" in thoughts:
+                    msgs.append(f"Criticism: {thoughts['criticism']}")
+                if "speak" in thoughts:
+                    msgs.append(f"(voice) {thoughts['speak']}")
+                for msg in msgs:
+                    print(f"{agent.name}: {msg}")
             if "command" in resp:
                 print(
                     f"Agent wants to execute the following command :\n{resp['command']}"

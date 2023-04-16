@@ -19,20 +19,20 @@ class CreateAgent(_AgentMangerTool):
     @property
     def resp(self):
         return {
-            "id": "ID of the newly created agent.",
+            "uuid": "Unique ID of the newly created agent.",
             "resp": "Response from the newly created agent.",
         }
 
-    def run(self, name, task, prompt):
+    def run(self, name="", task="", prompt=""):
         from loopgpt.agent import Agent
 
         agent = Agent(name=name)
         agent.tools.clear()
         agent.constraints.clear()
-        id = uuid4(), hex[:8]
+        id = uuid4().hex[:8]
         self.agent.sub_agents[id] = (Agent, task)
         resp = agent.chat(prompt)
-        return {"id": id, "resp": resp}
+        return {"uuid": id, "resp": resp}
 
 
 class MessageAgent(_AgentMangerTool):
@@ -49,7 +49,6 @@ class MessageAgent(_AgentMangerTool):
             "resp": 'Response from the agent. If the specified agent doesn\'t exist, this field will say "AGENT NOT FOUND!".'
         }
 
-    @property
     def run(self, id, message):
         if id not in self.agent.sub_agents:
             return {"resp": "AGENT NOT FOUND!"}

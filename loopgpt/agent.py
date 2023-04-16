@@ -77,6 +77,8 @@ class Agent:
     def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
         if self.staging_tool:
             if run_tool:
+                if self.staging_tool.get("name") == "task_complete":
+                    message = ""
                 output = self.run_staging_tool()
                 self.memory.add(
                     f"Assistant reply: {self.staging_response}\nResult: {output}\nHuman Feedback: {message}"
@@ -96,19 +98,35 @@ class Agent:
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
         resp = chat(full_prompt, model=self.model, max_tokens=token_limit - token_count)
+        print("=========")
+        print(resp)
+        print("=========")
         self.history.append({"role": "user", "content": message})
         self.history.append({"role": "assistant", "content": resp})
         try:
-            resp = json.loads(resp)
+            resp = self._load_json(resp)
             if "name" in resp:
                 resp = {"command": resp}
-            if "command" in resp:
-                self.staging_tool = resp.get("command")
+                self.staging_tool = resp["command"]
                 self.staging_response = resp
         except Exception as e:
-            print("Error parsing json", e)
             pass
         return resp
+
+    def _load_json(self, s):
+        if "{" not in s or "}" not in s:
+            raise Exception()
+        try:
+            return json.loads(s)
+        except Exception:
+            s = s[s.index("{"):s.index("}") + 1]
+            try:
+                return json.loads(s)
+            except Exception:
+                try:
+                    return json.loads(s + "}")
+                except Exception:
+                    raise Exception()  # TODO use gpt to fix json
 
     def last_user_input(self) -> str:
         for msg in self.history[::-1]:
@@ -131,6 +149,8 @@ class Agent:
                 }
             )
             return
+        if self.staging_tool["name"] == "task_complete":
+            return {"success": True}
         if "args" not in self.staging_tool:
             self.history.append(
                 {
@@ -208,6 +228,8 @@ class Agent:
         for i, tool in enumerate(self.tools):
             tool.agent = self
             prompt.append(f"{i + 1}. {tool.prompt()}")
+        task_complete_command = {"name": "task_complete", "description": "Execute this command when all given tasks are completed.", "args": {}, "response_format": {"success": "true"}}
+        prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
         return "\n".join(prompt) + "\n"
 
     def resources_prompt(self):
