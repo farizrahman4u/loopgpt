@@ -123,10 +123,15 @@ class Agent:
             try:
                 return json.loads(s)
             except Exception:
+                s += "}"
                 try:
-                    return json.loads(s + "}")
-                except Exception as e:
-                    raise Exception(e)  # TODO use gpt to fix json
+                    return json.loads(s)
+                except Exception:
+                    s = s.replace("\'", "\"")
+                    try:
+                        return json.loads(s)
+                    except:
+                        raise
 
     def last_user_input(self) -> str:
         for msg in self.history[::-1]:
