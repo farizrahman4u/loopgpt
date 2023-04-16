@@ -10,6 +10,7 @@ from loopgpt.tools.shell import Shell
 from loopgpt.tools.agent_manager import AgentManagerTools
 from loopgpt.tools.memory_manager import MemoryManagerTools
 from loopgpt.tools import from_config as tool_from_config
+from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat
 from loopgpt.tools.google_search import GoogleSearch
 from loopgpt.tools import builtin_tools
@@ -48,6 +49,7 @@ class Agent:
     def clear_state(self):
         self.history.clear()
         self.sub_agents.clear()
+        self.memory.clear()
 
     def _get_seed_prompt(self):
         prompt = []
@@ -75,6 +77,7 @@ class Agent:
     def config(self, include_state=True):
         cfg = {
             "class": self.__class__.__name__,
+            "type": "agent",
             "name": self.name,
             "model": self.model,
             "tools": [tool.config() for tool in self.tools],
@@ -83,8 +86,13 @@ class Agent:
             "response_format": self.response_format,
         }
         if include_state:
-            cfg["sub_agents"] = {k: v.config() for k, v in self.sub_agents.items()}
-            cfg["history"] = self.history[:]
+            cfg.update(
+                {
+                    "sub_agents": {k: v.config() for k, v in self.sub_agents.items()},
+                    "history": self.history[:],
+                    "memory": self.memory.config(),
+                }
+            )
         return cfg
 
     @classmethod
@@ -100,6 +108,9 @@ class Agent:
             k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()
         }
         agent.history = config.get("history", [])
+        memory = config.get("memory")
+        if memory:
+            agent.memory = memory_from_config(memory)
         return agent
 
     def save(self, file, include_state=True):

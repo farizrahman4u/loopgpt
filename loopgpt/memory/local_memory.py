@@ -1,4 +1,5 @@
 from loopgpt.memory.base_memory import BaseMemory
+from loopgpt.embeddings import from_config as embedding_provider_from_config
 import numpy as np
 from typing import *
 
@@ -41,13 +42,15 @@ class LocalMemory(BaseMemory):
             {
                 "docs": self.docs,
                 "embs": self._serialize_embs(),
-                "embedding_provider": self.embedding_provider.serialize(),
+                "embedding_provider": self.embedding_provider.config(),
             }
         )
+        return cfg
 
     @classmethod
     def from_config(cls, config):
-        obj = cls()
+        provider = embedding_provider_from_config(config["embedding_provider"])
+        obj = cls(provider)
         obj.docs = config["docs"]
         embs = config["embs"]
         if embs is not None:
@@ -55,3 +58,7 @@ class LocalMemory(BaseMemory):
                 embs["shape"]
             )
         return obj
+
+    def clear(self):
+        self.docs.clear()
+        self.embs = None

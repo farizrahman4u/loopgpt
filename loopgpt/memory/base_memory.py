@@ -8,9 +8,12 @@ class BaseMemory:
     def get(query: str, k: int) -> List[str]:
         raise NotImplementedError()
 
-    def get_config(self):
-        return {"class": self.__class__.__name__}
+    def config(self):
+        return {"class": self.__class__.__name__, "type": "memory"}
 
     @classmethod
     def from_config(cls, config):
         raise cls()
+
+    def clear(self):
+        raise NotImplementedError()

@@ -40,10 +40,9 @@ class BaseTool:
     def config(self):
         return {
             "class": self.__class__.__name__,
+            "type": "tool",
         }
 
     @classmethod
     def from_config(cls, config):
-        config = config.copy()
-        config.pop("class", None)
-        return cls(**config)
+        return cls()

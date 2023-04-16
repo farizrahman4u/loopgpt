@@ -11,6 +11,7 @@ class BaseEmbeddingProvider:
     def config(self):
         return {
             "class": self.__class__.__name__,
+            "type": "embedding_provider",
         }
 
     @classmethod
