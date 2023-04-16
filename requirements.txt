@@ -1,3 +1,5 @@
 openai
 bs4
 selenium
+numpy
+toktoken
