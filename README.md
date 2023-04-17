@@ -1,11 +1,10 @@
-# LoopGPT
 
 <p align="center">
 <img src="/logo.svg?raw=true" width=100>
 </p>
 <H1>
 <p align="center">
-  actdb
+  LoopGPT
 </p>
 </H1>
 <p align="center">
