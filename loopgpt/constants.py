@@ -38,7 +38,7 @@ SEED_INPUT = (
     " format specified above:"
 )
 
-PROCEED_INPUT = "You may proceed."
+PROCEED_INPUT = "GENERATE NEXT RESPONSE JSON."
 
 DEFAULT_AGENT_NAME = "LoopGPT"
 DEFAULT_AGENT_DESCRIPTION = "A personal assistant that responds exclusively in JSON"

@@ -99,13 +99,13 @@ def cli(agent):
                 if "criticism" in thoughts:
                     msgs["criticism"] = thoughts["criticism"]
                 if "speak" in thoughts:
-                    msgs["speak"] = "(voice)" + thoughts["speak"]
+                    msgs["speak"] = "(voice) " + thoughts["speak"]
                 for kind, msg in msgs.items():
-                    print_line(kind, msg)
+                    print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
                 if "name" in command and "args" in command:
-                    print_line("command", f"{command['name']}, Args: {command['args']}")
+                    print_line("command", f"{command['name']}, Args: {command['args']}", end="\n\n")
                     while True:
                         yn = input(f"Execute? (Y/N): ")
                         yn = yn.lower().strip()
