@@ -38,10 +38,16 @@ SEED_INPUT = (
     " format specified above:"
 )
 
-PROCEED_INPUT = "You may proceed."
-
 DEFAULT_RESOURCES = [
     "Internet access for searches and information gathering.",
     "Long Term memory management.",
     "GPT-3.5 powered Agents for delegation of simple tasks.",
 ]
+PROCEED_INPUT = "GENERATE NEXT RESPONSE JSON."
+
+DEFAULT_AGENT_NAME = "LoopGPT"
+DEFAULT_AGENT_DESCRIPTION = "A personal assistant that responds exclusively in JSON"
+
+# SPINNER
+SPINNER_ENABLED = True
+SPINNER_START_DELAY = 2
