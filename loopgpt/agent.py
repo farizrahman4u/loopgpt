@@ -19,6 +19,7 @@ from typing import *
 
 import json
 import time
+import ast
 
 
 class Agent:
@@ -122,17 +123,17 @@ class Agent:
         try:
             return json.loads(s)
         except Exception:
-            s = s[s.find("{"):s.rfind("}") + 1]
+            s = s[s.find("{") : s.rfind("}") + 1]
             try:
                 return json.loads(s)
             except Exception:
-                s += "}"
                 try:
-                    return json.loads(s)
+                    s = s.replace("\n", " ")
+                    return ast.literal_eval(s)
                 except Exception:
-                    s = s.replace("'", '"')
+                    s = s + "}"
                     try:
-                        return json.loads(s)
+                        return ast.literal_eval(s)
                     except:
                         raise
 
@@ -157,9 +158,10 @@ class Agent:
                 }
             )
             return
-        if self.staging_tool["name"] == "task_complete":
+        tool_id = self.staging_tool["name"]
+        if  tool_id == "task_complete":
             resp = {"success": True}
-        elif self.staging_tool["name"] == "do_nothing":
+        elif tool_id == "do_nothing":
             resp = {"success": True}
         else:
             if "args" not in self.staging_tool:
@@ -170,11 +172,10 @@ class Agent:
                     }
                 )
                 return
-            tool_id = self.staging_tool["name"]
             kwargs = self.staging_tool["args"]
             found = False
-            for tool in self.tools:
-                if tool.id == tool_id:
+            for k, tool in self.tools.items():
+                if k == tool_id:
                     found = True
                     break
             if not found:
@@ -239,8 +240,18 @@ class Agent:
         for i, tool in enumerate(self.tools.values()):
             tool.agent = self
             prompt.append(f"{i + 1}. {tool.prompt()}")
-        task_complete_command = {"name": "task_complete", "description": "Execute this command when all given tasks are completed.", "args": {}, "response_format": {"success": "true"}}
-        do_nothing_command = {"name": "do_nothing", "description": "Do nothing", "args": {}, "response_format": {"success": "true"}}
+        task_complete_command = {
+            "name": "task_complete",
+            "description": "Execute this command when all given tasks are completed.",
+            "args": {},
+            "response_format": {"success": "true"},
+        }
+        do_nothing_command = {
+            "name": "do_nothing",
+            "description": "Do nothing",
+            "args": {},
+            "response_format": {"success": "true"},
+        }
         prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
         prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
         return "\n".join(prompt) + "\n"

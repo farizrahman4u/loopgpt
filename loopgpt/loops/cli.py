@@ -76,6 +76,7 @@ def check_agent_config(agent):
     
     profiles[agent.name] = Fore.GREEN + agent.name
 
+
 def cli(agent):
     print(HEADER)
     check_agent_config(agent)
