@@ -3,3 +3,4 @@ bs4
 selenium
 numpy
 tiktoken
+requests
