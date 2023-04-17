@@ -30,11 +30,13 @@ class Agent:
         description=DEFAULT_AGENT_DESCRIPTION,
         goals=None,
         model="gpt-3.5-turbo",
+        temperature=0.8,
     ):
         self.name = name
         self.description = description
         self.goals = goals or []
         self.model = model
+        self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
         self.constraints = DEFAULT_CONSTRAINTS[:]
@@ -89,6 +91,9 @@ class Agent:
         if self.staging_tool:
             if run_tool:
                 if self.staging_tool.get("name") == "task_complete":
+                    self.history.append(
+                        {"role": "system", "content": "Completed all user specified tasks."}
+                    )
                     message = ""
                 output = self.run_staging_tool()
                 self.tool_response = output
@@ -109,7 +114,12 @@ class Agent:
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
-        resp = chat(full_prompt, model=self.model, max_tokens=token_limit - token_count)
+        resp = chat(
+            full_prompt,
+            model=self.model,
+            max_tokens=token_limit - token_count,
+            temperature=self.temperature,
+        )
         self.history.append({"role": "user", "content": message})
         self.history.append({"role": "assistant", "content": resp})
         try:
@@ -202,6 +212,9 @@ class Agent:
         return resp
 
     def clear_state(self):
+        self.staging_tool = None
+        self.staging_response = None
+        self.tool_response = None
         self.history.clear()
         self.sub_agents.clear()
         self.memory.clear()
@@ -288,6 +301,7 @@ class Agent:
             "description": self.description,
             "goals": self.goals[:],
             "model": self.model,
+            "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
             "constraints": list(self.constraints),
             "evaluations": list(self.evaluations),
@@ -298,6 +312,9 @@ class Agent:
                     "sub_agents": {k: v.config() for k, v in self.sub_agents.items()},
                     "history": self.history[:],
                     "memory": self.memory.config(),
+                    "staging_tool": self.staging_tool,
+                    "staging_response": self.staging_response,
+                    "tool_response": self.tool_response,
                 }
             )
         return cfg
@@ -308,6 +325,7 @@ class Agent:
         agent.name = config["name"]
         agent.description = config["description"]
         agent.goals = config["goals"][:]
+        agent.temperature = config["temperature"]
         agent.model = config["model"]
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.constraints = config["constraints"][:]
@@ -319,6 +337,9 @@ class Agent:
         memory = config.get("memory")
         if memory:
             agent.memory = memory_from_config(memory)
+        agent.staging_tool = config.get("staging_tool")
+        agent.staging_response = config.get("staging_response")
+        agent.tool_response = config.get("tool_response")
         return agent
 
     def save(self, file, include_state=True):
