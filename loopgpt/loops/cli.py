@@ -85,19 +85,19 @@ def cli(agent):
     resp = agent.chat()
     while True:
         if isinstance(resp, str):
-            print(f"{agent.name}: {resp}")
+            print_line(agent.name, resp)
         else:
             if "thoughts" in resp:
-                msgs = []
+                msgs = {}
                 thoughts = resp["thoughts"]
                 if "text" in thoughts:
-                    msgs.append(thoughts["text"])
+                    msgs[agent.name] = thoughts["text"]
                 if "reasoning" in thoughts:
-                    msgs.append(f"Reasoning: {thoughts['reasoning']}")
+                    msgs["reasoning"] = thoughts["reasoning"]
                 if "plan" in thoughts:
-                    msgs += thoughts["plan"].split("\n")
+                    msgs["plan"] = thoughts["plan"].split("\n")
                 if "criticism" in thoughts:
-                    msgs.append(f"Criticism: {thoughts['criticism']}")
+                    msgs["criticism"] = thoughts["criticism"]
                 if "speak" in thoughts:
                     msgs["speak"] = "(voice)" + thoughts["speak"]
                 for kind, msg in msgs.items():

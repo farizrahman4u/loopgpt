@@ -39,3 +39,10 @@ SEED_INPUT = (
 )
 
 PROCEED_INPUT = "You may proceed."
+
+DEFAULT_AGENT_NAME = "LoopGPT"
+DEFAULT_AGENT_DESCRIPTION = "A personal assistant that responds exclusively in JSON"
+
+# SPINNER
+SPINNER_ENABLED = True
+SPINNER_START_DELAY = 2
