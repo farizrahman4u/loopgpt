@@ -1,4 +1,5 @@
 from typing import *
+from loopgpt.logger import logger
 import tiktoken
 import time
 import os
@@ -25,6 +26,7 @@ def chat(
                 model=model, messages=messages, api_key=api_key, max_tokens=max_tokens, temperature=1,
             )["choices"][0]["message"]["content"]
         except RateLimitError:
+            logger.warn("Rate limit exceeded. Retrying after 20 seconds.")
             time.sleep(20)
             continue
 

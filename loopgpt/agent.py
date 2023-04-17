@@ -3,6 +3,8 @@ from loopgpt.constants import (
     DEFAULT_RESPONSE_FORMAT,
     DEFAULT_EVALUATIONS,
     SEED_INPUT,
+    DEFAULT_AGENT_NAME,
+    DEFAULT_AGENT_DESCRIPTION
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
@@ -10,6 +12,7 @@ from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.memory.local_memory import LocalMemory
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
 from loopgpt.loops.cli import cli
+from loopgpt.utils.spinner import spinner
 
 
 from typing import *
@@ -20,12 +23,10 @@ import time
 
 class Agent:
     def __init__(
-        self, name="LoopGPT", description=None, goals=None, model="gpt-3.5-turbo"
+        self, name=DEFAULT_AGENT_NAME, description=DEFAULT_AGENT_DESCRIPTION, goals=None, model="gpt-3.5-turbo"
     ):
         self.name = name
-        self.description = (
-            description or "A personal assistant that responds exclusively in JSON"
-        )
+        self.description = description
         self.goals = goals or []
         self.model = model
         self.sub_agents = {}
@@ -75,6 +76,7 @@ class Agent:
             token_count = count_tokens(prompt, model=self.model)
         return prompt, token_count
 
+    @spinner
     def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
         if self.staging_tool:
             if run_tool:
@@ -99,9 +101,9 @@ class Agent:
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
         resp = chat(full_prompt, model=self.model, max_tokens=token_limit - token_count)
-        print("=========")
-        print(resp)
-        print("=========")
+        # print("=========")
+        # print(resp)
+        # print("=========")
         self.history.append({"role": "user", "content": message})
         self.history.append({"role": "assistant", "content": resp})
         try:
