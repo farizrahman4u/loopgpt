@@ -14,6 +14,7 @@ def chat(
     model: str = "gpt-3.5-turbo",
     api_key: Optional[str] = None,
     max_tokens: Optional[int] = None,
+    temperature: float=0.8,
 ) -> str:
     import openai
     from openai.error import RateLimitError
@@ -27,7 +28,7 @@ def chat(
                 messages=messages,
                 api_key=api_key,
                 max_tokens=max_tokens,
-                temperature=1,
+                temperature=temperature,
             )["choices"][0]["message"]["content"]
         except RateLimitError:
             logger.warn("Rate limit exceeded. Retrying after 20 seconds.")
