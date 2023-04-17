@@ -165,7 +165,7 @@ class Agent:
         if tool_id == "task_complete":
             resp = {"success": True}
         elif tool_id == "do_nothing":
-            resp = {"success": True}
+            resp = {"response": "Nothing Done."}
         else:
             if "args" not in self.staging_tool:
                 self.history.append(
@@ -252,9 +252,9 @@ class Agent:
         }
         do_nothing_command = {
             "name": "do_nothing",
-            "description": "Do nothing",
+            "description": "Do nothing. Use this command only when there is no action to be performed.",
             "args": {},
-            "response_format": {"success": "true"},
+            "response_format": {"response": "Nothing Done."},
         }
         prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
         prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")

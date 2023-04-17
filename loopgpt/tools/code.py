@@ -5,25 +5,29 @@ import sys
 import os
 
 
-
 def ai_function(func, desc, args, model="gpt-3.5-turbo"):
     """Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
     Also see: https://github.com/Torantulino/AI-Functions
     """
     msgs = [
         {
-        "role": "system",
-        "content": f"You are now the following python function: ```# {desc}\n{func}```\n\nOnly respond with your `return` value.",
+            "role": "system",
+            "content": f"You are now the following python function: ```# {desc}\n{func}```\n\nOnly respond with your `return` value.",
         },
-        {
-            "role": "user",
-            "content": ", ".join(map(str, args))
-        }
+        {"role": "user", "content": ", ".join(map(str, args))},
     ]
-    return chat(messages=msgs, model=model, temperature=0.)
+    return chat(messages=msgs, model=model, temperature=0.0)
 
 
-class ExecutePythonFile(BaseTool):
+class _BaseCodeTool(BaseTool):
+    @property
+    def model(self):
+        if hasattr(self, "agent"):
+            return self.agent.model
+        return "gpt-3.5-turbo"
+
+
+class ExecutePythonFile(_BaseCodeTool):
     @property
     def args(self):
         return {"file": "The Python file path"}
@@ -51,7 +55,7 @@ class ExecutePythonFile(BaseTool):
             return {"output": res.stdout}
 
 
-class EvaluateCode(BaseTool):
+class EvaluateCode(_BaseCodeTool):
     @property
     def description(self):
         return "Returns a list of suggestions to improve a given piece of code."
@@ -64,17 +68,18 @@ class EvaluateCode(BaseTool):
 
     @property
     def resp(self):
-        return {
-            "suggestions": "List of suggestions to improve the code."
-        }
+        return {"suggestions": "List of suggestions to improve the code."}
 
     def run(self, code):
         func = "def analyze_code(code: str) -> List[str]:"
-        desc = "Analyzes the given code and returns a list of suggestions" " for improvements."
-        return {"suggestions": ai_function(func, desc, [code])}
+        desc = (
+            "Analyzes the given code and returns a list of suggestions"
+            " for improvements."
+        )
+        return {"suggestions": ai_function(func, desc, [code], model=self.model)}
 
 
-class ImproveCode(BaseTool):
+class ImproveCode(_BaseCodeTool):
     @property
     def description(self):
         return "Improve a piece of code given a list of suggestions."
@@ -88,17 +93,19 @@ class ImproveCode(BaseTool):
 
     @property
     def resp(self):
-        return {
-            "improved_code": "Improved code."
-        }
+        return {"improved_code": "Improved code."}
 
     def run(self, code, suggestions):
         func = "def generate_improved_code(suggestions: str, code: str) -> str:"
         desc = "Improves the provided code based on the suggestions provided, making no other changes."
-        return ai_function(func, desc, [code, str(suggestions)])
+        return {
+            "improved_code": ai_function(
+                func, desc, [code, str(suggestions)], model=self.model
+            )
+        }
 
 
-class WriteTests(BaseTool):
+class WriteTests(_BaseCodeTool):
     @property
     def args(self):
         return {
@@ -107,11 +114,9 @@ class WriteTests(BaseTool):
 
     @property
     def resp(self):
-        return {
-            "tests": "Tests."
-        }
+        return {"tests": "Tests."}
 
     def run(self, code):
         func = "def create_test_cases(code: str, focus: Optional[str] = None) -> str:"
         desc = "Generates test cases for the existing code, focusing on specific areas if required."
-        return ai_function(func, desc, [code])
+        return {"tests": ai_function(func, desc, [code], model=self.model)}

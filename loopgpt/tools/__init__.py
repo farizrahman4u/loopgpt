@@ -6,7 +6,7 @@ from loopgpt.tools.agent_manager import (
 )
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.tools.browser import Browser
-from loopgpt.tools.code import ExecutePythonFile
+from loopgpt.tools.code import ExecutePythonFile, EvaluateCode, ImproveCode, WriteTests
 from loopgpt.tools.google_search import GoogleSearch
 from loopgpt.tools.filesystem import (
     ReadFromFile,
