@@ -1,1 +1,1 @@
-from loopgpt.loops.cli import cli
+from loopgpt.loops.repl import cli

@@ -13,4 +13,5 @@ if __name__ == "__main__":
         name=package_name,
         version="0.0.1",
         description="Ready to deploy document search engine.",
+        entry_points={"console_scripts": ["loopgpt = loopgpt.loops.cli:main"]},
     )

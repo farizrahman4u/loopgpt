@@ -12,8 +12,8 @@ from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.memory.local_memory import LocalMemory
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
-from loopgpt.loops.cli import cli
 from loopgpt.utils.spinner import spinner
+from loopgpt.loops import cli
 
 
 from typing import *
