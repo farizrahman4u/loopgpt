@@ -30,11 +30,13 @@ class Agent:
         description=DEFAULT_AGENT_DESCRIPTION,
         goals=None,
         model="gpt-3.5-turbo",
+        temperature=0.8,
     ):
         self.name = name
         self.description = description
         self.goals = goals or []
         self.model = model
+        self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
         self.constraints = DEFAULT_CONSTRAINTS[:]
@@ -109,7 +111,12 @@ class Agent:
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
-        resp = chat(full_prompt, model=self.model, max_tokens=token_limit - token_count)
+        resp = chat(
+            full_prompt,
+            model=self.model,
+            max_tokens=token_limit - token_count,
+            temperature=self.temperature,
+        )
         self.history.append({"role": "user", "content": message})
         self.history.append({"role": "assistant", "content": resp})
         try:
@@ -287,6 +294,7 @@ class Agent:
             "description": self.description,
             "goals": self.goals[:],
             "model": self.model,
+            "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
             "constraints": list(self.constraints),
             "evaluations": list(self.evaluations),
@@ -310,6 +318,7 @@ class Agent:
         agent.name = config["name"]
         agent.description = config["description"]
         agent.goals = config["goals"][:]
+        agent.temperature = config["temperature"]
         agent.model = config["model"]
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.constraints = config["constraints"][:]
