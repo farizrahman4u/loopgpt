@@ -18,6 +18,7 @@ if "last_response" not in st.session_state:
 if "wait_for_yn" not in st.session_state:
     st.session_state["wait_for_yn"] = False
 
+
 def process_response(resp, voice_only=True):
     if resp:
         msgs = []
@@ -41,11 +42,14 @@ def process_response(resp, voice_only=True):
                     else:
                         msgs.append(f"(voice) {thoughts['speak']}")
             if "command" in resp and resp["command"]:
-                msgs.append(f"Agent wants to execute the following command :\n{resp['command']}. Type 'y' to execute or 'n' to cancel.")
+                msgs.append(
+                    f"Agent wants to execute the following command :\n{resp['command']}. Type 'y' to execute or 'n' to cancel."
+                )
                 st.session_state.wait_for_yn = True
         for msg in msgs:
             st.session_state.history.append(("loopGPT", msg))
         return msgs
+
 
 def submit():
     inp = st.session_state.input
@@ -65,17 +69,17 @@ def submit():
         else:
             resp = agent.chat(inp, run_tool=False)
             st.session_state.history.append(("user", inp))
-        
+
         st.session_state.last_user_input = inp
         st.session_state.input = ""
         process_response(resp)
+
 
 if __name__ == "__main__":
     st.title("LoopGPT")
 
     if st.session_state.history:
-        
         for i, msg in enumerate(st.session_state.history):
             message(msg[1], is_user=msg[0] == "user", key=str(i))
-    
+
     st.text_input("Chat with LoopGPT", key="input", on_change=submit)

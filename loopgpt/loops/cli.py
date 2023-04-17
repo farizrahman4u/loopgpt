@@ -1,5 +1,6 @@
 from loopgpt.constants import PROCEED_INPUT
 
+
 def cli(agent):
     resp = agent.chat()
     while True:

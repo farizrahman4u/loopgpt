@@ -83,6 +83,7 @@ class Browser(BaseTool):
         links = self._extract_links_from_soup(soup)[:5]
         text = self._extract_text_from_soup(soup)
         summary = self.summarizer.summarize(text, question)
+        self.agent.memory.add(summary)
         return {
             "text": summary,
             "links": links,
