@@ -159,7 +159,7 @@ class Agent:
             )
             return
         tool_id = self.staging_tool["name"]
-        if  tool_id == "task_complete":
+        if tool_id == "task_complete":
             resp = {"success": True}
         elif tool_id == "do_nothing":
             resp = {"success": True}
