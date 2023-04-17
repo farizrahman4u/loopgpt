@@ -198,6 +198,9 @@ class Agent:
         return resp
 
     def clear_state(self):
+        self.staging_tool = None
+        self.staging_response = None
+        self.tool_response = None
         self.history.clear()
         self.sub_agents.clear()
         self.memory.clear()
@@ -294,6 +297,9 @@ class Agent:
                     "sub_agents": {k: v.config() for k, v in self.sub_agents.items()},
                     "history": self.history[:],
                     "memory": self.memory.config(),
+                    "staging_tool": self.staging_tool,
+                    "staging_response": self.staging_response,
+                    "tool_response": self.tool_response,
                 }
             )
         return cfg
@@ -315,6 +321,9 @@ class Agent:
         memory = config.get("memory")
         if memory:
             agent.memory = memory_from_config(memory)
+        agent.staging_tool = config.get("staging_tool")
+        agent.staging_response = config.get("staging_response")
+        agent.tool_response = config.get("tool_response")
         return agent
 
     def save(self, file, include_state=True):
