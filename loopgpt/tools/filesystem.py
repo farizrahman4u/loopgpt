@@ -87,6 +87,20 @@ class CheckIfFileExists(BaseTool):
         return {"exists": os.path.isfile(file)}
 
 
+class ListFiles(BaseTool):
+    @property
+    def args(self):
+        return {}
+
+    @property
+    def resp(self):
+        return {
+            "files": "list of files",
+        }
+
+    def run(self, *_, **__):
+        return os.listdir()
+
 FileSystemTools = [
     ReadFromFile,
     WriteToFile,

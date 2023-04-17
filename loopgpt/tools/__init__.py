@@ -14,6 +14,7 @@ from loopgpt.tools.filesystem import (
     AppendToFile,
     DeleteFile,
     CheckIfFileExists,
+    ListFiles,
     FileSystemTools,
 )
 from loopgpt.tools.shell import Shell

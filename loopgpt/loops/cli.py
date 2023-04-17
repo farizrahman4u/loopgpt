@@ -24,6 +24,7 @@ PLAN = Fore.LIGHTYELLOW_EX + "PLAN"
 CRITICISM = Fore.LIGHTRED_EX + "CRITICISM"
 SPEAK = Fore.LIGHTGREEN_EX + "SPEAK"
 COMMAND = Fore.LIGHTMAGENTA_EX + "NEXT_COMMAND"
+SYSTEM = Fore.LIGHTYELLOW_EX + "SYSTEM"
 INPUT_PROMPT = Fore.LIGHTYELLOW_EX + "Enter message: " + Style.RESET_ALL
 
 profiles = {
@@ -33,6 +34,7 @@ profiles = {
     "criticism": CRITICISM,
     "speak": SPEAK,
     "command": COMMAND,
+    "system": SYSTEM,
 }
 
 
@@ -129,7 +131,11 @@ def cli(agent):
                         if yn in ("y", "n"):
                             break
                     if yn == "y":
+                        cmd = agent.staging_tool.get("name", agent.staging_tool)
+                        print_line("system", f"Executing command: {cmd}")
                         resp = agent.chat(PROCEED_INPUT, True)
+                        print_line("system", f"{cmd} output: {agent.tool_response}")
+                        print_line("system", f"")
                     elif yn == "n":
                         feedback = input(
                             "Enter feedback (Why not execute the command?): "

@@ -45,6 +45,7 @@ class Agent:
         tools = [tool_type() for tool_type in builtin_tools()]
         self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
+        self.tool_response = None
 
     def get_full_prompt(self, user_input: str = ""):
         header = {"role": "system", "content": self.header_prompt()}
@@ -90,6 +91,7 @@ class Agent:
                 if self.staging_tool.get("name") == "task_complete":
                     message = ""
                 output = self.run_staging_tool()
+                self.tool_response = output
                 self.memory.add(
                     f"Assistant reply: {self.staging_response}\nResult: {output}\nHuman Feedback: {message}"
                 )
