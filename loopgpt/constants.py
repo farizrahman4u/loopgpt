@@ -8,7 +8,7 @@ DEFAULT_CONSTRAINTS = [
     "~4000 word limit for short term memory. Your short term memory is short, so immediately save important information to files.",
     "If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.",
     "No user assistance",
-    'Exclusively use a single command listed in double quotes e.g. "command_name"',
+    'Exclusively use a single command listed in double quotes e.g. "command name"',
     # "Prioritize specific tools over generic tools for performing tasks.",
 ]
 
@@ -37,3 +37,5 @@ SEED_INPUT = (
     "Determine which next command to use, and respond using the"
     " format specified above:"
 )
+
+PROCEED_INPUT = "You may proceed."

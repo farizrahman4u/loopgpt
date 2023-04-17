@@ -1,3 +1,5 @@
+from loopgpt.constants import PROCEED_INPUT
+
 def cli(agent):
     resp = agent.chat()
     while True:
@@ -29,7 +31,7 @@ def cli(agent):
                     if yn in ("y", "n"):
                         break
                 if yn == "y":
-                    resp = agent.chat("GENERATE NEXT COMMAND JSON", True)
+                    resp = agent.chat(PROCEED_INPUT, True)
                 elif yn == "n":
                     feedback = input("Enter feedback (Why not execute the command?): ")
                     resp = agent.chat(feedback, False)
