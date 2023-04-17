@@ -132,6 +132,8 @@ def cli(agent):
                             break
                     if yn == "y":
                         cmd = agent.staging_tool.get("name", agent.staging_tool)
+                        if cmd == "task_complete":
+                            return
                         print_line("system", f"Executing command: {cmd}")
                         resp = agent.chat(PROCEED_INPUT, True)
                         print_line("system", f"{cmd} output: {agent.tool_response}")

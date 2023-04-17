@@ -91,6 +91,9 @@ class Agent:
         if self.staging_tool:
             if run_tool:
                 if self.staging_tool.get("name") == "task_complete":
+                    self.history.append(
+                        {"role": "system", "content": "Completed all user specified tasks."}
+                    )
                     message = ""
                 output = self.run_staging_tool()
                 self.tool_response = output
