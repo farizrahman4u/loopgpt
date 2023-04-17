@@ -123,6 +123,10 @@ class Agent:
         return resp
 
     def _load_json(self, s):
+        if s.startswith("Assistant Reply {"):
+            s = s[len("Assistant Reply ") :]
+        if "Result: {" in s:
+            s = s.split("Result: {}", 1)[0] 
         if "{" not in s or "}" not in s:
             raise Exception()
         try:

@@ -47,6 +47,7 @@ PROCEED_INPUT = "GENERATE NEXT RESPONSE JSON."
 
 DEFAULT_AGENT_NAME = "LoopGPT"
 DEFAULT_AGENT_DESCRIPTION = "A personal assistant that responds exclusively in JSON"
+DEFAULT_GOALS = ["Respond exclusively in JSON format", "Give consise and useful responses", "Always execute plans to completion"]
 
 # SPINNER
 SPINNER_ENABLED = True

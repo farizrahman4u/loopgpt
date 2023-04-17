@@ -42,7 +42,15 @@ def from_config(config) -> BaseTool:
 
 def builtin_tools():
     return [
-        v
-        for v in globals().values()
-        if isinstance(v, type) and issubclass(v, BaseTool) and v != BaseTool
+        GoogleSearch,
+        Browser,
+        CreateAgent,
+        MessageAgent,
+        ListAgents,
+        DeleteAgent,
+        *FileSystemTools,
+        EvaluateCode,
+        ImproveCode,
+        WriteTests,
+        ExecutePythonFile,
     ]

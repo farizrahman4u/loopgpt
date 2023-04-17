@@ -126,7 +126,8 @@ def cli(agent):
                         end="\n\n",
                     )
                     while True:
-                        yn = input(f"Execute? (Y/N): ")
+                        # yn = input(f"Execute? (Y/N): ")
+                        yn = "y"
                         yn = yn.lower().strip()
                         if yn in ("y", "n"):
                             break

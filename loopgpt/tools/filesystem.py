@@ -103,9 +103,10 @@ class ListFiles(BaseTool):
 
 
 FileSystemTools = [
-    ReadFromFile,
     WriteToFile,
+    ReadFromFile,
     AppendToFile,
     DeleteFile,
     CheckIfFileExists,
+    ListFiles
 ]
