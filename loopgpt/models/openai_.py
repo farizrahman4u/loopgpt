@@ -1,6 +1,7 @@
 from typing import *
-import os
 import tiktoken
+import time
+import os
 
 
 def _getkey(key: Optional[str] = None):
@@ -14,11 +15,18 @@ def chat(
     max_tokens: Optional[int] = None,
 ) -> str:
     import openai
+    from openai.error import RateLimitError
 
     api_key = _getkey(api_key)
-    return openai.ChatCompletion.create(
-        model=model, messages=messages, api_key=api_key, max_tokens=max_tokens
-    )["choices"][0]["message"]["content"]
+    num_retries = 3
+    for _ in range(num_retries):
+        try:
+            return openai.ChatCompletion.create(
+                model=model, messages=messages, api_key=api_key, max_tokens=max_tokens, temperature=1,
+            )["choices"][0]["message"]["content"]
+        except RateLimitError:
+            time.sleep(20)
+            continue
 
 
 def count_tokens(messages: List[Dict[str, str]], model: str = "gpt-3.5-turbo") -> int:

@@ -119,7 +119,7 @@ class Agent:
         try:
             return json.loads(s)
         except Exception:
-            s = s[s.find("{"):s[::-1].rfind("}") + 1]
+            s = s[s.find("{"):s.rfind("}") + 1]
             try:
                 return json.loads(s)
             except Exception:
@@ -155,28 +155,31 @@ class Agent:
             )
             return
         if self.staging_tool["name"] == "task_complete":
-            return {"success": True}
-        if "args" not in self.staging_tool:
-            self.history.append(
-                {
-                    "role": "system",
-                    "content": f"Command args not provided. Make sure to follow the specified response format.",
-                }
-            )
-            return
-        tool_id = self.staging_tool["name"]
-        kwargs = self.staging_tool["args"]
-        found = False
-        for tool in self.tools:
-            if tool.id == tool_id:
-                found = True
-                break
-        if not found:
-            self.history.append(
-                {"role": "system", "content": f"Command {tool_id} does not exist."}
-            )
-            return
-        resp = tool.run(**kwargs)
+            resp = {"success": True}
+        elif self.staging_tool["name"] == "do_nothing":
+            resp = {"success": True}
+        else:
+            if "args" not in self.staging_tool:
+                self.history.append(
+                    {
+                        "role": "system",
+                        "content": f"Command args not provided. Make sure to follow the specified response format.",
+                    }
+                )
+                return
+            tool_id = self.staging_tool["name"]
+            kwargs = self.staging_tool["args"]
+            found = False
+            for tool in self.tools:
+                if tool.id == tool_id:
+                    found = True
+                    break
+            if not found:
+                self.history.append(
+                    {"role": "system", "content": f"Command {tool_id} does not exist."}
+                )
+                return
+            resp = tool.run(**kwargs)
         self.history.append(
             {
                 "role": "system",
@@ -234,7 +237,9 @@ class Agent:
             tool.agent = self
             prompt.append(f"{i + 1}. {tool.prompt()}")
         task_complete_command = {"name": "task_complete", "description": "Execute this command when all given tasks are completed.", "args": {}, "response_format": {"success": "true"}}
+        do_nothing_command = {"name": "do_nothing", "description": "Do nothing", "args": {}, "response_format": {"success": "true"}}
         prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
+        prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
         return "\n".join(prompt) + "\n"
 
     def resources_prompt(self):

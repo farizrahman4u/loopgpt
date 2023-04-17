@@ -1,5 +1,6 @@
 from streamlit_chat import message
 from loopgpt.agent import Agent
+from loopgpt.constants import PROCEED_INPUT
 import streamlit as st
 
 if "agent" not in st.session_state:
@@ -57,8 +58,7 @@ def submit():
                 st.session_state.history.append(("user", yn))
                 st.session_state.wait_for_yn = False
                 if yn == "y":
-                    # resp = agent.chat("GENERATE NEXT COMMAND JSON if possible. Otherwise, return results of previous command.", True)
-                    resp = agent.chat("You may proceed.", True)
+                    resp = agent.chat(PROCEED_INPUT, True)
                 elif yn == "n":
                     feedback = "Enter feedback (Why not execute the command?): "
                     st.session_state.history.append(("loopGPT", feedback))
