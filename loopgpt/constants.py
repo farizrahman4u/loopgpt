@@ -39,3 +39,9 @@ SEED_INPUT = (
 )
 
 PROCEED_INPUT = "You may proceed."
+
+DEFAULT_RESOURCES = [
+    "Internet access for searches and information gathering.",
+    "Long Term memory management.",
+    "GPT-3.5 powered Agents for delegation of simple tasks.",
+]

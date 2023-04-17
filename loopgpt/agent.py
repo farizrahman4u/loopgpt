@@ -2,6 +2,7 @@ from loopgpt.constants import (
     DEFAULT_CONSTRAINTS,
     DEFAULT_RESPONSE_FORMAT,
     DEFAULT_EVALUATIONS,
+    DEFAULT_RESOURCES,
     SEED_INPUT,
 )
 from loopgpt.memory import from_config as memory_from_config
@@ -33,6 +34,7 @@ class Agent:
         self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
         self.constraints = DEFAULT_CONSTRAINTS[:]
         self.evaluations = DEFAULT_EVALUATIONS[:]
+        self.resources = DEFAULT_RESOURCES[:]
         self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
         tools = [tool_type() for tool_type in builtin_tools()]
@@ -204,7 +206,8 @@ class Agent:
             prompt.append(self.constraints_prompt())
         if self.tools:
             prompt.append(self.tools_prompt())
-        prompt.append(self.resources_prompt())
+        if self.resources:
+            prompt.append(self.resources_prompt())
         if self.evaluations:
             prompt.append(self.evaluation_prompt())
         prompt.append(self.response_format)
@@ -257,9 +260,8 @@ class Agent:
     def resources_prompt(self):
         prompt = []
         prompt.append("Resources:")
-        prompt.append("1. Internet access for searches and information gathering.")
-        prompt.append("2. Long Term memory management.")
-        prompt.append("3. GPT-3.5 powered Agents for delegation of simple tasks.")
+        for i, res in enumerate(self.resources):
+            prompt.append(f"{i + 1}. {res}")
         return "\n".join(prompt) + "\n"
 
     def evaluation_prompt(self):
