@@ -1,4 +1,3 @@
-
 def cli(agent):
     resp = agent.chat()
     while True:

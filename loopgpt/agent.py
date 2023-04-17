@@ -34,7 +34,8 @@ class Agent:
         self.evaluations = DEFAULT_EVALUATIONS[:]
         self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
-        self.tools = [tool_type() for tool_type in builtin_tools()]
+        tools = [tool_type() for tool_type in builtin_tools()]
+        self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
 
     def get_full_prompt(self, user_input: str = ""):
@@ -119,7 +120,7 @@ class Agent:
         try:
             return json.loads(s)
         except Exception:
-            s = s[s.index("{"):s.index("}") + 1]
+            s = s[s.index("{") : s.index("}") + 1]
             try:
                 return json.loads(s)
             except Exception:
@@ -127,7 +128,7 @@ class Agent:
                 try:
                     return json.loads(s)
                 except Exception:
-                    s = s.replace("\'", "\"")
+                    s = s.replace("'", '"')
                     try:
                         return json.loads(s)
                     except:
@@ -167,8 +168,8 @@ class Agent:
         tool_id = self.staging_tool["name"]
         kwargs = self.staging_tool["args"]
         found = False
-        for tool in self.tools:
-            if tool.id == tool_id:
+        for k, tool in self.tools.items():
+            if k == tool_id:
                 found = True
                 break
         if not found:
@@ -230,10 +231,15 @@ class Agent:
     def tools_prompt(self):
         prompt = []
         prompt.append("Commands:")
-        for i, tool in enumerate(self.tools):
+        for i, tool in enumerate(self.tools.values()):
             tool.agent = self
             prompt.append(f"{i + 1}. {tool.prompt()}")
-        task_complete_command = {"name": "task_complete", "description": "Execute this command when all given tasks are completed.", "args": {}, "response_format": {"success": "true"}}
+        task_complete_command = {
+            "name": "task_complete",
+            "description": "Execute this command when all given tasks are completed.",
+            "args": {},
+            "response_format": {"success": "true"},
+        }
         prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
         return "\n".join(prompt) + "\n"
 
@@ -260,7 +266,7 @@ class Agent:
             "description": self.description,
             "goals": self.goals[:],
             "model": self.model,
-            "tools": [tool.config() for tool in self.tools],
+            "tools": [tool.config() for tool in self.tools.values()],
             "constraints": list(self.constraints),
             "evaluations": list(self.evaluations),
         }
@@ -281,7 +287,7 @@ class Agent:
         agent.description = config["description"]
         agent.goals = config["goals"][:]
         agent.model = config["model"]
-        agent.tools = list(map(tool_from_config, config["tools"]))
+        agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.constraints = config["constraints"][:]
         agent.evaluations = config["evaluations"][:]
         agent.sub_agents = {
