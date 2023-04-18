@@ -123,9 +123,7 @@ def cli(agent, continuous=False):
                     print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
-                if not isinstance(command, dict):
-                    print("COMMAND:", command)
-                if "name" in command and "args" in command:
+                if isinstance(command, dict) and "name" in command and "args" in command:
                     if command["name"] != "do_nothing":
                         print_line(
                             "command",
