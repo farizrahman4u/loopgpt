@@ -32,6 +32,7 @@ class SimpleBrowser(BaseTool):
         )
         self.session = session
         self.summarizer = Summarizer()
+        self.cache = {}
         atexit.register(self.close)
 
     @property
@@ -43,9 +44,12 @@ class SimpleBrowser(BaseTool):
         return "Browser"
 
     def _get(self, url):
+        if url in self.cache:
+            return self.cache[url]
         resp = self.session.get(url)
         if resp.status_code >= 400:
             return f"HTTP Error {resp.status_code}"
+        self.cache[url] = resp.text
         return resp.text
 
     def _extract_links_from_soup(self, soup):

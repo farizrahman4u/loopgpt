@@ -51,6 +51,7 @@ class Agent:
         tools = [tool_type() for tool_type in builtin_tools()]
         self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
+        self.staging_response = None
         self.tool_response = None
 
     def get_full_prompt(self, user_input: str = ""):
@@ -109,6 +110,13 @@ class Agent:
                 hist[i] = entry
             except:
                 pass
+        user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
+        for i in user_msgs[:-1]:
+            entry = hist[i].copy()
+            msg = entry["content"]
+            if msg in [PROCEED_INPUT, SEED_INPUT]:
+                entry["content"] = PROCEED_INPUT_SMALL
+                hist[i] = entry
         return hist
 
     @spinner
@@ -126,12 +134,10 @@ class Agent:
                     message = ""
                 output = self.run_staging_tool()
                 self.tool_response = output
-                self.memory.add(
-                    f"You ran command {tool['name']} with args {tool['args']} which returned following reponse\n: {output}"
-                )
-                # self.memory.add(
-                #     f"Assistant reply: {tool}\nResult: {output}"
-                # )
+                if tool.get("name") != "do_nothing":
+                    self.memory.add(
+                        f"You ran command {tool['name']} with args {tool['args']} which returned following reponse:\n {output}"
+                    )
             else:
                 self.history.append(
                     {
@@ -142,22 +148,20 @@ class Agent:
                 self.memory.add(
                     f"User disapproved running command {tool['name']} with args {tool['args']} with following feedback\n: {message}"
                 )
-                # self.memory.add(
-                #     f"Assistant reply: {self.staging_response}\nResult: (User did not approve)\nHuman Feedback: {message}"
-                # )
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
         maxt_tokens = max(1000, token_limit - token_count)
+        print("=================")
+        print(full_prompt)
+        print("=================")
         resp = chat(
             full_prompt,
             model=self.model,
             max_tokens=maxt_tokens,
             temperature=self.temperature,
         )
-        if message == PROCEED_INPUT:
-            message = PROCEED_INPUT_SMALL
         try:
             resp = self._load_json(resp)
             if "name" in resp:
@@ -223,13 +227,14 @@ class Agent:
 
     def run_staging_tool(self):
         if "name" not in self.staging_tool:
+            resp = "Command name not provided. Make sure to follow the specified response format."
             self.history.append(
                 {
                     "role": "system",
-                    "content": f"Command name not provided. Make sure to follow the specified response format.",
+                    "content": resp,
                 }
             )
-            return
+            return resp
         tool_id = self.staging_tool["name"]
         if tool_id == "task_complete":
             resp = {"success": True}
@@ -237,13 +242,14 @@ class Agent:
             resp = {"response": "Nothing Done."}
         else:
             if "args" not in self.staging_tool:
+                resp = "Command args not provided. Make sure to follow the specified response format."
                 self.history.append(
                     {
                         "role": "system",
-                        "content": f"Command args not provided. Make sure to follow the specified response format.",
+                        "content": resp,
                     }
                 )
-                return
+                return resp
             kwargs = self.staging_tool["args"]
             found = False
             for k, tool in self.tools.items():
@@ -251,15 +257,26 @@ class Agent:
                     found = True
                     break
             if not found:
+                resp = f"Command {tool_id} does not exist."
                 self.history.append(
-                    {"role": "system", "content": f"Command {tool_id} does not exist."}
+                    {"role": "system", "content": resp}
                 )
-                return
-            resp = tool.run(**kwargs)
+                return resp
+            try:
+                resp = tool.run(**kwargs)
+            except Exception as e:
+                resp  = f"Command '{tool_id}' failed with error: {e}"
+                self.history.append(
+                    {
+                        "role": "system",
+                        "content": resp,
+                    }
+                )
+                return resp
         self.history.append(
             {
                 "role": "system",
-                "content": f"Response from {tool_id}:\n{json.dumps(resp)}",
+                "content": f"{tool_id} returned the following response:\n{json.dumps(resp)}",
             }
         )
         return resp
@@ -285,7 +302,7 @@ class Agent:
             prompt.append(self.evaluation_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
-        prompt.append(self.response_format)
+        # prompt.append(self.response_format)
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):

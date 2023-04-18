@@ -13,6 +13,8 @@ from selenium.common.exceptions import NoSuchWindowException
 from loopgpt.tools.base_tool import BaseTool
 from selenium.webdriver.support import expected_conditions
 from loopgpt.summarizer import Summarizer
+from loopgpt.logger import logger
+import logging
 import atexit
 
 
@@ -27,6 +29,7 @@ class Browser(BaseTool):
         self.options = options
         self.driver = None
         self.summarizer = Summarizer()
+        self.cache = {}
         atexit.register(self.close)
 
     def _init_driver(self):
@@ -36,17 +39,30 @@ class Browser(BaseTool):
         )
 
     def _get(self, url):
+        if url in self.cache:
+            return self.cache[url]
         if self.driver is None:
             self._init_driver()
-        try:
-            self.driver.get(url)
-        except NoSuchWindowException:
-            self._init_driver()
-            self.driver.get(url)
+        num_retries = 3
+        for i in range(num_retries):
+            try:
+                self.driver.get(url)
+                break
+            except NoSuchWindowException:
+                self._init_driver()
+                try:
+                    self.driver.get(url)
+                    break
+                except Exception:
+                    continue
+            except Exception:
+                continue
         WebDriverWait(self.driver, 10).until(
             expected_conditions.presence_of_element_located((By.TAG_NAME, "body"))
         )
-        return self.driver.execute_script("return document.body.outerHTML;")
+        ret = self.driver.execute_script("return document.body.outerHTML;")
+        self.cache[url] = ret
+        return ret
 
     def _extract_links_from_soup(self, soup):
         return [(link.text, link["href"]) for link in soup.find_all("a", href=True)]
@@ -78,13 +94,20 @@ class Browser(BaseTool):
             pass
 
     def run(self, url: str, query: str):
-        soup = BeautifulSoup(self._get(url), "html.parser")
-        [script.extract() for script in soup(["script", "style"])]
-        links = self._extract_links_from_soup(soup)[:5]
-        text = self._extract_text_from_soup(soup)
-        self.summarizer.agent = getattr(self, "agent", None)
-        summary = self.summarizer.summarize(text, query)
-        return {
-            "text": summary,
-            "links": links,
-        }
+        logger.log(logging.DEBUG, f"Scraping {query}...")
+        if not isinstance(url, str):
+            return "Scraping website failed. The URL must be a string."
+        try:
+            soup = BeautifulSoup(self._get(url), "html.parser")
+            [script.extract() for script in soup(["script", "style"])]
+            links = self._extract_links_from_soup(soup)[:5]
+            text = self._extract_text_from_soup(soup)
+            self.summarizer.agent = getattr(self, "agent", None)
+            summary = self.summarizer.summarize(text, query)
+            self.close()
+            return {
+                "text": summary,
+                "links": links,
+            }
+        except Exception:
+            return "An error occured while scraping the website. Make sure the URL is valid."
