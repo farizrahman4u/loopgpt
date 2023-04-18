@@ -107,7 +107,7 @@ class Browser(BaseTool):
             if getattr(self, "agent", None):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")
-                
+
             return {
                 "text": summary,
                 "links": links[:5],

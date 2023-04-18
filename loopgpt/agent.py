@@ -53,7 +53,7 @@ class Agent:
             if msg["role"] != "user"
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
-        return msgs[-n-1:-1]
+        return msgs[-n - 1 : -1]
 
     def get_full_prompt(self, user_input: str = ""):
         header = {"role": "system", "content": self.header_prompt()}
@@ -64,10 +64,6 @@ class Agent:
         prompt = [header, dtime]
         msgs = self._get_non_user_messages(10)
         relevant_memory = self.memory.get(str(msgs), 5) if len(msgs) > 5 else []
-        print("RELEVANT MEMEORY===")
-        print(relevant_memory)
-        print("===")
-        print("Initial relevant memory: ", len(relevant_memory))
         memory_added = False
         if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
@@ -79,12 +75,10 @@ class Agent:
                     "content": f"This reminds you of these events from your past:\n{memstr}\n",
                 }
                 token_count = count_tokens(prompt + [context], model=self.model)
-                print("-----", token_count)
                 if token_count < token_limit:
                     break
                 relevant_memory = relevant_memory[:-1]
             if relevant_memory:
-                print("Token count after memory: ", token_count)
                 memory_added = True
                 prompt.append(context)
         history = self._get_compressed_history()
@@ -102,9 +96,6 @@ class Agent:
             prompt.append(agent_resp)
             prompt.append(sys_resp)
         prompt += user_prompt
-        print("History: ", f"{len(history)}/{len(self.history)}")
-        print("Relevant memory: ", len(relevant_memory))
-        print("Total token count: ", token_count)
         return prompt, token_count
 
     def _get_compressed_history(self):
@@ -178,10 +169,6 @@ class Agent:
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
         maxt_tokens = max(1000, token_limit - token_count)
-        print("=================")
-        for p in full_prompt:
-            print(p)
-        print("=================")
         resp = chat(
             full_prompt,
             model=self.model,
@@ -324,9 +311,7 @@ class Agent:
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
-        return (
-            f"You are {self.name}, {self.description}."
-        )
+        return f"You are {self.name}, {self.description}."
 
     def goals_prompt(self):
         prompt = []

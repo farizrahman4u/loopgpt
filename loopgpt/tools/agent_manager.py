@@ -46,9 +46,7 @@ class MessageAgent(_AgentMangerTool):
 
     @property
     def resp(self):
-        return {
-            "resp": 'Response from the agent.'
-        }
+        return {"resp": "Response from the agent."}
 
     def run(self, id, message):
         if id not in self.agent.sub_agents:
