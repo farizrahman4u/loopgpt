@@ -1,10 +1,10 @@
 from loopgpt.constants import (
     DEFAULT_RESPONSE_FORMAT_,
-    SEED_INPUT,
+    INIT_PROMPT,
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
-    PROCEED_INPUT,
-    PROCEED_INPUT_SMALL,
+    NEXT_PROMPT,
+    NEXT_PROMPT_SMALL,
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
@@ -45,6 +45,8 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
+        self.init_prompt = INIT_PROMPT
+        self.next_prompt = NEXT_PROMPT
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -128,13 +130,15 @@ class Agent:
         for i in user_msgs:
             entry = hist[i].copy()
             msg = entry["content"]
-            if msg in [PROCEED_INPUT, SEED_INPUT]:
-                entry["content"] = PROCEED_INPUT_SMALL
+            if msg in [self.next_prompt, self.init_prompt]:
+                entry["content"] = NEXT_PROMPT_SMALL
                 hist[i] = entry
         return hist
 
     @spinner
-    def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
+    def chat(self, message: Optional[str] = None, run_tool=False) -> Union[str, Dict]:
+        if message is None:
+            message = self.init_prompt
         if self.staging_tool:
             tool = self.staging_tool
             if run_tool:

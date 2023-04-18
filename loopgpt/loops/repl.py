@@ -10,7 +10,6 @@ HEADER = r"""
 """
 
 from loopgpt.constants import (
-    PROCEED_INPUT,
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
 )
@@ -124,7 +123,11 @@ def cli(agent, continuous=False):
                     print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
-                if isinstance(command, dict) and "name" in command and "args" in command:
+                if (
+                    isinstance(command, dict)
+                    and "name" in command
+                    and "args" in command
+                ):
                     if command["name"] != "do_nothing":
                         print_line(
                             "command",
@@ -144,7 +147,7 @@ def cli(agent, continuous=False):
                         if cmd == "task_complete":
                             return
                         print_line("system", f"Executing command: {cmd}")
-                        resp = agent.chat(PROCEED_INPUT, True)
+                        resp = agent.chat(agent.next_prompt, True)
                         print_line("system", f"{cmd} output: {agent.tool_response}")
                         print_line("system", f"")
                     elif yn == "n":

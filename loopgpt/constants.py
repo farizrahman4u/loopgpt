@@ -19,16 +19,17 @@ DEFAULT_RESPONSE_FORMAT_ = {
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
 
-PROCEED_INPUT_SMALL = "GENERATE NEXT COMMAND JSON."
+NEXT_PROMPT_SMALL = "Next"
 
 
-EXPERIMENTAL_PROCEED_INPUT = (
+EXPERIMENTAL_NEXT_PROMPT = (
     "Decide your next response with the help of the following pseudo-code. Respond with the return value:\n"
     + "def get_next_response(last_command_executed_successfully, original_plan):\n"
     + "    '''The function returns your next response as a JSON dictionary. `points` is the score you get for this response.\n"
     + "    You are free to assume the values for any unknown variables.'''\n"
     + "    json_format = "
-    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
+    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+    + "\n"
     + "    if (last_command_executed_successfully):\n"
     + "        if (is_empty(current_plan)):\n"
     + "            json_format['command'] = {'name': 'task_complete'}\n"
@@ -46,7 +47,7 @@ EXPERIMENTAL_PROCEED_INPUT = (
     + "    return json_format\n"
 )
 
-PROCEED_INPUT = (
+NEXT_PROMPT = (
     "INSTRUCTIONS:\n"
     + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
     + "2 - exclusively use available commmands to work towards the goals.\n"
@@ -64,7 +65,7 @@ PROCEED_INPUT = (
 )
 
 
-SEED_INPUT = (
+INIT_PROMPT = (
     "Do the following:\n"
     + "1 - Execute the next best command to achieve the goals.\n"
     + '2 - Execute the "do_nothing" command if there is no other command to execute.\n'
