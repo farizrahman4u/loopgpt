@@ -22,6 +22,30 @@ DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described 
 PROCEED_INPUT_SMALL = "GENERATE NEXT COMMAND JSON."
 
 
+EXPERIMENTAL_PROCEED_INPUT = (
+    "Decide your next response with the help of the following pseudo-code. Respond with the return value:\n"
+    + "def get_next_response(last_command_executed_successfully, original_plan):\n"
+    + "    '''The function returns your next response as a JSON dictionary. `points` is the score you get for this response.\n"
+    + "    You are free to assume the values for any unknown variables.'''\n"
+    + "    json_format = "
+    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
+    + "    if (last_command_executed_successfully):\n"
+    + "        if (is_empty(current_plan)):\n"
+    + "            json_format['command'] = {'name': 'task_complete'}\n"
+    + "        elif (no_command_necessary):\n"
+    + "            json_format['command'] = {'name': 'do_nothing'}\n"
+    + "            points -= 1\n"
+    + "        else:\n"
+    + "            json_format['command'] = {'name': 'next_command_in_plan', 'args': 'arguments_dictionary'}}\n"
+    + "            points += 1\n"
+    + "    else:\n"
+    + "        points -= 1\n"
+    + "    if (is_subset(current_plan, original_plan)):\n"
+    + "        points += 100\n"
+    + "    fill_response(json_format)\n"
+    + "    return json_format\n"
+)
+
 PROCEED_INPUT = (
     "INSTRUCTIONS:\n"
     + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
