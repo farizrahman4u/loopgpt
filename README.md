@@ -1,6 +1,6 @@
 
 <p align="center">
-<img src="/logo.svg?raw=true" width=100>
+<img src="/docs/assets/imgs/logo.svg?raw=true" width=100>
 </p>
 <H1>
 <p align="center">
@@ -57,7 +57,7 @@ agent.save("ResearchGPT.json")
 
 Output:
 
-<img src="/loopgpt_demo_pic.png?raw=true">
+<img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true">
 
 Pick up where you left off with
 
