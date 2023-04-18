@@ -9,34 +9,41 @@
 </p>
 
 
-LoopGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
+L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
 ## 🚀 Features 🚀
 
-1. Extensible and modular "Pythonic" library. Easy to add new features, integrations and agent capabilities via the "plug n play" API
-2. GPT 3.5 friendly - Better results than Auto-GPT for those who don't have GPT-4 access yet!
-3. Minimal prompt overhead - We are continuously working on getting the best results with the least possible number of tokens.
-4. Ability to "course correct" agents who go astray via human feedback.
- 
-## Installation
+1. **"Plug N Play" API** - Extensible and modular "Pythonic" framework, not just a command line tool. Easy to add new features, integrations and custom agent capabilities, all from python code, no nasty config files!
+2. **GPT 3.5 friendly** - Better results than Auto-GPT for those who don't have GPT-4 access yet!
+3. **Minimal prompt overhead** - Every token counts. We are continuously working on getting the best results with the least possible number of tokens.
+4. **Human in the Loop** - Ability to "course correct" agents who go astray via human feedback.
+5. **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
+
+
+## 🛠️ Installation
 
 ```bash
 pip install loopgpt
 ```
 
-## Getting Started
+## 🏎️ Getting Started
 
-Create a new LoopGPT agent:
+### Create a new L♾️pGPT Agent🕵️:
 
 ```python
 from loopgpt.agent import Agent
 
-agent = Agent(model="gpt-3.5-turbo")
+agent = Agent()
 ```
 
-LoopGPT uses `gpt-3.5-turbo` by default and all outputs shown were made using it. GPT-4 users can set `model="gpt-4"` instead.
+L♾️pGPT uses `gpt-3.5-turbo` by default and all outputs shown were made using it. GPT-4 users can set `model="gpt-4"` instead:
 
-Setup the agent's attributes, this can also be done via the CLI:
+```python
+agent = Agent(model="gpt-4")
+```
+
+
+### Setup the Agent🕵️'s attributes:
 
 ```python
 agent.name = "ResearchGPT"
@@ -49,14 +56,22 @@ agent.goals = [
 ]
 ```
 
-And we're off! Let's run the agent's CLI:
+And we're off! Let's run the Agent🕵️'s CLI:
 
 ```python
-agent.cli(continuous=False)
+agent.cli()
 ```
 
+<img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true" height="350">
+
+### 🔁 Continuous Mode 🔁
+
 If `continuous` is set to `True`, the agent will not ask for the user's permission to execute commands. Use it at your own risk
-since it can go into infinite loops!
+as it can go into infinite loops!
+
+```python
+agent.cli(continuous=True)
+```
 
 You can also save the agent:
 
@@ -76,13 +91,9 @@ or the CLI command:
 loopgpt run ResearchGPT.json
 ```
 
-Output:
-
-<img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true">
-
 ## Add custom tools
 
-With LoopGPT, you can easily add your own tools to the agent's toolbox.
+With L♾️pGPT, you can easily add your own tools to the agent's toolbox.
 
 Let's create WeatherGPT, an AI assistant for all things weather.
 
@@ -108,7 +119,7 @@ class GetWeather(BaseTool):
         ...
 ```
 
-LoopGPT gives a default ID and description to your tool but you can override them if you'd like:
+L♾️pGPT gives a default ID and description to your tool but you can override them if you'd like:
 
 ```python
 class GetWeather(BaseTool):
