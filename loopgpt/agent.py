@@ -82,7 +82,7 @@ class Agent:
                 relevant_memory = relevant_memory[:-1]
             memory_added = True
             prompt.append(context)
-        history = self._get_simplified_history()
+        history = self._get_compressed_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         prompt = prompt[:2] + history + prompt[2:] + user_prompt
         token_limit = get_token_limit(self.model) - 1000  # 1000 reserved for response
@@ -96,7 +96,7 @@ class Agent:
             prompt.append(last_resp)
         return prompt, token_count
 
-    def _get_simplified_history(self):
+    def _get_compressed_history(self):
         hist = self.history[:]
         system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
         for i in system_msgs[:-1]:
