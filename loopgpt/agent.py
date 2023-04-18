@@ -94,8 +94,6 @@ class Agent:
             last_resp = prompt.pop(-2)
             prompt.append(last_resp)
         prompt += user_prompt
-        print("History: ", f"{len(history)}/{len(self.history)}")
-        print("Relevant memory: ", len(relevant_memory))
         return prompt, token_count
 
     def _get_compressed_history(self):
@@ -167,10 +165,6 @@ class Agent:
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
         maxt_tokens = max(1000, token_limit - token_count)
-        print("=================")
-        for p in full_prompt:
-            print(p)
-        print("=================")
         resp = chat(
             full_prompt,
             model=self.model,
