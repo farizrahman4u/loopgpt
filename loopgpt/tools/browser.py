@@ -94,7 +94,7 @@ class Browser(BaseTool):
             pass
 
     def run(self, url: str, query: str):
-        logger.log(logging.DEBUG, f"Scraping {query}...")
+        logger.log(logging.DEBUG, f"Scraping {url}...")
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         try:
@@ -104,10 +104,9 @@ class Browser(BaseTool):
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
             summary = self.summarizer.summarize(text, query)
-            self.close()
             return {
                 "text": summary,
                 "links": links,
             }
-        except Exception:
-            return "An error occured while scraping the website. Make sure the URL is valid."
+        except Exception as e:
+            return f"An error occured while scraping the website: {e}. Make sure the URL is valid."

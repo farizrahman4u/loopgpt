@@ -66,7 +66,8 @@ class Agent:
         }
         prompt = [header, dtime]
         relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10)
-        if relevant_memory and False:
+        memory_added = False
+        if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
             token_limit = 2500
             while relevant_memory:
@@ -79,6 +80,7 @@ class Agent:
                 if token_count < token_limit:
                     break
                 relevant_memory = relevant_memory[:-1]
+            memory_added = True
             prompt.append(context)
         history = self._get_simplified_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
@@ -89,6 +91,9 @@ class Agent:
             history = history[1:]
             prompt.pop(2)
             token_count = count_tokens(prompt, model=self.model)
+        if memory_added and len(prompt) > 3:
+            last_resp = prompt.pop(-2)
+            prompt.append(last_resp)
         return prompt, token_count
 
     def _get_simplified_history(self):
@@ -124,6 +129,7 @@ class Agent:
             if msg in [PROCEED_INPUT, SEED_INPUT]:
                 entry["content"] = PROCEED_INPUT_SMALL
                 hist[i] = entry
+        hist = [h for h in hist if not (h["role"] == "system" and "do_nothing" in h["content"])]
         return hist
 
     @spinner

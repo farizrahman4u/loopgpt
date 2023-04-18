@@ -21,7 +21,7 @@ DEFAULT_RESPONSE_FORMAT_ = {
         "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
-    "command": {"name": "command name", "args": {"arg name": "value"}},
+    "command": {"name": "next command in your plan", "args": {"arg name": "value"}},
 }
 
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
@@ -55,7 +55,7 @@ PROCEED_INPUT = (
     "Do the following:\n"
     + "1 - Check if the goals specified above have been achieved.\n"
     + "1.1 - If goals are achieved, execute the \"task_complete\" command.\n"
-    + "1.2 - If goals are not achieved, execute the next best command to achieve the goals.\n"
+    + "1.2 - If goals are not achieved, execute the next command in your plan.\n"
     + "2 - DO NOT REPEAT COMMANDS.\n"
     + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
     + "4 - Refer to outputs of previous commands before executing commands."

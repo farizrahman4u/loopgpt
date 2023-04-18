@@ -43,8 +43,7 @@ class GoogleSearch(BaseTool):
         return results
 
     def run(self, query, num_results=8):
-        key = self.google_api_key
-        if key and key.strip() and key != "your-google-api-key":
+        try:
             return self._google_search(query, num_results)
-        else:
+        except:
             return self._duckduckgo_search(query, num_results)
