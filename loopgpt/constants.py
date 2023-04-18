@@ -1,4 +1,6 @@
 import json
+import inspect
+
 
 """
 Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
@@ -17,7 +19,7 @@ DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
         "text": "thought",
         "reasoning": "reasoning",
-        "plan": "- short bulleted\n- list that conveys\n- long-term plan",
+        "plan": "- short bulleted\n- list that conveys\n- long-term plan\n including commands to execute",
         "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
@@ -36,33 +38,49 @@ DEFAULT_RESOURCES = [
 PROCEED_INPUT_SMALL = "GENERATE NEXT COMMAND JSON."
 
 
+def generate_next_command_json() -> str:
+    """Function to generate the next response json.
+    The function returns a JSON string  in the specified format that can be decoded using Python's json.loads()
+    Assume the values for any uknown variables based on the conversation messages.
+    """
+    RESPONSE_FORMAT = {
+    "thoughts": {
+        "text": "thought",
+        "reasoning": "reasoning",
+        "plan": "- short bulleted\n- list that conveys\n- long-term plan\n including commands to execute",
+        "criticism": "constructive self-criticism",
+        "speak": "thoughts summary to say to user",
+    },
+    "command": {"name": "next command in plan", "args": {"arg name": "value"}},
+    }
+    if last_command_executed_successfully:
+        if is_empty(curent_plan):
+            json_resp['command'] = {'name': 'task_complete', 'args': {}}
+            points += 1000
+        elif no_commands_necessary:
+            json_rsp['command'] = {'name': 'do_nothing'}
+            points -= 1
+            cost += 10
+        else:
+            json_resp['command'] = {'name': 'next_command_in_plan', 'args': '<arguments dictionary>'}
+            points += 1
+            cost += 1
+    else:
+        points -= 1
+    if is_subset(current_plan, original_plan):
+        points += 100
+    else:
+        cost += 100
+    fill_response(json_resp, RESPONSE_FORMAT)
+    return json.dumps(json_resp)
+
+
 PROCEED_INPUT = (
- 
-    # "Constraints:\n"
-    # + "\n".join([f"{i+1} - {c}" for i, c in enumerate(DEFAULT_CONSTRAINTS)]) + "\n\n"
-    # + "Resources:\n"
-    # + "\n".join([f"{i+1} - {c}" for i, c in enumerate(DEFAULT_RESOURCES)]) + "\n\n"
-    "INSTRUCTIONS:\n"
-    + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
-    + "2 - exclusively use available commmands to work towards the goals.\n"
-    + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
-    + "4 - A command is considered executed only if it is confirmed by a system message.\n"
-    # + "5 - A command is not considered executed just becauses it was in your plan.\n"
-    # + "5 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
-    + "5 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
-    + "6 - Execute the \"do_nothing\" command ONLY if there is no other command to execute.\n"
-    + "7 - Once all the planned commands are executed and ALL the goals are achieved, execute the \"task_complete\" command.\n"
-    + "8 - Explicitly associate a command with each step in your plan.\n"
-    + "9 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
-    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
+    "Decide your next response with the help of the following pseudo-code:\n"
+    + "```psuedo-code"
+    + inspect.getsource(generate_next_command_json)
+    +"```"
 )
-
-
-# PROCEED_INPUT = (
-#     "INSTRUCTIONS:\n"
-#     + "1 - Have you progressed towards your goals?\n"
-#     + "1.1 - "
-# )
 
 SEED_INPUT = (
     "Do the following:\n"
