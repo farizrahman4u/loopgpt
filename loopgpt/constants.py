@@ -71,8 +71,8 @@ def generate_next_command_json() -> str:
         points += 100
     else:
         cost += 100
-    fill_response(json_resp, RESPONSE_FORMAT)
-    return json.dumps(json_resp)
+    fill_response(RESPONSE_FORMAT, json_resp)
+    return json.dumps(RESPONSE_FORMAT)
 
 
 PROCEED_INPUT = (
