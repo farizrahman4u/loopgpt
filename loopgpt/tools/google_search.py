@@ -24,6 +24,10 @@ class GoogleSearch(BaseTool):
 
         results = []
         for result in ddg(query, max_results=num_results):
+            if getattr(self, "agent", None):
+                self.agent.memory.add(
+                    f"Search result for {query}: [{result['title']}]({result['href']})"
+                )
             results.append([result["title"], result["href"], result["body"]])
         return results
 
@@ -37,9 +41,15 @@ class GoogleSearch(BaseTool):
             .execute()
             .get("items", [])
         )
+        for result in results:
+            if getattr(self, "agent", None):
+                self.agent.memory.add(
+                    f"Search result for {query}: [{result['title']}]({result['link']})"
+                )
         results = [
             [result["title"], result["link"], result["snippet"]] for result in results
         ]
+
         return results
 
     def run(self, query, num_results=8):

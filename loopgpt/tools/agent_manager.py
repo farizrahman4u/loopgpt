@@ -11,16 +11,16 @@ class CreateAgent(_AgentMangerTool):
     @property
     def args(self):
         return {
-            "name": "Name of the agent",
-            "task": "Specific task for this agent",
+            "name": "Agent name",
+            "task": "Specific task for agent",
             "prompt": "The prompt",
         }
 
     @property
     def resp(self):
         return {
-            "uuid": "Unique ID of the newly created agent.",
-            "resp": "Response from the newly created agent.",
+            "id": "Unique ID of new agent.",
+            "resp": "Response from new agent.",
         }
 
     def run(self, name="", task="", prompt=""):
@@ -40,15 +40,13 @@ class MessageAgent(_AgentMangerTool):
     @property
     def args(self):
         return {
-            "id": "ID of the agent to send the message to",
+            "id": "Agent id.",
             "message": "The message",
         }
 
     @property
     def resp(self):
-        return {
-            "resp": 'Response from the agent. If the specified agent doesn\'t exist, this field will say "AGENT NOT FOUND!".'
-        }
+        return {"resp": "Response from the agent."}
 
     def run(self, id, message):
         if id not in self.agent.sub_agents:
@@ -60,11 +58,11 @@ class MessageAgent(_AgentMangerTool):
 class DeleteAgent(_AgentMangerTool):
     @property
     def args(self):
-        return {"id": "ID of the agent to delete"}
+        return {"id": "Agent id"}
 
     @property
     def resp(self):
-        return {"resp": "Whether the agent was deleted."}
+        return {"success": "true or false"}
 
     def run(self, id):
         try:

@@ -19,21 +19,13 @@ class Summarizer:
             spinner.hide()
         summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
-            summarry = chat([self._prompt(chunk, query)], max_tokens=300)
-            summaries.append(summarry)
-            if getattr(self, "agent", None):
-                self.agent.memory.add(summarry)
+            summary = chat([self._prompt(chunk, query)], max_tokens=300)
+            summaries.append(summary)
         summary = "\n".join(summaries)
-        while len(summary) > 2**12:
-            summaries = []
-            for chunk in tqdm(
-                list(self._chunk_text(summary)), desc="Shortening summary..."
-            ):
-                summaries.append(chat([self._prompt(chunk, query)], max_tokens=300))
-            summary = "\n".join(summaries)
+        summary = chat([self._prompt(chunk, query)], max_tokens=300)
         if spinner:
             spinner.show()
-        return summary
+        return summary, summaries
 
     def _count_tokens(self, text):
         return count_tokens(

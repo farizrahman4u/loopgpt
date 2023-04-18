@@ -1,10 +1,10 @@
 from loopgpt.constants import (
     DEFAULT_RESPONSE_FORMAT_,
-    SEED_INPUT,
+    INIT_PROMPT,
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
-    PROCEED_INPUT,
-    PROCEED_INPUT_SMALL,
+    NEXT_PROMPT,
+    NEXT_PROMPT_SMALL,
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
@@ -45,6 +45,8 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
+        self.init_prompt = INIT_PROMPT
+        self.next_prompt = NEXT_PROMPT
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -53,7 +55,7 @@ class Agent:
             if msg["role"] != "user"
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
-        return msgs[-n:]
+        return msgs[-n - 1 : -1]
 
     def get_full_prompt(self, user_input: str = ""):
         header = {"role": "system", "content": self.header_prompt()}
@@ -63,11 +65,11 @@ class Agent:
         }
         prompt = [header, dtime]
         msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 10) if len(msgs) > 5 else []
+        relevant_memory = self.memory.get(str(msgs), 5) if len(msgs) > 5 else []
         memory_added = False
         if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
-            token_limit = 1000
+            token_limit = 1500
             while relevant_memory:
                 memstr = "\n".join(relevant_memory)
                 context = {
@@ -90,9 +92,11 @@ class Agent:
             history = history[1:]
             prompt.pop(2)
             token_count = count_tokens(prompt + user_prompt, model=self.model)
-        if memory_added and len(prompt) > 3:
-            last_resp = prompt.pop(-2)
-            prompt.append(last_resp)
+        if memory_added and len(prompt) > 4:
+            sys_resp = prompt.pop(-2)
+            agent_resp = prompt.pop(-2)
+            prompt.append(agent_resp)
+            prompt.append(sys_resp)
         prompt += user_prompt
         return prompt, token_count
 
@@ -123,16 +127,18 @@ class Agent:
             except:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        for i in user_msgs[:-1]:
+        for i in user_msgs:
             entry = hist[i].copy()
             msg = entry["content"]
-            if msg in [PROCEED_INPUT, SEED_INPUT]:
-                entry["content"] = PROCEED_INPUT_SMALL
+            if msg in [self.next_prompt, self.init_prompt]:
+                entry["content"] = NEXT_PROMPT_SMALL
                 hist[i] = entry
         return hist
 
     @spinner
-    def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
+    def chat(self, message: Optional[str] = None, run_tool=False) -> Union[str, Dict]:
+        if message is None:
+            message = self.init_prompt
         if self.staging_tool:
             tool = self.staging_tool
             if run_tool:
@@ -147,9 +153,11 @@ class Agent:
                 output = self.run_staging_tool()
                 self.tool_response = output
                 if tool.get("name") != "do_nothing":
-                    self.memory.add(
-                        f"Command \"{tool['name']}\" with args {tool['args']} returned :\n {output}"
-                    )
+                    pass
+                    # TODO We dont have enough space for this in gpt3
+                    # self.memory.add(
+                    #     f"Command \"{tool['name']}\" with args {tool['args']} returned :\n {output}"
+                    # )
             else:
                 self.history.append(
                     {
@@ -157,9 +165,9 @@ class Agent:
                         "content": f"User did not approve running {tool.get('name', tool)}.",
                     }
                 )
-                self.memory.add(
-                    f"User disapproved running command \"{tool['name']}\" with args {tool['args']} with following feedback\n: {message}"
-                )
+                # self.memory.add(
+                #     f"User disapproved running command \"{tool['name']}\" with args {tool['args']} with following feedback\n: {message}"
+                # )
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
@@ -307,12 +315,7 @@ class Agent:
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
-        return (
-            f"You are {self.name}, {self.description}."
-            "Your decisions must always be made independently without"
-            " seeking user assistance. Play to your strengths as an LLM and pursue"
-            " simple strategies with no legal complications.\n"
-        )
+        return f"You are {self.name}, {self.description}."
 
     def goals_prompt(self):
         prompt = []
@@ -329,7 +332,7 @@ class Agent:
             prompt.append(f"{i + 1}. {tool.prompt()}")
         task_complete_command = {
             "name": "task_complete",
-            "description": "Execute this command when all given tasks are completed.",
+            "description": "Execute when all tasks are completed.",
             "args": {},
             "response_format": {"success": "true"},
         }

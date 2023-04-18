@@ -103,10 +103,14 @@ class Browser(BaseTool):
             links = self._extract_links_from_soup(soup)[:5]
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
-            summary = self.summarizer.summarize(text, query)
+            summary, chunks = self.summarizer.summarize(text, query)
+            if getattr(self, "agent", None):
+                for chunk in chunks:
+                    self.agent.memory.add(f"Snippet from {url}: {chunk}")
+
             return {
                 "text": summary,
-                "links": links,
+                "links": links[:5],
             }
         except Exception as e:
             return f"An error occured while scraping the website: {e}. Make sure the URL is valid."

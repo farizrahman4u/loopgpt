@@ -86,9 +86,13 @@ class SimpleBrowser(BaseTool):
         [script.extract() for script in soup(["script", "style"])]
         links = self._extract_links_from_soup(soup)[:5]
         text = self._extract_text_from_soup(soup)
-        summary = self.summarizer.summarize(text, question)
+        self.summarizer.agent = getattr(self, "agent", None)
+        summary, chunks = self.summarizer.summarize(text, question)
+        if getattr(self, "agent", None):
+            for chunk in chunks:
+                self.agent.memory.add(f"Snippet from {url}: {chunk}")
         self.agent.memory.add(summary)
         return {
             "text": summary,
-            "links": links,
+            "links": links[:5],
         }
