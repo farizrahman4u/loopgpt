@@ -29,7 +29,7 @@ class GoogleSearch(BaseTool):
                     f"Search result for {query}: [{result['title']}]({result['href']})"
                 )
             results.append([result["title"], result["href"], result["body"]])
-        return results
+        return {"results": results}
 
     def _google_search(self, query, num_results=8):
         from googleapiclient.discovery import build
@@ -50,7 +50,7 @@ class GoogleSearch(BaseTool):
             [result["title"], result["link"], result["snippet"]] for result in results
         ]
 
-        return results
+        return {"results": results}
 
     def run(self, query, num_results=8):
         try:
