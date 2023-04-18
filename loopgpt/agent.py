@@ -1,15 +1,19 @@
 from loopgpt.constants import (
     DEFAULT_CONSTRAINTS,
     DEFAULT_RESPONSE_FORMAT,
+    DEFAULT_RESPONSE_FORMAT_,
     DEFAULT_EVALUATIONS,
     DEFAULT_RESOURCES,
     SEED_INPUT,
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
+    PROCEED_INPUT,
+    PROCEED_INPUT_SMALL,
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
+from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
 from loopgpt.utils.spinner import spinner
@@ -71,57 +75,89 @@ class Agent:
                     break
                 relevant_memory = relevant_memory[:-1]
             prompt.append(context)
-        history = self.history
+        history = self._get_simplified_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         prompt = prompt[:2] + history + prompt[2:] + user_prompt
-        for p in prompt:
-            assert isinstance(p, dict), p
         token_limit = get_token_limit(self.model) - 1000  # 1000 reserved for response
         token_count = count_tokens(prompt, model=self.model)
-        while (
-            history[1:] and token_count > token_limit
-        ):  # keep at least 1 message from history
+        while history and token_count > token_limit:
             history = history[1:]
             prompt.pop(2)
             token_count = count_tokens(prompt, model=self.model)
         return prompt, token_count
 
+    def _get_simplified_history(self):
+        hist = self.history[:]
+        system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
+        for i in system_msgs[:-1]:
+            entry = hist[i].copy()
+            msg = entry["content"]
+            if msg.startswith("Response from "):
+                tool = msg[len("Response from ") :].split(":", 1)[0]
+                entry["content"] = f"<Response from {tool}>"
+                hist[i] = entry
+        assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
+        for i in assist_msgs[:-1]:
+            entry = hist[i].copy()
+            try:
+                respd = json.loads(entry["content"])
+                respd.pop("reasoning", None)
+                respd.pop("speak", None)
+                respd.pop("criticism", None)
+                respd.pop("plan", None)
+                entry["content"] = json.dumps(respd, indent=2)
+                hist[i] = entry
+            except:
+                pass
+        return hist
+
     @spinner
     def chat(self, message: str = SEED_INPUT, run_tool=False) -> Union[str, Dict]:
         if self.staging_tool:
+            tool = self.staging_tool
             if run_tool:
-                if self.staging_tool.get("name") == "task_complete":
+                if tool.get("name") == "task_complete":
                     self.history.append(
-                        {"role": "system", "content": "Completed all user specified tasks."}
+                        {
+                            "role": "system",
+                            "content": "Completed all user specified tasks.",
+                        }
                     )
                     message = ""
                 output = self.run_staging_tool()
                 self.tool_response = output
                 self.memory.add(
-                    f"Assistant reply: {self.staging_response}\nResult: {output}\nHuman Feedback: {message}"
+                    f"You ran command {tool['name']} with args {tool['args']} which returned following reponse\n: {output}"
                 )
+                # self.memory.add(
+                #     f"Assistant reply: {tool}\nResult: {output}"
+                # )
             else:
                 self.history.append(
                     {
                         "role": "system",
-                        "content": f"User did not approve running {self.staging_tool}.",
+                        "content": f"User did not approve running {tool.get('name', tool)}.",
                     }
                 )
                 self.memory.add(
-                    f"Assistant reply: {self.staging_response}\nResult: (User did not approve)\nHuman Feedback: {message}"
+                    f"User disapproved running command {tool['name']} with args {tool['args']} with following feedback\n: {message}"
                 )
+                # self.memory.add(
+                #     f"Assistant reply: {self.staging_response}\nResult: (User did not approve)\nHuman Feedback: {message}"
+                # )
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = get_token_limit(self.model)
+        maxt_tokens = max(1000, token_limit - token_count)
         resp = chat(
             full_prompt,
             model=self.model,
-            max_tokens=token_limit - token_count,
+            max_tokens=maxt_tokens,
             temperature=self.temperature,
         )
-        self.history.append({"role": "user", "content": message})
-        self.history.append({"role": "assistant", "content": resp})
+        if message == PROCEED_INPUT:
+            message = PROCEED_INPUT_SMALL
         try:
             resp = self._load_json(resp)
             if "name" in resp:
@@ -130,13 +166,24 @@ class Agent:
             self.staging_response = resp
         except Exception as e:
             pass
+        self.history.append({"role": "user", "content": message})
+        self.history.append(
+            {
+                "role": "assistant",
+                "content": json.dumps(resp) if isinstance(resp, dict) else resp,
+            }
+        )
         return resp
 
-    def _load_json(self, s):
-        if s.startswith("Assistant Reply {"):
-            s = s[len("Assistant Reply ") :]
+    def _extract_json_with_gpt(self, s):
+        func = "def convert_to_json(response: str) -> str:"
+        desc = f"""Convert the given string to a JSON string of the form \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the result can be parsed by Python json.loads."""
+        res = ai_function(func, desc, [s])
+        return res
+
+    def _load_json(self, s, try_gpt=True):
         if "Result: {" in s:
-            s = s.split("Result: {}", 1)[0] 
+            s = s.split("Result: ", 1)[0]
         if "{" not in s or "}" not in s:
             raise Exception()
         try:
@@ -150,10 +197,16 @@ class Agent:
                     s = s.replace("\n", " ")
                     return ast.literal_eval(s)
                 except Exception:
-                    s = s + "}"
                     try:
-                        return ast.literal_eval(s)
+                        return ast.literal_eval(s + "}")
                     except:
+                        if try_gpt:
+                            s = self._extract_json_with_gpt(s)
+                            try:
+                                s = ast.literal_eval(s)
+                                return s
+                            except:
+                                return self._load_json(s, try_gpt=False)
                         raise
 
     def last_user_input(self) -> str:
@@ -222,8 +275,6 @@ class Agent:
     def header_prompt(self):
         prompt = []
         prompt.append(self.persona_prompt())
-        if self.goals:
-            prompt.append(self.goals_prompt())
         if self.constraints:
             prompt.append(self.constraints_prompt())
         if self.tools:
@@ -232,6 +283,8 @@ class Agent:
             prompt.append(self.resources_prompt())
         if self.evaluations:
             prompt.append(self.evaluation_prompt())
+        if self.goals:
+            prompt.append(self.goals_prompt())
         prompt.append(self.response_format)
         return "\n".join(prompt) + "\n"
 
@@ -271,7 +324,7 @@ class Agent:
         }
         do_nothing_command = {
             "name": "do_nothing",
-            "description": "Do nothing. Use this command only when there is no action to be performed.",
+            "description": "Do nothing.",
             "args": {},
             "response_format": {"response": "Nothing Done."},
         }
@@ -363,5 +416,5 @@ class Agent:
             raise TypeError(f"Expected str or file like object. Received {type(f)}.")
         return cls.from_config(cfg)
 
-    def cli(self):
-        cli(self)
+    def cli(self, continuous=False):
+        cli(self, continuous=continuous)

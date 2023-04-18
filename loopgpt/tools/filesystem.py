@@ -108,5 +108,5 @@ FileSystemTools = [
     AppendToFile,
     DeleteFile,
     CheckIfFileExists,
-    ListFiles
+    ListFiles,
 ]

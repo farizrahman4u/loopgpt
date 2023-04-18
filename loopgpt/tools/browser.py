@@ -62,13 +62,13 @@ class Browser(BaseTool):
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape", "question": "The question"}
+        return {"url": "URL of the website to scrape", "query": "The search query"}
 
     @property
     def resp(self):
         return {
             "text": "Summary of relevant text scraped from the website",
-            "links": "list of links from the website, where each item is in the form `[link_text,link_url]`",
+            "links": "list of links from the website, where each item is in the form [link_text, link_url]",
         }
 
     def close(self):
@@ -77,13 +77,13 @@ class Browser(BaseTool):
         except Exception:
             pass
 
-    def run(self, url: str, question: str):
+    def run(self, url: str, query: str):
         soup = BeautifulSoup(self._get(url), "html.parser")
         [script.extract() for script in soup(["script", "style"])]
         links = self._extract_links_from_soup(soup)[:5]
         text = self._extract_text_from_soup(soup)
-        summary = self.summarizer.summarize(text, question)
-        self.agent.memory.add(summary)
+        self.summarizer.agent = getattr(self, "agent", None)
+        summary = self.summarizer.summarize(text, query)
         return {
             "text": summary,
             "links": links,

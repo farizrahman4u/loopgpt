@@ -110,7 +110,11 @@ def cli(agent, continuous=False):
                 if "reasoning" in thoughts:
                     msgs["reasoning"] = thoughts["reasoning"]
                 if "plan" in thoughts:
-                    msgs["plan"] = thoughts["plan"].split("\n")
+                    msgs["plan"] = (
+                        thoughts["plan"].split("\n")
+                        if isinstance(thoughts["plan"], str)
+                        else thoughts["plan"]
+                    )
                 if "criticism" in thoughts:
                     msgs["criticism"] = thoughts["criticism"]
                 if "speak" in thoughts:
@@ -119,14 +123,17 @@ def cli(agent, continuous=False):
                     print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
+                if not isinstance(command, dict):
+                    print("COMMAND:", command)
                 if "name" in command and "args" in command:
-                    print_line(
-                        "command",
-                        f"{command['name']}, Args: {command['args']}",
-                        end="\n\n",
-                    )
+                    if command["name"] != "do_nothing":
+                        print_line(
+                            "command",
+                            f"{command['name']}, Args: {command['args']}",
+                            end="\n\n",
+                        )
                     while True:
-                        if continuous:
+                        if continuous or command["name"] == "do_nothing":
                             yn = "y"
                         else:
                             yn = input(f"Execute? (Y/N): ")

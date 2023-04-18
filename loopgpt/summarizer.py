@@ -3,7 +3,7 @@ Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
 from typing import *
-from loopgpt.models.openai_ import chat
+from loopgpt.models.openai_ import chat, count_tokens
 
 
 class Summarizer:
@@ -13,14 +13,28 @@ class Summarizer:
     def summarize(self, text: str, query: str):
         summaries = []
         for chunk in self._chunk_text(text):
-            summaries.append(chat([self._prompt(chunk, query)], max_tokens=300))
+            summarry = chat([self._prompt(chunk, query)], max_tokens=300)
+            summaries.append(summarry)
+            if getattr(self, "agent", None):
+                self.agent.memory.add(summarry)
         summary = "\n".join(summaries)
-        while len(summary) > 2**13:
+        while len(summary) > 2**12:
             summaries = []
             for chunk in self._chunk_text(summary):
                 summaries.append(chat([self._prompt(chunk, query)], max_tokens=300))
             summary = "\n".join(summaries)
         return summary
+
+    def _count_tokens(self, text):
+        return count_tokens(
+            [
+                {
+                    "role": "system",
+                    "summary": text,
+                }
+            ],
+            self.model,
+        )
 
     def _chunk_text(self, text: str, chunk_size=2**12) -> List[str]:
         paras = text.split("\n")
