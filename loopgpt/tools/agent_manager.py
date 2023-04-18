@@ -30,9 +30,6 @@ class CreateAgent(_AgentMangerTool):
             name=name, description=f"An agent for performing this specific task: {task}"
         )
         agent.tools.clear()
-        agent.constraints.clear()
-        agent.evaluations.clear()
-        agent.resources.clear()
         id = uuid4().hex[:8]
         self.agent.sub_agents[id] = (Agent(), task)
         resp = agent.chat(prompt)

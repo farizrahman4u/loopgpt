@@ -26,21 +26,6 @@ DEFAULT_RESPONSE_FORMAT_ = {
 
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
-DEFAULT_EVALUATIONS = [
-    # "Make sure that the tools you use are aligned with your plan. THIS IS VERY IMPORTANT!",
-    "Continuously review and analyze your actions to ensure you are performing to the best of your abilities.",
-    "Constructively self-criticize your big-picture behavior constantly.",
-    "Reflect on past decisions and strategies to refine your approach.",
-    "Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.",
-]
-
-DEFAULT_EVALUATIONS = []
-
-SEED_INPUT = (
-    "Determine which next command to use, and respond using the"
-    " format specified above:"
-)
-
 
 DEFAULT_RESOURCES = [
     "Internet access for searches and information gathering.",
@@ -52,19 +37,32 @@ PROCEED_INPUT_SMALL = "GENERATE NEXT COMMAND JSON."
 
 
 PROCEED_INPUT = (
-    "Do the following:\n"
-    + "1 - Check if the goals specified above have been achieved.\n"
-    + "1.1 - If goals are achieved, execute the \"task_complete\" command.\n"
-    + "1.2 - If goals are not achieved, execute the next command in your plan.\n"
-    + "2 - DO NOT REPEAT COMMANDS.\n"
+ 
+    # "Constraints:\n"
+    # + "\n".join([f"{i+1} - {c}" for i, c in enumerate(DEFAULT_CONSTRAINTS)]) + "\n\n"
+    # + "Resources:\n"
+    # + "\n".join([f"{i+1} - {c}" for i, c in enumerate(DEFAULT_RESOURCES)]) + "\n\n"
+    "INSTRUCTIONS:\n"
+    + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
+    + "2 - exclusively use available commmands to work towards the goals.\n"
     + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
-    + "4 - Refer to outputs of previous commands before executing commands."
-    + "4 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
-    + "5 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
-    + "6 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + "4 - A command is considered executed only if it is confirmed by a system message.\n"
+    # + "5 - A command is not considered executed just becauses it was in your plan.\n"
+    # + "5 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
+    + "5 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
+    + "6 - Execute the \"do_nothing\" command ONLY if there is no other command to execute.\n"
+    + "7 - Once all the planned commands are executed and ALL the goals are achieved, execute the \"task_complete\" command.\n"
+    + "8 - Explicitly associate a command with each step in your plan.\n"
+    + "9 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
 )
 
+
+# PROCEED_INPUT = (
+#     "INSTRUCTIONS:\n"
+#     + "1 - Have you progressed towards your goals?\n"
+#     + "1.1 - "
+# )
 
 SEED_INPUT = (
     "Do the following:\n"

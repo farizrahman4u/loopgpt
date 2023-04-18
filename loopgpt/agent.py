@@ -1,8 +1,6 @@
 from loopgpt.constants import (
-    DEFAULT_CONSTRAINTS,
     DEFAULT_RESPONSE_FORMAT,
     DEFAULT_RESPONSE_FORMAT_,
-    DEFAULT_EVALUATIONS,
     DEFAULT_RESOURCES,
     SEED_INPUT,
     DEFAULT_AGENT_NAME,
@@ -43,9 +41,6 @@ class Agent:
         self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
-        self.constraints = DEFAULT_CONSTRAINTS[:]
-        self.evaluations = DEFAULT_EVALUATIONS[:]
-        self.resources = DEFAULT_RESOURCES[:]
         self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
         tools = [tool_type() for tool_type in builtin_tools()]
@@ -55,7 +50,7 @@ class Agent:
         self.tool_response = None
 
     def _get_non_user_messages(self, n):
-        msgs = [msg for msg in self.history if msg["role"] != "user"]
+        msgs = [msg for msg in self.history if msg["role"] != "user" and not (msg["role"] == "system" and "do_nothing" in msg["content"])]
         return msgs[-n:]
 
     def get_full_prompt(self, user_input: str = ""):
@@ -65,11 +60,11 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         prompt = [header, dtime]
-        relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10)
+        relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10) if len(self.history) > 5 else []
         memory_added = False
-        if relevant_memory:
+        if relevant_memory and False:
             # Add as many documents from memory as possible while staying under the token limit
-            token_limit = 2500
+            token_limit = 1000
             while relevant_memory:
                 memstr = "\n".join(relevant_memory)
                 context = {
@@ -80,20 +75,22 @@ class Agent:
                 if token_count < token_limit:
                     break
                 relevant_memory = relevant_memory[:-1]
-            memory_added = True
-            prompt.append(context)
+            if relevant_memory:
+                memory_added = True
+                prompt.append(context)
         history = self._get_compressed_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
-        prompt = prompt[:2] + history + prompt[2:] + user_prompt
+        prompt = prompt[:2] + history + prompt[2:]
         token_limit = get_token_limit(self.model) - 1000  # 1000 reserved for response
-        token_count = count_tokens(prompt, model=self.model)
-        while history and token_count > token_limit:
+        token_count = count_tokens(prompt + user_prompt, model=self.model)
+        while history[:-1] and token_count > token_limit:
             history = history[1:]
             prompt.pop(2)
-            token_count = count_tokens(prompt, model=self.model)
+            token_count = count_tokens(prompt + user_prompt, model=self.model)
         if memory_added and len(prompt) > 3:
             last_resp = prompt.pop(-2)
             prompt.append(last_resp)
+        prompt += user_prompt
         return prompt, token_count
 
     def _get_compressed_history(self):
@@ -116,8 +113,8 @@ class Agent:
                     thoughts.pop("reasoning", None)
                     thoughts.pop("speak", None)
                     thoughts.pop("criticism", None)
-                    if i != 0 and i < len(assist_msgs) - 2:
-                        thoughts.pop("plan", None)
+                    # if False and i < len(assist_msgs) - 2:
+                    thoughts.pop("text", None)
                 entry["content"] = json.dumps(respd, indent=2)
                 hist[i] = entry
             except:
@@ -129,7 +126,6 @@ class Agent:
             if msg in [PROCEED_INPUT, SEED_INPUT]:
                 entry["content"] = PROCEED_INPUT_SMALL
                 hist[i] = entry
-        hist = [h for h in hist if not (h["role"] == "system" and "do_nothing" in h["content"])]
         return hist
 
     @spinner
@@ -149,7 +145,7 @@ class Agent:
                 self.tool_response = output
                 if tool.get("name") != "do_nothing":
                     self.memory.add(
-                        f"You ran command {tool['name']} with args {tool['args']} which returned following reponse:\n {output}"
+                        f"Command \"{tool['name']}\" with args {tool['args']} returned :\n {output}"
                     )
             else:
                 self.history.append(
@@ -159,7 +155,7 @@ class Agent:
                     }
                 )
                 self.memory.add(
-                    f"User disapproved running command {tool['name']} with args {tool['args']} with following feedback\n: {message}"
+                    f"User disapproved running command \"{tool['name']}\" with args {tool['args']} with following feedback\n: {message}"
                 )
             self.staging_tool = None
             self.staging_response = None
@@ -167,7 +163,8 @@ class Agent:
         token_limit = get_token_limit(self.model)
         maxt_tokens = max(1000, token_limit - token_count)
         print("=================")
-        print(full_prompt)
+        for p in full_prompt:
+            print(p)
         print("=================")
         resp = chat(
             full_prompt,
@@ -271,7 +268,7 @@ class Agent:
                     found = True
                     break
             if not found:
-                resp = f"Command {tool_id} does not exist."
+                resp = f"Command \"{tool_id}\" does not exist."
                 self.history.append(
                     {"role": "system", "content": resp}
                 )
@@ -279,7 +276,7 @@ class Agent:
             try:
                 resp = tool.run(**kwargs)
             except Exception as e:
-                resp  = f"Command '{tool_id}' failed with error: {e}"
+                resp  = f"Command \"{tool_id}\" failed with error: {e}"
                 self.history.append(
                     {
                         "role": "system",
@@ -290,7 +287,7 @@ class Agent:
         self.history.append(
             {
                 "role": "system",
-                "content": f"Command {tool_id} with args {json.dumps(args)} returned the following response:\n{json.dumps(resp)}",
+                "content": f"Command \"{tool_id}\" with args {json.dumps(args)} returned:\n{json.dumps(resp)}",
             }
         )
         return resp
@@ -306,14 +303,8 @@ class Agent:
     def header_prompt(self):
         prompt = []
         prompt.append(self.persona_prompt())
-        if self.constraints:
-            prompt.append(self.constraints_prompt())
         if self.tools:
             prompt.append(self.tools_prompt())
-        if self.resources:
-            prompt.append(self.resources_prompt())
-        if self.evaluations:
-            prompt.append(self.evaluation_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
         # prompt.append(self.response_format)
@@ -323,7 +314,7 @@ class Agent:
         return (
             f"You are {self.name}, {self.description}."
             "Your decisions must always be made independently without"
-            "seeking user assistance. Play to your strengths as an LLM and pursue"
+            " seeking user assistance. Play to your strengths as an LLM and pursue"
             " simple strategies with no legal complications.\n"
         )
 
@@ -332,13 +323,6 @@ class Agent:
         prompt.append(f"GOALS:")
         for i, g in enumerate(self.goals):
             prompt.append(f"{i + 1}. {g}")
-        return "\n".join(prompt) + "\n"
-
-    def constraints_prompt(self):
-        prompt = []
-        prompt.append("Constraints:")
-        for i, constraint in enumerate(self.constraints):
-            prompt.append(f"{i + 1}. {constraint}")
         return "\n".join(prompt) + "\n"
 
     def tools_prompt(self):
@@ -370,12 +354,6 @@ class Agent:
             prompt.append(f"{i + 1}. {res}")
         return "\n".join(prompt) + "\n"
 
-    def evaluation_prompt(self):
-        prompt = []
-        prompt.append("Performance Evaluation:")
-        for i, evaln in enumerate(self.evaluations):
-            prompt.append(f"{i + 1}. {evaln}")
-        return "\n".join(prompt) + "\n"
 
     def config(self, include_state=True):
         cfg = {
@@ -387,8 +365,6 @@ class Agent:
             "model": self.model,
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
-            "constraints": list(self.constraints),
-            "evaluations": list(self.evaluations),
         }
         if include_state:
             cfg.update(
@@ -412,8 +388,6 @@ class Agent:
         agent.temperature = config["temperature"]
         agent.model = config["model"]
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
-        agent.constraints = config["constraints"][:]
-        agent.evaluations = config["evaluations"][:]
         agent.sub_agents = {
             k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()
         }
