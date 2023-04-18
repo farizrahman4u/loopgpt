@@ -56,8 +56,12 @@ PROCEED_INPUT = (
     + "1 - Check if the goals specified above have been achieved.\n"
     + "1.1 - If goals are achieved, execute the \"task_complete\" command.\n"
     + "1.2 - If goals are not achieved, execute the next best command to achieve the goals.\n"
-    + "2 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
-    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + "2 - DO NOT REPEAT COMMANDS.\n"
+    + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
+    + "4 - Refer to outputs of previous commands before executing commands."
+    + "4 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
+    + "5 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
+    + "6 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
 )
 

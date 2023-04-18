@@ -66,7 +66,7 @@ class Agent:
         }
         prompt = [header, dtime]
         relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10)
-        if relevant_memory:
+        if relevant_memory and False:
             # Add as many documents from memory as possible while staying under the token limit
             token_limit = 2500
             while relevant_memory:
@@ -243,6 +243,7 @@ class Agent:
             )
             return resp
         tool_id = self.staging_tool["name"]
+        args = self.staging_tool.get("args", {})
         if tool_id == "task_complete":
             resp = {"success": True}
         elif tool_id == "do_nothing":
@@ -283,7 +284,7 @@ class Agent:
         self.history.append(
             {
                 "role": "system",
-                "content": f"{tool_id} returned the following response:\n{json.dumps(resp)}",
+                "content": f"Command {tool_id} with args {json.dumps(args)} returned the following response:\n{json.dumps(resp)}",
             }
         )
         return resp
