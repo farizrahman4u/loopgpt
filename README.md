@@ -1,10 +1,7 @@
 
-<p align="center">
-<img src="/docs/assets/imgs/logo.svg?raw=true" width=100>
-</p>
 <H1>
 <p align="center">
-  ⭕LoopGPT⭕
+  L⭕⭕pGPT
 </p>
 </H1>
 <p align="center">
