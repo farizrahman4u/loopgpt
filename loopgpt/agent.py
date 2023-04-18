@@ -54,6 +54,10 @@ class Agent:
         self.staging_response = None
         self.tool_response = None
 
+    def _get_non_user_messages(self, n):
+        msgs = [msg for msg in self.history if msg["role"] != "user"]
+        return msgs[-n:]
+
     def get_full_prompt(self, user_input: str = ""):
         header = {"role": "system", "content": self.header_prompt()}
         dtime = {
@@ -61,7 +65,7 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         prompt = [header, dtime]
-        relevant_memory = self.memory.get(str(self.history[-10:]), 10)
+        relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10)
         if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
             token_limit = 2500
@@ -102,10 +106,13 @@ class Agent:
             entry = hist[i].copy()
             try:
                 respd = json.loads(entry["content"])
-                respd.pop("reasoning", None)
-                respd.pop("speak", None)
-                respd.pop("criticism", None)
-                respd.pop("plan", None)
+                thoughts = respd.get("thoughts")
+                if thoughts:
+                    thoughts.pop("reasoning", None)
+                    thoughts.pop("speak", None)
+                    thoughts.pop("criticism", None)
+                    if i != 0 and i < len(assist_msgs) - 2:
+                        thoughts.pop("plan", None)
                 entry["content"] = json.dumps(respd, indent=2)
                 hist[i] = entry
             except:

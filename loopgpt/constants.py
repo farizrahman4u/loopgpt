@@ -57,7 +57,7 @@ PROCEED_INPUT = (
     + "1.1 - If goals are achieved, execute the \"task_complete\" command.\n"
     + "1.2 - If goals are not achieved, execute the next best command to achieve the goals.\n"
     + "2 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
-    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT:\n"
+    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
 )
 
@@ -66,7 +66,7 @@ SEED_INPUT = (
     "Do the following:\n"
     + "1 - Execute the next best command to achieve the goals.\n"
     + "2 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
-    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT:\n"
+    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
 )
 
