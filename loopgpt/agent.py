@@ -1,7 +1,5 @@
 from loopgpt.constants import (
-    DEFAULT_RESPONSE_FORMAT,
     DEFAULT_RESPONSE_FORMAT_,
-    DEFAULT_RESOURCES,
     SEED_INPUT,
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
@@ -41,7 +39,6 @@ class Agent:
         self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
-        self.response_format = DEFAULT_RESPONSE_FORMAT
         self.history = []
         tools = [tool_type() for tool_type in builtin_tools()]
         self.tools = {tool.id: tool for tool in tools}
@@ -50,7 +47,12 @@ class Agent:
         self.tool_response = None
 
     def _get_non_user_messages(self, n):
-        msgs = [msg for msg in self.history if msg["role"] != "user" and not (msg["role"] == "system" and "do_nothing" in msg["content"])]
+        msgs = [
+            msg
+            for msg in self.history
+            if msg["role"] != "user"
+            and not (msg["role"] == "system" and "do_nothing" in msg["content"])
+        ]
         return msgs[-n:]
 
     def get_full_prompt(self, user_input: str = ""):
@@ -60,9 +62,10 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         prompt = [header, dtime]
-        relevant_memory = self.memory.get(str(self._get_non_user_messages(10)), 10) if len(self.history) > 5 else []
+        msgs = self._get_non_user_messages(10)
+        relevant_memory = self.memory.get(str(msgs), 10) if len(msgs) > 5 else []
         memory_added = False
-        if relevant_memory and False:
+        if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
             token_limit = 1000
             while relevant_memory:
@@ -91,6 +94,8 @@ class Agent:
             last_resp = prompt.pop(-2)
             prompt.append(last_resp)
         prompt += user_prompt
+        print("History: ", f"{len(history)}/{len(self.history)}")
+        print("Relevant memory: ", len(relevant_memory))
         return prompt, token_count
 
     def _get_compressed_history(self):
@@ -268,15 +273,13 @@ class Agent:
                     found = True
                     break
             if not found:
-                resp = f"Command \"{tool_id}\" does not exist."
-                self.history.append(
-                    {"role": "system", "content": resp}
-                )
+                resp = f'Command "{tool_id}" does not exist.'
+                self.history.append({"role": "system", "content": resp})
                 return resp
             try:
                 resp = tool.run(**kwargs)
             except Exception as e:
-                resp  = f"Command \"{tool_id}\" failed with error: {e}"
+                resp = f'Command "{tool_id}" failed with error: {e}'
                 self.history.append(
                     {
                         "role": "system",
@@ -287,7 +290,7 @@ class Agent:
         self.history.append(
             {
                 "role": "system",
-                "content": f"Command \"{tool_id}\" with args {json.dumps(args)} returned:\n{json.dumps(resp)}",
+                "content": f'Command "{tool_id}" with args {json.dumps(args)} returned:\n{json.dumps(resp)}',
             }
         )
         return resp
@@ -307,7 +310,6 @@ class Agent:
             prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
-        # prompt.append(self.response_format)
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
@@ -353,7 +355,6 @@ class Agent:
         for i, res in enumerate(self.resources):
             prompt.append(f"{i + 1}. {res}")
         return "\n".join(prompt) + "\n"
-
 
     def config(self, include_state=True):
         cfg = {

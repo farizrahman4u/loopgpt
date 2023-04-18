@@ -26,7 +26,9 @@ class Summarizer:
         summary = "\n".join(summaries)
         while len(summary) > 2**12:
             summaries = []
-            for chunk in tqdm(list(self._chunk_text(summary)), desc="Shortening summary..."):
+            for chunk in tqdm(
+                list(self._chunk_text(summary)), desc="Shortening summary..."
+            ):
                 summaries.append(chat([self._prompt(chunk, query)], max_tokens=300))
             summary = "\n".join(summaries)
         if spinner:
