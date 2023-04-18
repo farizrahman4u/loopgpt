@@ -1,7 +1,7 @@
 
 <H1>
 <p align="center">
-  L⭕⭕pGPT
+  L⭕⭕PGPT
 </p>
 </H1>
 <p align="center">
