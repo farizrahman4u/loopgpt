@@ -64,6 +64,7 @@ def print_line(speaker, line, end="\n"):
         for i, l in enumerate(line):
             print(indent + l, end=end if i == len(line) - 1 else "\n")
     else:
+        line = str(line)
         print(f"{profiles[speaker]}: {Style.RESET_ALL}{line}", end=end)
 
 

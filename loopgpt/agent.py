@@ -53,7 +53,7 @@ class Agent:
             if msg["role"] != "user"
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
-        return msgs[-n:]
+        return msgs[-n-1:-1]
 
     def get_full_prompt(self, user_input: str = ""):
         header = {"role": "system", "content": self.header_prompt()}
@@ -63,11 +63,15 @@ class Agent:
         }
         prompt = [header, dtime]
         msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 10) if len(msgs) > 5 else []
+        relevant_memory = self.memory.get(str(msgs), 5) if len(msgs) > 5 else []
+        print("RELEVANT MEMEORY===")
+        print(relevant_memory)
+        print("===")
+        print("Initial relevant memory: ", len(relevant_memory))
         memory_added = False
         if relevant_memory:
             # Add as many documents from memory as possible while staying under the token limit
-            token_limit = 1000
+            token_limit = 1500
             while relevant_memory:
                 memstr = "\n".join(relevant_memory)
                 context = {
@@ -75,10 +79,12 @@ class Agent:
                     "content": f"This reminds you of these events from your past:\n{memstr}\n",
                 }
                 token_count = count_tokens(prompt + [context], model=self.model)
+                print("-----", token_count)
                 if token_count < token_limit:
                     break
                 relevant_memory = relevant_memory[:-1]
             if relevant_memory:
+                print("Token count after memory: ", token_count)
                 memory_added = True
                 prompt.append(context)
         history = self._get_compressed_history()
@@ -90,12 +96,15 @@ class Agent:
             history = history[1:]
             prompt.pop(2)
             token_count = count_tokens(prompt + user_prompt, model=self.model)
-        if memory_added and len(prompt) > 3:
-            last_resp = prompt.pop(-2)
-            prompt.append(last_resp)
+        if memory_added and len(prompt) > 4:
+            sys_resp = prompt.pop(-2)
+            agent_resp = prompt.pop(-2)
+            prompt.append(agent_resp)
+            prompt.append(sys_resp)
         prompt += user_prompt
         print("History: ", f"{len(history)}/{len(self.history)}")
         print("Relevant memory: ", len(relevant_memory))
+        print("Total token count: ", token_count)
         return prompt, token_count
 
     def _get_compressed_history(self):
@@ -125,7 +134,7 @@ class Agent:
             except:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        for i in user_msgs[:-1]:
+        for i in user_msgs:
             entry = hist[i].copy()
             msg = entry["content"]
             if msg in [PROCEED_INPUT, SEED_INPUT]:
@@ -149,9 +158,11 @@ class Agent:
                 output = self.run_staging_tool()
                 self.tool_response = output
                 if tool.get("name") != "do_nothing":
-                    self.memory.add(
-                        f"Command \"{tool['name']}\" with args {tool['args']} returned :\n {output}"
-                    )
+                    pass
+                    # TODO We dont have enough space for this in gpt3
+                    # self.memory.add(
+                    #     f"Command \"{tool['name']}\" with args {tool['args']} returned :\n {output}"
+                    # )
             else:
                 self.history.append(
                     {
@@ -159,9 +170,9 @@ class Agent:
                         "content": f"User did not approve running {tool.get('name', tool)}.",
                     }
                 )
-                self.memory.add(
-                    f"User disapproved running command \"{tool['name']}\" with args {tool['args']} with following feedback\n: {message}"
-                )
+                # self.memory.add(
+                #     f"User disapproved running command \"{tool['name']}\" with args {tool['args']} with following feedback\n: {message}"
+                # )
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
@@ -315,9 +326,6 @@ class Agent:
     def persona_prompt(self):
         return (
             f"You are {self.name}, {self.description}."
-            "Your decisions must always be made independently without"
-            " seeking user assistance. Play to your strengths as an LLM and pursue"
-            " simple strategies with no legal complications.\n"
         )
 
     def goals_prompt(self):
@@ -335,7 +343,7 @@ class Agent:
             prompt.append(f"{i + 1}. {tool.prompt()}")
         task_complete_command = {
             "name": "task_complete",
-            "description": "Execute this command when all given tasks are completed.",
+            "description": "Execute when all tasks are completed.",
             "args": {},
             "response_format": {"success": "true"},
         }
