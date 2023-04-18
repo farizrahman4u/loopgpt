@@ -4,14 +4,6 @@ import json
 Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
-DEFAULT_CONSTRAINTS = [
-    "Your short term memory is very short, so immediately save important information to files.",
-    # "If you are unsure how you previously did something or want to recall past events, thinking about similar events will help you remember.",
-    "No user assistance.",
-    'Exclusively use the commands listed in double quotes e.g. "command name"',
-    # "DO NOT change your plan of action mid-way through a task.",
-    # "Prioritize specific tools over generic tools for performing tasks.",
-]
 
 DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
@@ -26,12 +18,6 @@ DEFAULT_RESPONSE_FORMAT_ = {
 
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
-
-DEFAULT_RESOURCES = [
-    "Internet access for searches and information gathering.",
-    "Long Term memory management.",
-    "GPT-3.5 powered Agents for delegation of simple tasks.",
-]
 
 PROCEED_INPUT_SMALL = "GENERATE NEXT COMMAND JSON."
 
@@ -69,19 +55,22 @@ PROCEED_INPUT = (
     + "5 - A command is not considered executed just becauses it was in your plan.\n"
     + "6 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
     + "7 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
-    + "8 - Execute the \"do_nothing\" command ONLY if there is no other command to execute.\n"
-    + "9 - Once all the planned commands are executed and ALL the goals are achieved, execute the \"task_complete\" command.\n"
+    + '8 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
+    + '9 - Once all the planned commands are executed and ALL the goals are achieved, execute the "task_complete" command.\n'
     + "10 - Explicitly associate a command with each step in your plan.\n"
     + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
-    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
+    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+    + "\n"
 )
+
 
 SEED_INPUT = (
     "Do the following:\n"
     + "1 - Execute the next best command to achieve the goals.\n"
-    + "2 - Execute the \"do_nothing\" command if there is no other command to execute.\n"
+    + '2 - Execute the "do_nothing" command if there is no other command to execute.\n'
     + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
-    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4) + "\n"
+    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+    + "\n"
 )
 
 
