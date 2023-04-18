@@ -1,7 +1,7 @@
 
 <H1>
 <p align="center">
-  L➰➰PGPT
+  l➿pgpt
 </p>
 </H1>
 <p align="center">
