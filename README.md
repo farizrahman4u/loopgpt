@@ -8,7 +8,6 @@
     <b>A Modular Auto-GPT Framework</b>
 </p>
 
-[![Discord](https://dcbadge.vercel.app/api/server/zkspfFwqDg)](https://discord.gg/zkspfFwqDg)
 
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
@@ -292,4 +291,4 @@ We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 
 ## 🌳 Community
 
-Join our [Community Slack](https://join.slack.com/t/lpgptcommunity/shared_invite/zt-1tsew1e4g-WgHfFLSzWF~a0PVq8QXcoQ)
+Join our [Discord](https://discord.gg/X7N8eH4h)
