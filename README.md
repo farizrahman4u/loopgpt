@@ -17,12 +17,12 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 2. **GPT 3.5 friendly** - Better results than Auto-GPT for those who don't have GPT-4 access yet!
 3. **Minimal prompt overhead** - Every token counts. We are continuously working on getting the best results with the least possible number of tokens.
 4. **Human in the Loop** - Ability to "course correct" agents who go astray via human feedback.
-5. **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
+5. **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including memory and the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
 
 
-## 🛠️ Installation
+## 🧑‍💻 Installation
 
-### 🧑‍💻 Install from PyPI
+### Install from PyPI
 
 ```bash
 pip install loopgpt
@@ -100,7 +100,7 @@ You can save the agent's state to a json file with:
 agent.save("ResearchGPT.json")
 ```
 
-This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, tools states etc).
+This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, memory, tools states etc).
 You can also save just the confifguration by passing `include_state=False` to `agent.save()`:
 
 ```python
