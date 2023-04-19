@@ -8,7 +8,6 @@
     <b>A Modular Auto-GPT Framework</b>
 </p>
 
-
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
 ## 🚀 Features 🚀
@@ -128,6 +127,13 @@ agent_config = agent.config()
 ```
 
 To get just the configuration without the internal state:
+
+```python
+agent_config = agent.config(include_state=False)
+```
+
+
+And to reload the agent from the config:
 
 ```python
 import loopgpt
