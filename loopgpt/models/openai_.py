@@ -6,7 +6,9 @@ import os
 
 
 def _getkey(key: Optional[str] = None):
-    return key or os.environ["OPENAI_API_KEY"]
+    key = key or os.getenv("OPENAI_API_KEY")
+    if key is None:
+        raise ValueError("OpenAI API Key not found. Please set the `OPENAI_API_KEY` environment variable.")
 
 
 def chat(
