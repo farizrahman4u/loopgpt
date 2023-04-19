@@ -237,7 +237,7 @@ agent.tools[weather_tool.id] = weather_tool
 agent.cli()
 ```
 
-Let's take a look at `dressing_tips.txt` that WeatherGPT wrote for us:
+Let's take a look at the `dressing_tips.txt` file that WeatherGPT wrote for us:
 
 dressing_tips.txt
 ```
@@ -259,7 +259,7 @@ For official google search support:
 - [Google Custom Search Engine ID](https://cse.google.com/cse/create/new) (also for Google Search)
     - Set environment variable `CUSTOM_SEARCH_ENGINE_ID` to the CSE ID
 
-In case these are absent, LoopGPT will fall back to using [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/)
+In case these are absent, L♾️pGPT will fall back to using [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/)
 
 
 ## 💌 Contribute 
