@@ -9,10 +9,13 @@
 </p>
 
 <p align="center">
-    <a href="https://join.slack.com/t/lpgptcommunity/shared_invite/zt-1tsew1e4g-WgHfFLSzWF~a0PVq8QXcoQ">
-        <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white">
+    <a href="https://discord.gg/rqs26cqx7v">
+        <img src="https://img.shields.io/discord/1098162593291587594?style=for-the-badge">
     </a>
 </p>
+
+
+
 
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
@@ -129,7 +132,7 @@ from loopgpt.tools import BaseTool
 class GetWeather(BaseTool):
     @property
     def args(self):
-        return {"city": "A string with the name of the city"}
+        return {"city": "name of the city"}
     
     @property
     def resp(self):
@@ -172,7 +175,7 @@ class GetWeather(BaseTool):
             data = {"report": dict(zip(keys, data))}
             return data
         except Exception as e:
-            return f"An error occured while getting the weather: {e}."
+            return {"report": f"An error occured while getting the weather: {e}."}
 ```
 
 That's it! You've built your first custom tool. Let's register it with a new agent and run it:
@@ -302,4 +305,4 @@ We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 
 ## 🌳 Community
 
-Join our [Community Slack](https://join.slack.com/t/lpgptcommunity/shared_invite/zt-1tsew1e4g-WgHfFLSzWF~a0PVq8QXcoQ)
+Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
