@@ -291,4 +291,4 @@ We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 
 ## 🌳 Community
 
-Join our [Discord](https://discord.gg/X7N8eH4h)
+Join our [Discord](https://discord.gg/rqs26cqx7v)
