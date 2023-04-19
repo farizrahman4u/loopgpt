@@ -8,7 +8,6 @@
     <b>A Modular Auto-GPT Framework</b>
 </p>
 
-
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
 ## 🚀 Features 🚀
@@ -133,6 +132,15 @@ agent_config = agent.config(include_state=False)
 ```
 
 
+To reload the agent from the config, use:
+
+```python
+import loopgpt
+
+agent = loopgpt.Agent.from_config(agent_config)
+```
+
+
 ## ⚒️ Adding custom tools ⚒️
 
 L♾️pGPT agents come with a set of builtin tools which allows them to perform variouos basic tasks such as searching the web, filesystem operations, etc. You can view these tools with `print(agent.tools)`.
@@ -205,6 +213,7 @@ That's it! You've built your first custom tool. Let's register it with a new age
 
 ```python
 import loopgpt
+
 # Create Agent
 agent = loopgpt.Agent()
 agent.name = "WeatherGPT"
@@ -255,7 +264,7 @@ In case these are absent, LoopGPT will fall back to using [DuckDuckGo Search](ht
 
 ## 💌 Contribute 
 
-Contributions are welcome! Please open an issue or a PR if you'd like to contribute.
+We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 
 ## 🌳 Community
 
