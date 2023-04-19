@@ -131,7 +131,7 @@ from loopgpt.tools import BaseTool
 class GetWeather(BaseTool):
     @property
     def args(self):
-        return {"city": "A string with the name of the city"}
+        return {"city": "name of the city"}
     
     @property
     def resp(self):
