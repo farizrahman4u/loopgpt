@@ -12,11 +12,11 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 
 ## 🚀 Features 🚀
 
-1. **"Plug N Play" API** - Extensible and modular "Pythonic" framework, not just a command line tool. Easy to add new features, integrations and custom agent capabilities, all from python code, no nasty config files!
-2. **GPT 3.5 friendly** - Better results than Auto-GPT for those who don't have GPT-4 access yet!
-3. **Minimal prompt overhead** - Every token counts. We are continuously working on getting the best results with the least possible number of tokens.
-4. **Human in the Loop** - Ability to "course correct" agents who go astray via human feedback.
-5. **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including memory and the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
+*  **"Plug N Play" API** - Extensible and modular "Pythonic" framework, not just a command line tool. Easy to add new features, integrations and custom agent capabilities, all from python code, no nasty config files!
+*  **GPT 3.5 friendly** - Better results than Auto-GPT for those who don't have GPT-4 access yet!
+*  **Minimal prompt overhead** - Every token counts. We are continuously working on getting the best results with the least possible number of tokens.
+*  **Human in the Loop** - Ability to "course correct" agents who go astray via human feedback.
+*  **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including memory and the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
 
 
 ## 🧑‍💻 Installation
