@@ -139,6 +139,8 @@ def cli(agent, continuous=False):
                             yn = "y"
                         else:
                             yn = input(f"Execute? (Y/N): ")
+                            if yn.lower().strip() == "exit":
+                                return
                             yn = yn.lower().strip()
                         if yn in ("y", "n"):
                             break
@@ -154,6 +156,8 @@ def cli(agent, continuous=False):
                         feedback = input(
                             "Enter feedback (Why not execute the command?): "
                         )
+                        if feedback.lower().strip() == "exit":
+                            return
                         resp = agent.chat(feedback, False)
                     write_divider()
                     continue

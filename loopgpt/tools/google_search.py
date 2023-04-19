@@ -7,7 +7,7 @@ class GoogleSearch(BaseTool):
     def __init__(self):
         super(GoogleSearch, self).__init__()
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
-        self.google_cx_id = os.getenv("GOOGLE_CX_ID")
+        self.google_cx_id = os.getenv("CUSTOM_SEARCH_ENGINE_ID")
 
     @property
     def args(self):
