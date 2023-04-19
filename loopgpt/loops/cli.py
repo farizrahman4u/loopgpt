@@ -23,6 +23,11 @@ def main():
         "--save",
         help="Filename to save the agent. Only applicable when `filename` is not specified.",
     )
+    parser.add_argument(
+        "--continuous",
+        help="If continuous mode is enabled, the agent will not ask user for permission to execute a command. Use it at your own risk!",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
@@ -44,7 +49,7 @@ def main():
                 json.dump(agent.config(), f)
     else:
         agent = Agent()
-        agent.cli()
+        agent.cli(continuous=args.continuous)
 
         if args.save:
             with open(args.save, "w") as f:

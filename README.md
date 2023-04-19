@@ -88,6 +88,14 @@ You can exit the CLI by typing "exit".
 
 <img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true" height="350">
 
+### 🔁 Continuous Mode 🔁
+
+If `continuous` is set to `True`, the agent will not ask for the user's permission to execute commands. It may go into infinite loops, so use it at your own risk!
+
+```python
+agent.cli(continuous=True)
+```
+
 ### 💻 Command Line Only Mode
 
 You can run L♾️pGPT directly from the command line without having to write any python code as well:
@@ -97,14 +105,6 @@ loopgpt run
 ```
 
 Run `loopgpt --help` to see all the available options.
-
-### 🔁 Continuous Mode 🔁
-
-If `continuous` is set to `True`, the agent will not ask for the user's permission to execute commands. It may go into infinite loops, so use it at your own risk!
-
-```python
-agent.cli(continuous=True)
-```
 
 ## ⚒️ Adding custom tools ⚒️
 
