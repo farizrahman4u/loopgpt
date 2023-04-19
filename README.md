@@ -8,11 +8,7 @@
     <b>A Modular Auto-GPT Framework</b>
 </p>
 
-<p align="center">
-    <a href="https://join.slack.com/t/lpgptcommunity/shared_invite/zt-1tsew1e4g-WgHfFLSzWF~a0PVq8QXcoQ">
-        <img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white">
-    </a>
-</p>
+[![Discord](https://dcbadge.vercel.app/api/server/zkspfFwqDg)](https://discord.gg/zkspfFwqDg)
 
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
