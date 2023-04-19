@@ -5,7 +5,7 @@ import os
 class ReadFromFile(BaseTool):
     @property
     def args(self):
-        return {"file": "Path to the file to read."}
+        return {"file": "Path to the file to read as a string."}
 
     @property
     def resp(self):
@@ -25,8 +25,8 @@ class WriteToFile(BaseTool):
     @property
     def args(self):
         return {
-            "file": "Path of the file to write to.",
-            "content": "Content to be written to the file.",
+            "file": "Path of the file to write to as a string.",
+            "content": "Content to be written to the file as a string.",
         }
 
     @property
@@ -43,8 +43,8 @@ class AppendToFile(BaseTool):
     @property
     def args(self):
         return {
-            "file": "Path of the file to append to.",
-            "content": "Content to be appended to the file.",
+            "file": "Path of the file to append to as a string.",
+            "content": "The content to be appended to the file as a string.",
         }
 
     @property
@@ -60,7 +60,7 @@ class AppendToFile(BaseTool):
 class DeleteFile(BaseTool):
     @property
     def args(self):
-        return {"file": "Path to the file to be deleted"}
+        return {"file": "Path to the file to be deleted as a string."}
 
     @property
     def resp(self):
@@ -77,7 +77,7 @@ class DeleteFile(BaseTool):
 class CheckIfFileExists(BaseTool):
     @property
     def args(self):
-        return {"file": "Path to the check if file exists."}
+        return {"file": "Path to the check if file exists as a string."}
 
     @property
     def resp(self):

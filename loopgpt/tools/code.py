@@ -30,7 +30,7 @@ class _BaseCodeTool(BaseTool):
 class ExecutePythonFile(_BaseCodeTool):
     @property
     def args(self):
-        return {"file": "The Python file path"}
+        return {"file": "The Python file path as a string."}
 
     @property
     def resp(self):

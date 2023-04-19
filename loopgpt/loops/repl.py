@@ -139,7 +139,7 @@ def cli(agent, continuous=False):
                     and "name" in command
                     and "args" in command
                 ):
-                    if command["name"] != "do_nothing":
+                    if command["name"]:
                         print_line(
                             "command",
                             f"{command['name']}, Args: {command['args']}",

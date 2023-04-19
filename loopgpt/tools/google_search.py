@@ -16,7 +16,7 @@ class GoogleSearch(BaseTool):
     @property
     def resp(self):
         return {
-            "results": "A list of results. Each result is of the form [title, link, description]"
+            "results": "A list of results. Each result is a list of the form [title, link, description]"
         }
 
     def _duckduckgo_search(self, query, num_results=8):

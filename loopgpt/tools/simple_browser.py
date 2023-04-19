@@ -66,7 +66,7 @@ class SimpleBrowser(BaseTool):
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape", "question": "The question"}
+        return {"url": "URL of the website to scrape as a string", "question": "The question"}
 
     @property
     def resp(self):
