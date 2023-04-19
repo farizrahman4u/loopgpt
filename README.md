@@ -258,7 +258,7 @@ In case these are absent, LoopGPT will fall back to using [DuckDuckGo Search](ht
 
 ## 💌 Contribute 
 
-Contributions are welcome! Please open an issue or a PR if you'd like to contribute.
+We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 
 ## 🌳 Community
 
