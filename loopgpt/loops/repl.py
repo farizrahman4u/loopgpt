@@ -158,6 +158,8 @@ def cli(agent, continuous=False):
                         )
                         if feedback.lower().strip() == "exit":
                             return
+                        next_prompt = agent.next_prompt
+                        feedback = next_prompt + "\n\n" + feedback
                         resp = agent.chat(feedback, False)
                     write_divider()
                     continue
