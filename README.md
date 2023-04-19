@@ -20,9 +20,9 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 5. **Full state serialization** - Pick up where you left off; L♾️pGPT can save the complete state of an agent, including the states of its tools to a file or python object. No external databases or vector stores required (but they are still supported)!
 
 
-## 🛠️ Installation
+## 🧑‍💻 Installation
 
-### 🧑‍💻 Install from PyPI
+### Install from PyPI
 
 ```bash
 pip install loopgpt
