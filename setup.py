@@ -11,7 +11,7 @@ if __name__ == "__main__":
         install_requires=install_requires,
         packages=find_packages(),
         name=package_name,
-        version="0.0.6",
+        version="0.0.7",
         description="Modular Auto-GPT Framework",
         entry_points={"console_scripts": ["loopgpt = loopgpt.loops.cli:main"]},
     )
