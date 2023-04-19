@@ -85,29 +85,28 @@ You can exit the CLI by typing "exit".
 
 ### 🔁 Continuous Mode 🔁
 
-If `continuous` is set to `True`, the agent will not ask for the user's permission to execute commands. Use it at your own risk
-as it can go into infinite loops!
+If `continuous` is set to `True`, the agent will not ask for the user's permission to execute commands. It may go into infinite loops, so use it at your own risk!
 
 ```python
 agent.cli(continuous=True)
 ```
 
-### 💾 Save and Load Agent State 💾
+### 💾 Saving and Loading Agent State 💾
 
-You can save the agent's state to a json file with:
+You can save an agent's state to a json file with:
 
 ```python
 agent.save("ResearchGPT.json")
 ```
 
-This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, memory, tools states etc).
+This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, memory, tool states etc).
 You can also save just the confifguration by passing `include_state=False` to `agent.save()`:
 
 ```python
 agent.save("ResearchGPT.json", include_state=False)
 ```
 
-You can then pick up where you left off with:
+Then pick up where you left off with:
 
 ```python
 import loopgpt
@@ -115,7 +114,7 @@ agent = loopgpt.Agent.load("ResearchGPT.json")
 agent.cli()
 ```
 
-You can also run a saved agent from the command line:
+or by running the saved agent from the command line:
 
 ```bash
 loopgpt run ResearchGPT.json
@@ -130,9 +129,7 @@ agent_config = agent.config()
 To get just the configuration without the internal state:
 
 ```python
-import loopgpt
-
-agent = loopgpt.Agent.from_config(agent_config)
+agent_config = agent.config(include_state=False)
 ```
 
 
@@ -262,4 +259,4 @@ Contributions are welcome! Please open an issue or a PR if you'd like to contrib
 
 ## 🌳 Community
 
-Join our [Community Slack]()
+Join our [Community Slack](https://join.slack.com/t/lpgptcommunity/shared_invite/zt-1tsew1e4g-WgHfFLSzWF~a0PVq8QXcoQ)
