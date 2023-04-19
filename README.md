@@ -200,7 +200,15 @@ dressing_tips.txt
 - It's Overcast outside with a temperature of +11°C in New York. Wearing a light jacket, pants, and an umbrella is recommended.
 ```
 
-### 💾 Saving and Loading Agent State 💾
+## 🚢 Course Correction
+
+Unlike Auto-GPT, the agent does not terminate when the user denies the execution of a command. Instead it asks the user for feedback to correct its course.
+
+<img src="/docs/assets/imgs/course_correction_1.png?raw=true" height="350">
+<img src="/docs/assets/imgs/course_correction_2.png?raw=true" height="350">
+
+
+## 💾 Saving and Loading Agent State 💾
 
 You can save an agent's state to a json file with:
 
