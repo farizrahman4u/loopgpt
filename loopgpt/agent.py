@@ -367,7 +367,7 @@ class Agent:
         if include_state:
             cfg.update(
                 {
-                    "sub_agents": {k: v.config() for k, v in self.sub_agents.items()},
+                    "sub_agents": {k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()},
                     "history": self.history[:],
                     "memory": self.memory.config(),
                     "staging_tool": self.staging_tool,
@@ -387,7 +387,7 @@ class Agent:
         agent.model = config["model"]
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.sub_agents = {
-            k: cls.from_config(v) for k, v in config.get("sub_agents", {}).items()
+            k: (cls.from_config(v[0]), v[1]) for k, v in config.get("sub_agents", {}).items()
         }
         agent.history = config.get("history", [])
         memory = config.get("memory")
