@@ -92,7 +92,7 @@ agent.cli(continuous=True)
 
 ## ⚒️ Adding custom tools ⚒️
 
-L♾️pGPT agents come with a set of builtin tools which allows them to perform variouos basic tasks such as searching the web, filesystem operations, etc. You can view these tools with `print(agent.tools)`.
+L♾️pGPT agents come with a set of builtin tools which allows them to perform various basic tasks such as searching the web, filesystem operations, etc. You can view these tools with `print(agent.tools)`.
 
 In addition to these builtin tools, you can also add your own tools to the agent's toolbox.
 
