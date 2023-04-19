@@ -8,6 +8,14 @@
     <b>A Modular Auto-GPT Framework</b>
 </p>
 
+<p align="center">
+    <a href="https://discord.gg/rqs26cqx7v">
+        <img src="https://img.shields.io/discord/1098162593291587594?style=for-the-badge">
+    </a>
+</p>
+
+
+
 
 L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/Significant-Gravitas/Auto-GPT) project as a proper python package, written with modularity and extensibility in mind.
 
