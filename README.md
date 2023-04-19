@@ -49,6 +49,7 @@ python setup.py develop
 
 ## 🏎️ Getting Started
 
+**You must set your OpenAI API Key 🔑 in your environment variables for anything to work. See the [Requirements secion](#-requirements) below.**
 
 ### Create a new L♾️pGPT Agent🕵️:
 
@@ -277,6 +278,11 @@ agent = loopgpt.Agent.from_config(agent_config)
 
 - Python 3.8+
 - [An OpenAI API Key](https://platform.openai.com/account/api-keys)
+    - Set environment variable `OPENAI_API_KEY` to the API key
+    - How to set environment variables:
+        - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
+        - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
+        - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
 - Google Chrome
 
 ### Optional Requirements

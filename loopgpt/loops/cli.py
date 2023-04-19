@@ -7,7 +7,11 @@ import json
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("action", choices=["run"], help="Action to perform. If no file is specified, a new agent is created.")
+    parser.add_argument(
+        "action",
+        choices=["run"],
+        help="Action to perform. If no file is specified, a new agent is created.",
+    )
     parser.add_argument("filename", nargs="?", help="Agent state JSON.", default=None)
     parser.add_argument(
         "--readonly",

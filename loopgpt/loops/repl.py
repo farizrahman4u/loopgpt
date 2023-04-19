@@ -47,6 +47,8 @@ def listed_prompt(speaker, message, item_kind):
             indent + f"- {Fore.LIGHTBLUE_EX}{item_kind} {i} : {Style.RESET_ALL}", end=""
         )
         inp = input()
+        if inp.lower().strip() == "exit":
+            return -1
         if inp.strip():
             lst.append(inp)
         else:
@@ -80,22 +82,31 @@ def write_divider(big=False):
 
 def check_agent_config(agent):
     if agent.name is None or agent.name == DEFAULT_AGENT_NAME:
-        agent.name = prompt("loopgpt", "Enter the name of your AI agent: ")
+        name = prompt("loopgpt", "Enter the name of your AI agent: ")
+        if name.lower().strip() == "exit":
+            return -1
+        agent.name = name
 
     if agent.description is None or agent.description == DEFAULT_AGENT_DESCRIPTION:
-        agent.description = prompt("loopgpt", "Enter a description for your AI agent: ")
+        description = prompt("loopgpt", "Enter a description for your AI agent: ")
+        if description.lower().strip() == "exit":
+            return -1
+        agent.description = description
 
     if agent.goals == []:
-        agent.goals = listed_prompt(
-            "loopgpt", "Enter the goals of your AI agent: ", "Goal"
-        )
+        goals = listed_prompt("loopgpt", "Enter the goals of your AI agent: ", "Goal")
+        if goals == -1:
+            return -1
+        agent.goals = goals
 
     profiles[agent.name] = Fore.GREEN + agent.name
 
 
 def cli(agent, continuous=False):
     print(HEADER)
-    check_agent_config(agent)
+    res = check_agent_config(agent)
+    if res == -1:
+        return
     write_divider(big=True)
     resp = agent.chat()
     while True:
@@ -135,7 +146,7 @@ def cli(agent, continuous=False):
                             end="\n\n",
                         )
                     while True:
-                        if continuous or command["name"] == "do_nothing":
+                        if continuous:
                             yn = "y"
                         else:
                             yn = input(f"Execute? (Y/N): ")
@@ -151,7 +162,6 @@ def cli(agent, continuous=False):
                         print_line("system", f"Executing command: {cmd}")
                         resp = agent.chat(agent.next_prompt, True)
                         print_line("system", f"{cmd} output: {agent.tool_response}")
-                        print_line("system", f"")
                     elif yn == "n":
                         feedback = input(
                             "Enter feedback (Why not execute the command?): "
