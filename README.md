@@ -204,8 +204,8 @@ dressing_tips.txt
 
 Unlike Auto-GPT, the agent does not terminate when the user denies the execution of a command. Instead it asks the user for feedback to correct its course.
 
-<img src="/docs/assets/imgs/course_correction_1.png?raw=true" height="350">
-<img src="/docs/assets/imgs/course_correction_2.png?raw=true" height="350">
+<img src="/docs/assets/imgs/course_correction_1.png?raw=true">
+<img src="/docs/assets/imgs/course_correction_2.png?raw=true">
 
 
 ## 💾 Saving and Loading Agent State 💾
