@@ -90,57 +90,6 @@ If `continuous` is set to `True`, the agent will not ask for the user's permissi
 agent.cli(continuous=True)
 ```
 
-### 💾 Saving and Loading Agent State 💾
-
-You can save an agent's state to a json file with:
-
-```python
-agent.save("ResearchGPT.json")
-```
-
-This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, memory, tool states etc).
-You can also save just the confifguration by passing `include_state=False` to `agent.save()`:
-
-```python
-agent.save("ResearchGPT.json", include_state=False)
-```
-
-Then pick up where you left off with:
-
-```python
-import loopgpt
-agent = loopgpt.Agent.load("ResearchGPT.json")
-agent.cli()
-```
-
-or by running the saved agent from the command line:
-
-```bash
-loopgpt run ResearchGPT.json
-```
-
-You can convert the agent state to a json compatible python dictionary instead of writing to a file:
-
-```python
-agent_config = agent.config()
-```
-
-To get just the configuration without the internal state:
-
-```python
-agent_config = agent.config(include_state=False)
-```
-
-
-To reload the agent from the config, use:
-
-```python
-import loopgpt
-
-agent = loopgpt.Agent.from_config(agent_config)
-```
-
-
 ## ⚒️ Adding custom tools ⚒️
 
 L♾️pGPT agents come with a set of builtin tools which allows them to perform variouos basic tasks such as searching the web, filesystem operations, etc. You can view these tools with `print(agent.tools)`.
@@ -243,6 +192,56 @@ dressing_tips.txt
 ```
 - It's Clear outside with a temperature of +10°C in Beijing. Wearing a light jacket and pants is recommended.
 - It's Overcast outside with a temperature of +11°C in New York. Wearing a light jacket, pants, and an umbrella is recommended.
+```
+
+### 💾 Saving and Loading Agent State 💾
+
+You can save an agent's state to a json file with:
+
+```python
+agent.save("ResearchGPT.json")
+```
+
+This saves the agent's configuration (model, name, description etc) as well as its internal state (conversation state, memory, tool states etc).
+You can also save just the confifguration by passing `include_state=False` to `agent.save()`:
+
+```python
+agent.save("ResearchGPT.json", include_state=False)
+```
+
+Then pick up where you left off with:
+
+```python
+import loopgpt
+agent = loopgpt.Agent.load("ResearchGPT.json")
+agent.cli()
+```
+
+or by running the saved agent from the command line:
+
+```bash
+loopgpt run ResearchGPT.json
+```
+
+You can convert the agent state to a json compatible python dictionary instead of writing to a file:
+
+```python
+agent_config = agent.config()
+```
+
+To get just the configuration without the internal state:
+
+```python
+agent_config = agent.config(include_state=False)
+```
+
+
+To reload the agent from the config, use:
+
+```python
+import loopgpt
+
+agent = loopgpt.Agent.from_config(agent_config)
 ```
 
 ## 📋 Requirements
