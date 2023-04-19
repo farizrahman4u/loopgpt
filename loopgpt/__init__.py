@@ -1,3 +1,6 @@
+__version__ = "0.0.4"
+
+
 from loopgpt.agent import Agent
 from loopgpt.tools import *
 from loopgpt.memory import *
