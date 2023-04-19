@@ -208,6 +208,7 @@ That's it! You've built your first custom tool. Let's register it with a new age
 
 ```python
 import loopgpt
+
 # Create Agent
 agent = loopgpt.Agent()
 agent.name = "WeatherGPT"
