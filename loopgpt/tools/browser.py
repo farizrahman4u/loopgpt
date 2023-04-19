@@ -94,7 +94,6 @@ class Browser(BaseTool):
             pass
 
     def run(self, url: str, query: str):
-        logger.log(logging.DEBUG, f"Scraping {url}...")
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         try:

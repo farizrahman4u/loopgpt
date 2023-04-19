@@ -2,4 +2,4 @@ import logging
 
 logger = logging.getLogger("base")
 
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)

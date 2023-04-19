@@ -4,3 +4,6 @@ selenium
 numpy
 tiktoken
 requests
+colorama
+duckduckgo-search
+google-api-python-client
