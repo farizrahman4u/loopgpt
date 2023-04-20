@@ -29,16 +29,25 @@ class Agent:
         name=DEFAULT_AGENT_NAME,
         description=DEFAULT_AGENT_DESCRIPTION,
         goals=None,
-        model="gpt-3.5-turbo",
+        model=None,
+        embedding_provider=None,
         temperature=0.8,
     ):
+        if model is None:
+            model = OpenAIModel("gpt-3.5-turbo")
+        elif isinstance(model, str):
+            model = OpenAIModel(model)
+        
+        if embedding_provider is None:
+            embedding_provider = OpenAIEmbeddingProvider()
+        
         self.name = name
         self.description = description
         self.goals = goals or []
-        self.model = OpenAIModel(model)
+        self.model = model
         self.temperature = temperature
         self.sub_agents = {}
-        self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
+        self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
         tools = [tool_type() for tool_type in builtin_tools()]
         self.tools = {tool.id: tool for tool in tools}
