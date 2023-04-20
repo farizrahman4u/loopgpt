@@ -2,8 +2,6 @@
 Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
-
-from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,24 +17,48 @@ import atexit
 
 
 class Browser(BaseTool):
-    def __init__(self):
+    def __init__(self, browser_type="chrome"):
         super(Browser, self).__init__()
+        if browser_type not in ("chrome", "firefox"):
+            browser_type = "chrome"
+        self._set_browser_options(browser_type)
+        self.driver = None
+        self.summarizer = Summarizer()
+        self.cache = {}
+        atexit.register(self.close)
+    
+    def _set_browser_options(self, browser_type):
+        self.browser_type = browser_type
+        if self.browser_type == "chrome":
+            from selenium.webdriver.chrome.options import Options
+        elif self.browser_type == "firefox":
+            from selenium.webdriver.firefox.options import Options
         options = Options()
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
         )
         options.headless = True
         self.options = options
-        self.driver = None
-        self.summarizer = Summarizer()
-        self.cache = {}
-        atexit.register(self.close)
+    
+    def _init_chrome_driver(self):
+        try:
+            self.driver = webdriver.Chrome(
+                executable_path=ChromeDriverManager().install(), options=self.options
+            )
+        except:
+            logger.log(logging.INFO, "Failed to initialize Chrome driver. Trying Firefox...")
+            self._set_browser_options("firefox")
+            self._init_driver()
+    
+    def _init_firefox_driver(self):
+        self.driver = webdriver.Firefox(options=self.options)
 
     def _init_driver(self):
         self.close()
-        self.driver = webdriver.Chrome(
-            executable_path=ChromeDriverManager().install(), options=self.options
-        )
+        if self.browser_type == "chrome":
+            self._init_chrome_driver()
+        elif self.browser_type == "firefox":
+            self._init_firefox_driver()
 
     def _get(self, url):
         if url in self.cache:
@@ -113,3 +135,12 @@ class Browser(BaseTool):
             }
         except Exception as e:
             return f"An error occured while scraping the website: {e}. Make sure the URL is valid."
+    
+    def config(self):
+        config = super().config()
+        config["browser_type"] = self.browser_type
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(config["browser_type"])
