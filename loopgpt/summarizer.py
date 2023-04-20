@@ -4,13 +4,15 @@ Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 
 from typing import *
 from tqdm import tqdm
-from loopgpt.models.openai_ import chat, count_tokens
+from loopgpt.models import BaseConversationModel, OpenAIModel
 
 import loopgpt.utils.spinner
 
 
 class Summarizer:
-    def __init__(self, model: str = "gpt-3.5-turbo"):
+    def __init__(self, model: Optional[BaseConversationModel] = None):
+        if model is None:
+            model = OpenAIModel("gpt-3.5-turbo")
         self.model = model
 
     def summarize(self, text: str, query: str):
@@ -19,16 +21,16 @@ class Summarizer:
             spinner.hide()
         summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
-            summary = chat([self._prompt(chunk, query)], max_tokens=300)
+            summary = self.model.chat([self._prompt(chunk, query)], max_tokens=300)
             summaries.append(summary)
         summary = "\n".join(summaries)
-        summary = chat([self._prompt(chunk, query)], max_tokens=300)
+        summary = self.model.chat([self._prompt(chunk, query)], max_tokens=300)
         if spinner:
             spinner.show()
         return summary, summaries
 
     def _count_tokens(self, text):
-        return count_tokens(
+        return self.model.count_tokens(
             [
                 {
                     "role": "system",
