@@ -74,9 +74,12 @@ def prompt(speaker, line):
     return input()
 
 
-def write_divider(big=False):
+def write_divider(big=False, default_columns=80):
     char = "\u2501" if big else "\u2500"
-    columns = os.get_terminal_size().columns
+    try:
+        columns = os.get_terminal_size().columns
+    except OSError:
+        columns = default_columns
     print(char * columns)
 
 
