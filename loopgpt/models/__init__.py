@@ -1,5 +1,6 @@
 from loopgpt.models.openai_ import OpenAIModel
 from loopgpt.models.stable_lm import StableLMModel
+from loopgpt.models.hf import HuggingFaceModel
 from loopgpt.models.base import *
 
 

@@ -43,6 +43,20 @@ class HuggingFaceModel(BaseModel):
         completion = self.tokenizer.decode(completion_tokens, skip_special_tokens=True)
 
         return completion
+
+    def encode_messages(self, messages: List[Dict[str, str]]) -> str:
+        message_format = {
+            "system": "<|SYSTEM|>{0}",
+            "user": "<|USER|>{0}",
+            "assistant": "<|ASSISTANT|>{0}",
+        }
+
+        data = []
+        for message in messages:
+            data.append(message_format[message["role"]].format(message["content"]))
+        data.append(message_format["assistant"].format(""))
+
+        return "".join(data)
     
     @staticmethod
     def stop_tokens(input_ids, scores, **kwargs):
