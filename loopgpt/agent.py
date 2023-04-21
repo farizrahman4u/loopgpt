@@ -7,11 +7,11 @@ from loopgpt.constants import (
     NEXT_PROMPT_SMALL,
 )
 from loopgpt.memory import from_config as memory_from_config
-from loopgpt.models.openai_ import chat, count_tokens, get_token_limit
+from loopgpt.models import OpenAIModel, from_config as model_from_config
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
-from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
+from loopgpt.embeddings import OpenAIEmbeddingProvider
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
 
@@ -29,16 +29,25 @@ class Agent:
         name=DEFAULT_AGENT_NAME,
         description=DEFAULT_AGENT_DESCRIPTION,
         goals=None,
-        model="gpt-3.5-turbo",
+        model=None,
+        embedding_provider=None,
         temperature=0.8,
     ):
+        if model is None:
+            model = OpenAIModel("gpt-3.5-turbo")
+        elif isinstance(model, str):
+            model = OpenAIModel(model)
+
+        if embedding_provider is None:
+            embedding_provider = OpenAIEmbeddingProvider()
+
         self.name = name
         self.description = description
         self.goals = goals or []
         self.model = model
         self.temperature = temperature
         self.sub_agents = {}
-        self.memory = LocalMemory(embedding_provider=OpenAIEmbeddingProvider())
+        self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
         tools = [tool_type() for tool_type in builtin_tools()]
         self.tools = {tool.id: tool for tool in tools}
@@ -76,7 +85,7 @@ class Agent:
                     "role": "system",
                     "content": f"This reminds you of these events from your past:\n{memstr}\n",
                 }
-                token_count = count_tokens(prompt + [context], model=self.model)
+                token_count = self.model.count_tokens(prompt + [context])
                 if token_count < token_limit:
                     break
                 relevant_memory = relevant_memory[:-1]
@@ -86,12 +95,12 @@ class Agent:
         history = self._get_compressed_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         prompt = prompt[:2] + history + prompt[2:]
-        token_limit = get_token_limit(self.model) - 1000  # 1000 reserved for response
-        token_count = count_tokens(prompt + user_prompt, model=self.model)
+        token_limit = self.model.get_token_limit() - 1000  # 1000 reserved for response
+        token_count = self.model.count_tokens(prompt + user_prompt)
         while history[:-1] and token_count > token_limit:
             history = history[1:]
             prompt.pop(2)
-            token_count = count_tokens(prompt + user_prompt, model=self.model)
+            token_count = self.model.count_tokens(prompt + user_prompt)
         if memory_added and len(prompt) > 4:
             sys_resp = prompt.pop(-2)
             agent_resp = prompt.pop(-2)
@@ -171,11 +180,10 @@ class Agent:
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
-        token_limit = get_token_limit(self.model)
+        token_limit = self.model.get_token_limit()
         maxt_tokens = max(1000, token_limit - token_count)
-        resp = chat(
+        resp = self.model.chat(
             full_prompt,
-            model=self.model,
             max_tokens=maxt_tokens,
             temperature=self.temperature,
         )
@@ -360,14 +368,16 @@ class Agent:
             "name": self.name,
             "description": self.description,
             "goals": self.goals[:],
-            "model": self.model,
+            "model": self.model.config(),
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
         }
         if include_state:
             cfg.update(
                 {
-                    "sub_agents": {k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()},
+                    "sub_agents": {
+                        k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()
+                    },
                     "history": self.history[:],
                     "memory": self.memory.config(),
                     "staging_tool": self.staging_tool,
@@ -384,10 +394,11 @@ class Agent:
         agent.description = config["description"]
         agent.goals = config["goals"][:]
         agent.temperature = config["temperature"]
-        agent.model = config["model"]
+        agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.sub_agents = {
-            k: (cls.from_config(v[0]), v[1]) for k, v in config.get("sub_agents", {}).items()
+            k: (cls.from_config(v[0]), v[1])
+            for k, v in config.get("sub_agents", {}).items()
         }
         agent.history = config.get("history", [])
         memory = config.get("memory")
