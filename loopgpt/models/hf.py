@@ -3,6 +3,7 @@ from loopgpt.models.base import BaseModel
 
 class HuggingFaceModel(BaseModel):
     def __init__(self, model="stabilityai/stablelm-tuned-alpha-7b", load_in_8bit=False):
+        import torch
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
         except ImportError as e:
@@ -13,7 +14,7 @@ class HuggingFaceModel(BaseModel):
         self.model = model
         self.load_in_8bit = load_in_8bit
         self.tokenizer = AutoTokenizer.from_pretrained(model)
-        self.model = AutoModelForCausalLM.from_pretrained(model, torch_dtype="float16", load_in_8bit=load_in_8bit, device_map="auto", offload_folder="./offload")
+        self.model = AutoModelForCausalLM.from_pretrained(model, torch_dtype=torch.float16, load_in_8bit=load_in_8bit, device_map="auto", offload_folder="./offload")
         self.stopping_criteria = StoppingCriteriaList([self.stop_tokens])
 
     
