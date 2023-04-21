@@ -26,7 +26,7 @@ class Browser(BaseTool):
         self.summarizer = Summarizer()
         self.cache = {}
         atexit.register(self.close)
-    
+
     def _set_browser_options(self, browser_type):
         self.browser_type = browser_type
         if self.browser_type == "chrome":
@@ -39,17 +39,19 @@ class Browser(BaseTool):
         )
         options.headless = True
         self.options = options
-    
+
     def _init_chrome_driver(self):
         try:
             self.driver = webdriver.Chrome(
                 executable_path=ChromeDriverManager().install(), options=self.options
             )
         except:
-            logger.log(logging.INFO, "Failed to initialize Chrome driver. Trying Firefox...")
+            logger.log(
+                logging.INFO, "Failed to initialize Chrome driver. Trying Firefox..."
+            )
             self._set_browser_options("firefox")
             self._init_driver()
-    
+
     def _init_firefox_driver(self):
         self.driver = webdriver.Firefox(options=self.options)
 
@@ -135,7 +137,7 @@ class Browser(BaseTool):
             }
         except Exception as e:
             return f"An error occured while scraping the website: {e}. Make sure the URL is valid."
-    
+
     def config(self):
         config = super().config()
         config["browser_type"] = self.browser_type

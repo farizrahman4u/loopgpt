@@ -1,6 +1,6 @@
 from typing import *
 from loopgpt.logger import logger
-from loopgpt.models.base import BaseConversationModel
+from loopgpt.models.base import BaseModel
 import tiktoken
 import time
 import os
@@ -15,7 +15,7 @@ def _getkey(key: Optional[str] = None):
         )
 
 
-class OpenAIModel(BaseConversationModel):
+class OpenAIModel(BaseModel):
     def __init__(self, model: str = "gpt-3.5-turbo", api_key: Optional[str] = None):
         self.model = model
         self.api_key = api_key
@@ -45,11 +45,11 @@ class OpenAIModel(BaseConversationModel):
                 time.sleep(20)
                 continue
 
-
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
-        tokens_per_message, tokens_per_name = {"gpt-3.5-turbo": (4, -1), "gpt-4": (3, 1)}[
-            self.model
-        ]
+        tokens_per_message, tokens_per_name = {
+            "gpt-3.5-turbo": (4, -1),
+            "gpt-4": (3, 1),
+        }[self.model]
         enc = tiktoken.encoding_for_model(self.model)
         num_tokens = 0
         for message in messages:
@@ -61,7 +61,6 @@ class OpenAIModel(BaseConversationModel):
         num_tokens += 3
         return num_tokens
 
-
     def get_token_limit(self) -> int:
         return {
             "gpt-3.5-turbo": 4000,
@@ -70,10 +69,12 @@ class OpenAIModel(BaseConversationModel):
 
     def config(self):
         cfg = super().config()
-        cfg.update({
-            "model": self.model,
-            "api_key": self.api_key,
-        })
+        cfg.update(
+            {
+                "model": self.model,
+                "api_key": self.api_key,
+            }
+        )
         return cfg
 
     @classmethod

@@ -1,11 +1,11 @@
 from loopgpt.tools.base_tool import BaseTool
-from loopgpt.models import BaseConversationModel, OpenAIModel
+from loopgpt.models import BaseModel, OpenAIModel
 import subprocess
 import sys
 import os
 
 
-def ai_function(func, desc, args, model: BaseConversationModel):
+def ai_function(func, desc, args, model: BaseModel):
     """Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
     Also see: https://github.com/Torantulino/AI-Functions
     """

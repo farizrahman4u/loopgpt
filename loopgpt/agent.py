@@ -37,10 +37,10 @@ class Agent:
             model = OpenAIModel("gpt-3.5-turbo")
         elif isinstance(model, str):
             model = OpenAIModel(model)
-        
+
         if embedding_provider is None:
             embedding_provider = OpenAIEmbeddingProvider()
-        
+
         self.name = name
         self.description = description
         self.goals = goals or []
@@ -375,7 +375,9 @@ class Agent:
         if include_state:
             cfg.update(
                 {
-                    "sub_agents": {k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()},
+                    "sub_agents": {
+                        k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()
+                    },
                     "history": self.history[:],
                     "memory": self.memory.config(),
                     "staging_tool": self.staging_tool,
@@ -395,7 +397,8 @@ class Agent:
         agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.sub_agents = {
-            k: (cls.from_config(v[0]), v[1]) for k, v in config.get("sub_agents", {}).items()
+            k: (cls.from_config(v[0]), v[1])
+            for k, v in config.get("sub_agents", {}).items()
         }
         agent.history = config.get("history", [])
         memory = config.get("memory")

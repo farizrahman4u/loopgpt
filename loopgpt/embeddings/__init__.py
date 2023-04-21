@@ -1,6 +1,6 @@
 from loopgpt.embeddings.provider import BaseEmbeddingProvider
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
-from loopgpt.embeddings.roberta import RobertaLargeEmbeddingProvider
+from loopgpt.embeddings.hf import HuggingFaceEmbeddingProvider
 
 user_providers = {}
 

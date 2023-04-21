@@ -4,13 +4,13 @@ Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 
 from typing import *
 from tqdm import tqdm
-from loopgpt.models import BaseConversationModel, OpenAIModel
+from loopgpt.models import BaseModel, OpenAIModel
 
 import loopgpt.utils.spinner
 
 
 class Summarizer:
-    def __init__(self, model: Optional[BaseConversationModel] = None):
+    def __init__(self, model: Optional[BaseModel] = None):
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
         self.model = model
