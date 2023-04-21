@@ -78,4 +78,4 @@ class OpenAIModel(BaseModel):
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config.get("api_key", None))
+        return cls(config["model"], config["api_key"])
