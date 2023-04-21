@@ -17,7 +17,7 @@ class HuggingFaceModel(BaseModel):
         self.stopping_criteria = StoppingCriteriaList([self.stop_tokens])
 
     
-    def chat(self, messages: List[Dict[str, str]], temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
+    def chat(self, messages: List[Dict[str, str]], max_tokens: Optional[int] = None, temperature: float = 0.7) -> str:
         prompt = self.encode_messages(messages)
         encoding = self.tokenizer(prompt, return_tensors="pt")
         encoding.to(self.model.device)
