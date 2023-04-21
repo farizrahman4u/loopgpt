@@ -290,14 +290,17 @@ agent = loopgpt.Agent.from_config(agent_config)
 
 ### Optional Requirements
 
-For official google search support:
-- [Google API Key](https://console.developers.google.com) (for Google Search)
-    - Set environment variable `GOOGLE_API_KEY` to the API key
-- [Google Custom Search Engine ID](https://cse.google.com/cse/create/new) (also for Google Search)
-    - Set environment variable `CUSTOM_SEARCH_ENGINE_ID` to the CSE ID
+For official google search support you will need to setup two environment variable keys `GOOGLE_API_KEY` and `CUSTOM_SEARCH_ENGINE_ID`, here is how to get them:
 
-In case these are absent, L♾️pGPT will fall back to using [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/)
+1. Create an application on the [Google Developers Console][google-console].
+2. Create your custom search engine using [Google Custom Search][google-custom-search].
+3. Once your custom search engine is created, select it and get into the details page of the search engine.
+    - On the "Basic" section, you will find the "Search engine ID" field, that value is what you will use for the `CUSTOM_SEARCH_ENGINE_ID` environment variable.
+    - Now go to the "Programmatic Access" section at the bottom of the page.
+        - Create a "Custom Search JSON API"
+        - Follow the dialog by selecting the application you created on step #1 and when you get your API key use it to populate the `GOOGLE_API_KEY` environment variable.
 
+ℹ️ In case these are absent, L♾️pGPT will fall back to using [DuckDuckGo Search](https://pypi.org/project/duckduckgo-search/).
 
 ## 💌 Contribute 
 
@@ -306,3 +309,6 @@ We need A LOT of Help! Please open an issue or a PR if you'd like to contribute.
 ## 🌳 Community
 
 Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
+
+[google-console]: https://console.developers.google.com
+[google-custom-search]: https://programmablesearchengine.google.com/controlpanel/create
