@@ -1,11 +1,11 @@
 from loopgpt.tools.base_tool import BaseTool
-from loopgpt.models.openai_ import chat
+from loopgpt.models import BaseConversationModel, OpenAIModel
 import subprocess
 import sys
 import os
 
 
-def ai_function(func, desc, args, model="gpt-3.5-turbo"):
+def ai_function(func, desc, args, model: BaseConversationModel):
     """Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
     Also see: https://github.com/Torantulino/AI-Functions
     """
@@ -16,7 +16,7 @@ def ai_function(func, desc, args, model="gpt-3.5-turbo"):
         },
         {"role": "user", "content": ", ".join(map(str, args))},
     ]
-    return chat(messages=msgs, model=model, temperature=0.0)
+    return model.chat(messages=msgs, model=model, temperature=0.0)
 
 
 class _BaseCodeTool(BaseTool):
@@ -24,7 +24,7 @@ class _BaseCodeTool(BaseTool):
     def model(self):
         if hasattr(self, "agent"):
             return self.agent.model
-        return "gpt-3.5-turbo"
+        return OpenAIModel("gpt-3.5-turbo")
 
 
 class ExecutePythonFile(_BaseCodeTool):

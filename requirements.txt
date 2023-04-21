@@ -8,3 +8,5 @@ colorama
 duckduckgo-search
 google-api-python-client
 webdriver_manager
+transformers
+sentence_transformers
