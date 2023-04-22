@@ -50,7 +50,7 @@ EXPERIMENTAL_NEXT_PROMPT = (
 NEXT_PROMPT = (
     "INSTRUCTIONS:\n"
     + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
-    + "2 - exclusively use available commmands to work towards the goals.\n"
+    + "2 - Only use available commmands.\n"
     + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
     + "4 - A command is considered executed only if it is confirmed by a system message.\n"
     + "5 - A command is not considered executed just becauses it was in your plan.\n"
@@ -58,7 +58,8 @@ NEXT_PROMPT = (
     + "7 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
     + '8 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
     + '9 - Once all the planned commands are executed and ALL the goals are achieved, execute the "task_complete" command.\n'
-    + "10 - Explicitly associate a command with each step in your plan.\n"
+    # + "10 - Explicitly associate a command with each step in your plan.\n"
+    + "10 - Make sure to execute commands only with supported arguments.\n"
     + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"

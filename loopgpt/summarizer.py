@@ -11,20 +11,80 @@ import loopgpt.utils.spinner
 
 class Summarizer:
     def __init__(self, model: Optional[BaseModel] = None):
-        if model is None:
-            model = OpenAIModel("gpt-3.5-turbo")
-        self.model = model
+        if isinstance(model, str):
+            model = OpenAIModel(model)
+        self._model = model
 
-    def summarize(self, text: str, query: str):
+    @property
+    def model(self):
+        if self._model is None:
+            if hasattr(self, "agent"):
+                model = self.agent.model
+                if isinstance(model, OpenAIModel):
+                    if model.model == "gpt-3.5-turbo":
+                        self._model = model
+                    else:
+                        self._model = OpenAIModel("gpt-3.5-turbo")
+            else:
+                self._model = OpenAIModel("gpt-3.5-turbo")
+        return self._model
+
+    def qa_chunk(self, text, query):
+        prompt = f"""{text}\n\nUsing the above text, try to answer the following query: "{query}". -- if the query cannot be answered using the text, say \"NO ANSWER\"\n"""
+        resp = self.model.chat(
+            [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
+        )
+        if resp.strip().upper() in ("NO ANSWER", '"NO ANSWER"', "'NO ANSWER'"):
+            return ""
+        # if "NO ANSWER " in resp.upper():
+        #     return ""
+        return resp
+
+    def summarize_chunk(self, text, query):
+        prompt = f"""Summarize the following text: \n"{text}"\n"""
+        resp = self.model.chat(
+            [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
+        )
+        return resp
+
+    def qa_or_summarize_chunk(self, text, query):
+        ans = self.qa_chunk(text, query)
+        if ans:
+            return {
+                "has_answer": True,
+                "answer": ans,
+            }
+        else:
+            resp = self.summarize_chunk(text, query)
+            return {
+                "has_answer": False,
+                "summary": resp,
+            }
+
+    def summarize(self, text: str, query: str, url: str = ""):
+        url = f"'{url}'" if url else "web"
+
         spinner = loopgpt.utils.spinner.ACTIVE_SPINNER
         if spinner:
             spinner.hide()
         summaries = []
+        # all_summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
-            summary = self.model.chat([self._prompt(chunk, query)], max_tokens=300)
-            summaries.append(summary)
+            ans = self.qa_chunk(chunk, query)
+            if ans:
+                summaries.append(ans)
+            # resp = self.qa_or_summarize_chunk(chunk, query)
+            # if resp["has_answer"]:
+            #     summary = resp["answer"]
+            #     summaries.append(summary)
+            #     all_summaries.append(summary)
+            # else:
+            #     all_summaries.append(resp["summary"])
+        if not summaries:
+            return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        summary = self.model.chat([self._prompt(chunk, query)], max_tokens=300)
+        if self._count_tokens(summary) > 300:
+            summary = self.summarize_chunk(text, query)
         if spinner:
             spinner.show()
         return summary, summaries
@@ -37,7 +97,6 @@ class Summarizer:
                     "summary": text,
                 }
             ],
-            self.model,
         )
 
     def _chunk_text(self, text: str, chunk_size=2**12) -> List[str]:

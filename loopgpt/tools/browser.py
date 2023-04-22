@@ -102,7 +102,7 @@ class Browser(BaseTool):
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape", "query": "The search query"}
+        return {"url": "<url>(Multiple URLs not supported)", "question": "<question>"}
 
     @property
     def resp(self):
@@ -117,7 +117,7 @@ class Browser(BaseTool):
         except Exception:
             pass
 
-    def run(self, url: str, query: str):
+    def run(self, url: str, question: str):
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         try:
@@ -126,7 +126,7 @@ class Browser(BaseTool):
             links = self._extract_links_from_soup(soup)[:5]
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
-            summary, chunks = self.summarizer.summarize(text, query)
+            summary, chunks = self.summarizer.summarize(text, question)
             if getattr(self, "agent", None):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")

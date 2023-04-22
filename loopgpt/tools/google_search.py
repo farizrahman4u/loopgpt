@@ -23,8 +23,8 @@ class GoogleSearch(BaseTool):
         from duckduckgo_search import ddg
 
         results = []
-        for result in ddg(query, max_results=num_results):
-            if getattr(self, "agent", None):
+        if getattr(self, "agent", None):
+            for result in ddg(query, max_results=num_results):
                 self.agent.memory.add(
                     f"Search result for {query}: [{result['title']}]({result['href']})"
                 )
@@ -41,8 +41,8 @@ class GoogleSearch(BaseTool):
             .execute()
             .get("items", [])
         )
-        for result in results:
-            if getattr(self, "agent", None):
+        if getattr(self, "agent", None):
+            for result in results:
                 self.agent.memory.add(
                     f"Search result for {query}: [{result['title']}]({result['link']})"
                 )
