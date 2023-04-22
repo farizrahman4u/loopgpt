@@ -3,11 +3,11 @@ from typing import *
 from uuid import uuid4
 
 
-class _AgentMangerTool(BaseTool):
+class _AgentManagerTool(BaseTool):
     pass
 
 
-class CreateAgent(_AgentMangerTool):
+class CreateAgent(_AgentManagerTool):
     @property
     def args(self):
         return {
@@ -36,7 +36,7 @@ class CreateAgent(_AgentMangerTool):
         return {"uuid": id, "resp": resp}
 
 
-class MessageAgent(_AgentMangerTool):
+class MessageAgent(_AgentManagerTool):
     @property
     def args(self):
         return {
@@ -55,7 +55,7 @@ class MessageAgent(_AgentMangerTool):
         return {"resp": resp}
 
 
-class DeleteAgent(_AgentMangerTool):
+class DeleteAgent(_AgentManagerTool):
     @property
     def args(self):
         return {"id": "Agent id"}
@@ -72,7 +72,7 @@ class DeleteAgent(_AgentMangerTool):
             return {f"resp": "Specified agent (id={id} not found.)"}
 
 
-class ListAgents(_AgentMangerTool):
+class ListAgents(_AgentManagerTool):
     @property
     def args(self):
         return {}
