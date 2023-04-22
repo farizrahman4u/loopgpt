@@ -31,6 +31,8 @@ class Summarizer:
 
     def qa_chunk(self, text, query):
         prompt = f"""{text}\n\nUsing the above text, try to answer the following query: "{query}". -- if the query cannot be answered using the text, say \"NO ANSWER\"\n"""
+        print("length of text:", len(text))
+        print("number of tokens:", self.model.count_tokens([{ "role": "user", "content": prompt}]))
         resp = self.model.chat(
             [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
         )
@@ -61,18 +63,20 @@ class Summarizer:
                 "summary": resp,
             }
 
-    def summarize(self, text: str, query: str, url: str = ""):
-        url = f"'{url}'" if url else "web"
-
+    def summarize(self, text: str, query: str):
         spinner = loopgpt.utils.spinner.ACTIVE_SPINNER
         if spinner:
             spinner.hide()
         summaries = []
         # all_summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
-            ans = self.qa_chunk(chunk, query)
-            if ans:
-                summaries.append(ans)
+            if not query:
+                summary = self.summarize_chunk(chunk, query)
+                summaries.append(summary)
+            else:
+                ans = self.qa_chunk(chunk, query)
+                if ans:
+                    summaries.append(ans)
             # resp = self.qa_or_summarize_chunk(chunk, query)
             # if resp["has_answer"]:
             #     summary = resp["answer"]
@@ -83,7 +87,7 @@ class Summarizer:
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        if self._count_tokens(summary) > 300:
+        if self._count_tokens(summary) > 500:
             summary = self.summarize_chunk(text, query)
         if spinner:
             spinner.show()
@@ -99,19 +103,19 @@ class Summarizer:
             ],
         )
 
-    def _chunk_text(self, text: str, chunk_size=2**12) -> List[str]:
+    def _chunk_text(self, text: str, chunk_size=900) -> List[str]:
         paras = text.split("\n")
-        curr_len = 0
+        curr_token_count = 0
         curr_chunk = []
         for p in paras:
-            new_len = curr_len + len(p) + 1
-            if new_len <= chunk_size:
+            new_token_count = curr_token_count + self._count_tokens(p)
+            if new_token_count < chunk_size:
                 curr_chunk.append(p)
-                curr_len = new_len
+                curr_token_count = new_token_count
             else:
                 yield "\n".join(curr_chunk)
                 curr_chunk = [p]
-                curr_len = len(p) + 1
+                curr_token_count = self._count_tokens(p)
         if curr_chunk:
             yield "\n".join(curr_chunk)
 
