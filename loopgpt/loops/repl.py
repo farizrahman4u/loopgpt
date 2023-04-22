@@ -2,7 +2,7 @@ HEADER = r"""
 +------------------------------------------------------------+
 | ██╗░░░░░░█████╗░░█████╗░██████╗░░██████╗░██████╗░████████╗ |
 | ██║░░░░░██╔══██╗██╔══██╗██╔══██╗██╔════╝░██╔══██╗╚══██╔══╝ |
-| ██║░░░░░██║░░██║██║░░██║██████╔╝██║░░██╗░██████╔╝░░░██║░░░ |
+| ██║░░░░░██║░░░░██░░░░██║██████╔╝██║░░██╗░██████╔╝░░░██║░░░ |
 | ██║░░░░░██║░░██║██║░░██║██╔═══╝░██║░░╚██╗██╔═══╝░░░░██║░░░ |
 | ███████╗╚█████╔╝╚█████╔╝██║░░░░░╚██████╔╝██║░░░░░░░░██║░░░ |
 | ╚══════╝░╚════╝░░╚════╝░╚═╝░░░░░░╚═════╝░╚═╝░░░░░░░░╚═╝░░░ |
@@ -74,9 +74,12 @@ def prompt(speaker, line):
     return input()
 
 
-def write_divider(big=False):
+def write_divider(big=False, default_columns=80):
     char = "\u2501" if big else "\u2500"
-    columns = os.get_terminal_size().columns
+    try:
+        columns = os.get_terminal_size().columns
+    except OSError:
+        columns = default_columns
     print(char * columns)
 
 
@@ -109,6 +112,7 @@ def cli(agent, continuous=False):
         return
     write_divider(big=True)
     resp = agent.chat()
+    n = 1
     while True:
         if isinstance(resp, str):
             print_line(agent.name, resp)
@@ -146,13 +150,16 @@ def cli(agent, continuous=False):
                             end="\n\n",
                         )
                     while True:
-                        if continuous:
+                        if continuous or n > 1:
                             yn = "y"
+                            n -= 1
                         else:
-                            yn = input(f"Execute? (Y/N): ")
-                            if yn.lower().strip() == "exit":
-                                return
+                            inp = input(f"Execute? (Y/N/Y:n to execute n steps continuously): ")
+                            yn, n = inp.split(":") if ":" in inp else (inp, 1)
+                            n = int(n)
                             yn = yn.lower().strip()
+                            if yn == "exit":
+                                return
                         if yn in ("y", "n"):
                             break
                     if yn == "y":
