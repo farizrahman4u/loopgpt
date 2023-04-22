@@ -88,7 +88,7 @@ class Summarizer:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
         if self._count_tokens(summary) > 500:
-            summary = self.summarize_chunk(text, query)
+            summary = self.summarize_chunk(summary, query)
         if spinner:
             spinner.show()
         return summary, summaries

@@ -28,7 +28,7 @@ class GoogleSearch(BaseTool):
                 self.agent.memory.add(
                     f"Search result for {query}: [{result['title']}]({result['href']})"
                 )
-            results.append([result["title"], result["href"], result["body"]])
+                results.append([result["title"], result["href"], result["body"]])
         return {"results": results}
 
     def _google_search(self, query, num_results=8):
@@ -41,14 +41,13 @@ class GoogleSearch(BaseTool):
             .execute()
             .get("items", [])
         )
+        results_ = []
         if getattr(self, "agent", None):
             for result in results:
                 self.agent.memory.add(
                     f"Search result for {query}: [{result['title']}]({result['link']})"
                 )
-        results = [
-            [result["title"], result["link"], result["snippet"]] for result in results
-        ]
+                results_.append([result["title"], result["link"], result["snippet"]])
 
         return {"results": results}
 

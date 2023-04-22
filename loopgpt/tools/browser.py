@@ -99,11 +99,11 @@ class Browser(BaseTool):
 
     @property
     def desc(self):
-        return "Scrape answers for a question in a given web page"
+        return "Open a single webpage"
 
     @property
     def args(self):
-        return {"url": "<url>(Multiple URLs not supported)", "question": "<question>"}
+        return {"url: str": "URL of the web page", "question: str": "Question to answer"}
 
     @property
     def resp(self):
