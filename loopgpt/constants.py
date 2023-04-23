@@ -5,12 +5,13 @@ Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
 
+
 DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
         "text": "thought",
         "reasoning": "reasoning",
-        "progress": "what you have done so far",
-        "plan": "- short bulleted\n- list that conveys\n- long-term plan",
+        # "progress": "what you have done so far",
+        # "tasks": "- short bulleted\n- list that conveys\n- long-term plan",
         # "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
@@ -20,6 +21,17 @@ DEFAULT_RESPONSE_FORMAT_ = {
 
 
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
+
+
+PLAN_UPDATE_RESPONSE_FORMAT ={
+    "tasks_to_add_to_todo": "- short bulleted\n- list that conveys\n- long-term plan",#["task1", "task2"],
+    "tasks_to_remove_from_todo": "- short bulleted\n- list of tasks\n- to remove \n- from TODO list"
+}
+
+
+INIT_PLAN_RESPONSE_FORMAT ={
+    "plan": "- short bulleted\n- list that conveys\n- long-term plan",
+}
 
 
 NEXT_PROMPT_SMALL = "Next"
@@ -57,12 +69,14 @@ NEXT_PROMPT = (
     + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
     + "4 - A command is considered executed only if it is confirmed by a system message.\n"
     + "5 - A command is not considered executed just becauses it was in your plan.\n"
-    + "6 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
+    + "6 - Remember to use the output of previous command. If it contains useful information, save it to a file.\n"
     + "7 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
     + '8 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
     + '9 - Once all the planned commands are executed and ALL the goals are achieved, execute the "task_complete" command.\n'
     # + "10 - Explicitly associate a command with each step in your plan.\n"
     + "10 - Make sure to execute commands only with supported arguments.\n"
+    # + "11 - Remove completed tasks from task list.\n"
+    # + "12 - Add new tasks to task list only if necessary.\n"
     + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
@@ -99,6 +113,50 @@ INIT_PROMPT = (
 #     + "8 - If \"command\" is empty, set it to \"do_nothing\" with args \"{}\".\n"
 # )
 
+
+NEXT_PROMPT = (
+    "INSTRUCTIONS:\n"
+    + "1 - Perform the next task in your TODO list.\n"
+    + "2 - Only use available commmands.\n"
+    + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
+    + "4 - A command is considered executed only if it is confirmed by a system message.\n"
+    + "5 - A command is not considered executed just becauses it was in your plan.\n"
+    + "6 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
+    + "7 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
+    + '8 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
+    + '9 - Once all the planned commands are executed and ALL the goals are achieved, execute the "task_complete" command.\n'
+    # + "10 - Explicitly associate a command with each step in your plan.\n"
+    + "10 - Make sure to execute commands only with supported arguments.\n"
+    + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+    + "\n"
+)
+
+
+INIT_PLAN_PROMPT = (
+    "INSTRUCTIONS:\n"
+    + "1 - Create a plan to achieve your goals using available commands.\n"
+    + "2 - Only use available commmands.\n"
+    + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
+    + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + json.dumps(INIT_PLAN_RESPONSE_FORMAT, indent=4)
+)
+
+PLAN_UPDATE_PROMPT = (
+    "INSTRUCTIONS:\n"
+    + " - Remove completed tasks from your TODO list based on your PROGRESS.\n"
+    + " - Check if current TODO list is sufficient to achieve your goals.\n"
+    + " - If yes, do not add new items to your TODO list.\n"
+    + " - If not add new tasks to your TODO list which do not overlap with existing items.\n"
+    + " - Only use available commmands.\n"
+    # + "4 - Each task should use exactly one available command.\n"
+    + " - Performing tasks are expensive, add them only if they are completely necessary to achieve your goals.\n"
+    + " - DO NOT ADD TASKS THAT OVERLAP WITH ITEMS ALREADY IN THE TODO LIST.\n"
+    + " - Return empty list if no new tasks are needed.\n"
+    + " - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + json.dumps(PLAN_UPDATE_RESPONSE_FORMAT, indent=4)
+    + "\n"
+)
 
 DEFAULT_AGENT_NAME = "LoopGPT"
 DEFAULT_AGENT_DESCRIPTION = "A personal assistant that responds exclusively in JSON"

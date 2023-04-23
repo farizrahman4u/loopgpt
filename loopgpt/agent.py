@@ -5,6 +5,10 @@ from loopgpt.constants import (
     DEFAULT_AGENT_DESCRIPTION,
     NEXT_PROMPT,
     NEXT_PROMPT_SMALL,
+    PLAN_UPDATE_RESPONSE_FORMAT,
+    PLAN_UPDATE_PROMPT,
+    INIT_PLAN_PROMPT,
+
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models import OpenAIModel, from_config as model_from_config
@@ -14,6 +18,7 @@ from loopgpt.memory.local_memory import LocalMemory
 from loopgpt.embeddings import OpenAIEmbeddingProvider
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
+import numpy as np
 
 
 from typing import *
@@ -56,7 +61,11 @@ class Agent:
         self.tool_response = None
         self.init_prompt = INIT_PROMPT
         self.next_prompt = NEXT_PROMPT
+        self.plan_update_prompt = PLAN_UPDATE_PROMPT
+        self.plan_init_prompt = INIT_PLAN_PROMPT
         self.progress = []
+        self.plan = []
+        self.completed_tasks = []
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -150,6 +159,14 @@ class Agent:
 
     @spinner
     def chat(self, message: Optional[str] = None, run_tool=False) -> Union[str, Dict]:
+        if self.completed_tasks and not self.plan:
+            self.history.append(
+                {
+                    "role": "system",
+                    "content": "Completed all user specified tasks.",
+                }
+            )
+            return
         if message is None:
             message = self.init_prompt
         if self.staging_tool:
@@ -183,6 +200,7 @@ class Agent:
                 # )
             self.staging_tool = None
             self.staging_response = None
+        self.generate_new_plan()
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = self.model.get_token_limit()
         max_tokens = min(1000, max(token_limit - token_count, 0))
@@ -219,8 +237,6 @@ class Agent:
         return res
 
     def _load_json(self, s, try_gpt=True):
-        if "Result: {" in s:
-            s = s.split("Result: ", 1)[0]
         if "{" not in s or "}" not in s:
             raise Exception()
         try:
@@ -330,14 +346,26 @@ class Agent:
             prompt.append(self.goals_prompt())
         if self.progress:
             prompt.append(self.progress_prompt())
+        if self.plan:
+            prompt.append(self.plan_prompt())
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
         return f"You are {self.name}, {self.description}."
 
     def progress_prompt(self):
-        progress = '\n'.join(self.progress)
+        progress = '\n'.join(self.progress[-1:])
         return f"CURRENT PROGRESS:\n{progress}\n"
+
+
+    def plan_prompt(self):
+        ret = f"TODO LIST:\n"
+        for task in self.plan:
+            ret += f" - {task}\n"
+        # completed = '\n'.join(self.completed_tasks) if self.completed_tasks else "<empty>"
+        # ret += f"\nCOMPLETED TASKS:\n{completed}\n"
+        return ret
+
 
     def goals_prompt(self):
         prompt = []
@@ -446,3 +474,50 @@ class Agent:
 
     def cli(self, continuous=False):
         cli(self, continuous=continuous)
+
+
+    def generate_new_plan(self):
+        if not self.plan:
+            prompt = self.plan_init_prompt
+        else:
+            prompt = self.plan_update_prompt
+        full_prompt, token_count = self.get_full_prompt(prompt)
+        token_limit = self.model.get_token_limit()
+        max_tokens = min(1000, max(token_limit - token_count, 0))
+        assert max_tokens
+        resp = self.model.chat(
+            full_prompt,
+            max_tokens=max_tokens,
+            temperature=self.temperature,
+        )
+        resp = self._load_json(resp)
+        # num_completed_tasks = resp["num_tasks_to_pop_from_top"]
+        # if isinstance(num_completed_tasks, str):
+        #     num_completed_tasks = int(num_completed_tasks)
+        if not self.plan:
+            plan = resp["plan"]
+            if isinstance(plan, str):
+                plan = plan.split("\n")
+            plan = [task[len("- "):] for task in plan if isinstance(task, str) and task.startswith("- ")]
+            self.plan = plan
+            return
+
+        new_tasks = resp["tasks_to_add_to_todo"]
+        if isinstance(new_tasks, str):
+            new_tasks = new_tasks.split("\n")
+        new_tasks = [task[len("- "):] for task in new_tasks if isinstance(task, str) and task.startswith("- ")]
+        plan_normed = [task.strip().lower() for task in self.plan]
+        new_tasks = [task for task in new_tasks if task.strip().lower() not in plan_normed]
+
+        completed_tasks = resp["tasks_to_remove_from_todo"]
+        if isinstance(completed_tasks, str):
+            completed_tasks = completed_tasks.split("\n")
+        completed_tasks = [task[len("- "):] for task in completed_tasks if isinstance(task, str) and task.startswith("- ")]
+        self.completed_tasks += completed_tasks
+
+        completed_tasks = [task.strip().lower() for task in completed_tasks]
+        self.plan = [task for task in self.plan if task.strip().lower() not in completed_tasks]
+
+        # self.completed_tasks.append(self.plan.pop(0))
+        self.plan = new_tasks + self.plan
+    

@@ -124,12 +124,13 @@ def cli(agent, continuous=False):
                     msgs[agent.name] = thoughts["text"]
                 if "reasoning" in thoughts:
                     msgs["reasoning"] = thoughts["reasoning"]
-                if "plan" in thoughts:
-                    msgs["plan"] = (
-                        thoughts["plan"].split("\n")
-                        if isinstance(thoughts["plan"], str)
-                        else thoughts["plan"]
-                    )
+                # if "plan" in thoughts:
+                #     msgs["plan"] = (
+                #         thoughts["plan"].split("\n")
+                #         if isinstance(thoughts["plan"], str)
+                #         else thoughts["plan"]
+                    # )
+                msgs["plan"] = agent.plan
                 if "progress" in thoughts:
                     msgs["progress"] = thoughts["progress"]
                 if "speak" in thoughts:
