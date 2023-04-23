@@ -97,11 +97,11 @@ class Browser(BaseTool):
 
     @property
     def desc(self):
-        return "Scrape answers for a question in a given web page"
+        return "Use this command to open any website"
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape", "query": "The search query"}
+        return {"url": "URL of the website to open", "query": "The search query"}
 
     @property
     def resp(self):

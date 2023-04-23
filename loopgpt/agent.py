@@ -67,22 +67,22 @@ class Agent:
         msgs = self._get_non_user_messages(10)
         relevant_memory = self.memory.get(str(msgs), 5) if len(msgs) > 5 else []
         memory_added = False
-        if relevant_memory:
-            # Add as many documents from memory as possible while staying under the token limit
-            token_limit = 1500
-            while relevant_memory:
-                memstr = "\n".join(relevant_memory)
-                context = {
-                    "role": "system",
-                    "content": f"This reminds you of these events from your past:\n{memstr}\n",
-                }
-                token_count = count_tokens(prompt + [context], model=self.model)
-                if token_count < token_limit:
-                    break
-                relevant_memory = relevant_memory[:-1]
-            if relevant_memory:
-                memory_added = True
-                prompt.append(context)
+        # if relevant_memory:
+        #     # Add as many documents from memory as possible while staying under the token limit
+        #     token_limit = 1500
+        #     while relevant_memory:
+        #         memstr = "\n".join(relevant_memory)
+        #         context = {
+        #             "role": "system",
+        #             "content": f"This reminds you of these events from your past:\n{memstr}\n",
+        #         }
+        #         token_count = count_tokens(prompt + [context], model=self.model)
+        #         if token_count < token_limit:
+        #             break
+        #         relevant_memory = relevant_memory[:-1]
+        #     if relevant_memory:
+        #         memory_added = True
+        #         prompt.append(context)
         history = self._get_compressed_history()
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         prompt = prompt[:2] + history + prompt[2:]
@@ -99,6 +99,26 @@ class Agent:
             prompt.append(sys_resp)
         prompt += user_prompt
         return prompt, token_count
+    
+    def convert_response_to_speech(self, resp):
+        speech = ""
+        thoughts = resp.get("thoughts")
+        if thoughts:
+            thoughts.pop("reasoning", None)
+            thoughts.pop("speak", None)
+            thoughts.pop("criticism", None)
+            thoughts.pop("text", None)
+        
+        plan = thoughts.pop("plan", None)
+        if plan:
+            speech += "My current plan is:\n" + plan
+        
+        command = resp.get("command")
+        if command:
+            speech += f"\n\nI want to execute the command: {command['name']} with arguments: {command['args']}"
+        
+        return speech
+
 
     def _get_compressed_history(self):
         hist = self.history[:]
@@ -111,20 +131,14 @@ class Agent:
                 entry["content"] = f"<Response from {tool}>"
                 hist[i] = entry
         assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs[:-1]:
+        for i in assist_msgs[:]:
             entry = hist[i].copy()
             try:
                 respd = json.loads(entry["content"])
-                thoughts = respd.get("thoughts")
-                if thoughts:
-                    thoughts.pop("reasoning", None)
-                    thoughts.pop("speak", None)
-                    thoughts.pop("criticism", None)
-                    # if False and i < len(assist_msgs) - 2:
-                    thoughts.pop("text", None)
-                entry["content"] = json.dumps(respd, indent=2)
+                entry["content"] = self.convert_response_to_speech(respd)
                 hist[i] = entry
             except:
+                print("json.loads failed!")
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
         for i in user_msgs:
@@ -171,6 +185,9 @@ class Agent:
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
+        print("============================================================")
+        print(full_prompt)
+        print("============================================================")
         token_limit = get_token_limit(self.model)
         maxt_tokens = max(1000, token_limit - token_count)
         resp = chat(
@@ -292,7 +309,7 @@ class Agent:
         self.history.append(
             {
                 "role": "system",
-                "content": f'Command "{tool_id}" with args {json.dumps(args)} returned:\n{json.dumps(resp)}',
+                "content": f'Command "{tool_id}" with arguments {json.dumps(args)} returned:\n{json.dumps(resp)}',
             }
         )
         return resp

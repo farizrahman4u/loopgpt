@@ -62,11 +62,11 @@ class SimpleBrowser(BaseTool):
 
     @property
     def desc(self):
-        return "Scrape answers for a question in a given web page"
+        return "Use this command to open any website"
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape as a string", "question": "The question"}
+        return {"url": "URL of the website to open", "query": "The search query"}
 
     @property
     def resp(self):
@@ -81,13 +81,13 @@ class SimpleBrowser(BaseTool):
         except Exception:
             pass
 
-    def run(self, url: str, question: str):
+    def run(self, url: str, query: str):
         soup = BeautifulSoup(self._get(url), "html.parser")
         [script.extract() for script in soup(["script", "style"])]
         links = self._extract_links_from_soup(soup)[:5]
         text = self._extract_text_from_soup(soup)
         self.summarizer.agent = getattr(self, "agent", None)
-        summary, chunks = self.summarizer.summarize(text, question)
+        summary, chunks = self.summarizer.summarize(text, query)
         if getattr(self, "agent", None):
             for chunk in chunks:
                 self.agent.memory.add(f"Snippet from {url}: {chunk}")
