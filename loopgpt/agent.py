@@ -92,7 +92,6 @@ class Agent:
                 msgs.append(context)
             msgs += history[-1:]
             msgs += user_prompt
-            msgs += [{"role": "system", "content": self.next_prompt}]
             return msgs
 
         maxtokens = self.model.get_token_limit() - 1000

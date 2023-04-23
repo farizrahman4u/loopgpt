@@ -11,7 +11,6 @@ DEFAULT_RESPONSE_FORMAT_ = {
         "reasoning": "reasoning",
         "progress": "what you have done so far",
         "plan": "- short bulleted\n- list that conveys\n- long-term plan",
-        # "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
     "command": {"name": "next command in your plan", "args": {"arg name": "value"}},
