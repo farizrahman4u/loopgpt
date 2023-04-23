@@ -11,8 +11,10 @@ class LocalMemory(BaseMemory):
         self.embs: Optional[np.ndarray] = None
         self.embedding_provider = embedding_provider
 
-    def add(self, doc: str):
-        emb = self.embedding_provider(doc)
+    def add(self, doc: str, key: Optional[str] = None):
+        if not key:
+            key = doc
+        emb = self.embedding_provider(key)
         if self.embs is None:
             self.embs = np.expand_dims(emb, 0)
         else:

@@ -8,6 +8,7 @@ def test_serde_basic():
     cfg = agent.config()
     agent2 = loopgpt.Agent.from_config(cfg)
 
+
 def test_serde_browser():
     browser = Browser("firefox")
     cfg = browser.config()
