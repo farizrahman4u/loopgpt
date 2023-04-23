@@ -103,7 +103,10 @@ class Browser(BaseTool):
 
     @property
     def args(self):
-        return {"url: str": "URL of the web page", "question: str": "Question to answer"}
+        return {
+            "url: str": "URL of the web page",
+            "question: str": "Question to answer",
+        }
 
     @property
     def resp(self):

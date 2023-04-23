@@ -154,7 +154,9 @@ def cli(agent, continuous=False):
                             yn = "y"
                             n -= 1
                         else:
-                            inp = input(f"Execute? (Y/N/Y:n to execute n steps continuously): ")
+                            inp = input(
+                                f"Execute? (Y/N/Y:n to execute n steps continuously): "
+                            )
                             yn, n = inp.split(":") if ":" in inp else (inp, 1)
                             n = int(n)
                             yn = yn.lower().strip()

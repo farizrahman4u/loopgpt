@@ -76,7 +76,7 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 5)  # if len(msgs) > 5 else []
+        relevant_memory = self.memory.get(str(msgs), 5)
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         history = self._get_compressed_history()
 
@@ -112,26 +112,15 @@ class Agent:
     def _get_compressed_history(self):
         hist = self.history[:]
         system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
-        # for i in system_msgs[:-1]:
-        #     entry = hist[i].copy()
-        #     msg = entry["content"]
-        #     if msg.startswith("Response from "):
-        #         tool = msg[len("Response from ") :].split(":", 1)[0]
-        #         entry["content"] = f"<Response from {tool}>"
-        #         hist[i] = entry
-        # toremove = system_msgs[:-1]
-        # hist = [hist[i] for i in range(len(hist)) if i not in toremove]
         assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
         for i in assist_msgs:
             entry = hist[i].copy()
             try:
                 respd = json.loads(entry["content"])
-                # respd.pop("command", None)
                 thoughts = respd.get("thoughts")
                 if thoughts:
                     thoughts.pop("reasoning", None)
                     thoughts.pop("speak", None)
-                    # if False and i < len(assist_msgs) - 2:
                     thoughts.pop("text", None)
                     thoughts.pop("plan", None)
                 entry["content"] = json.dumps(respd, indent=2)
@@ -139,12 +128,6 @@ class Agent:
             except:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        # for i in user_msgs:
-        #     entry = hist[i].copy()
-        #     msg = entry["content"]
-        #     if msg in [self.next_prompt, self.init_prompt]:
-        #         entry["content"] = NEXT_PROMPT_SMALL
-        #         hist[i] = entry
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
 
@@ -196,7 +179,11 @@ class Agent:
             resp = self._load_json(resp)
             plan = resp.get("plan")
             if plan and isinstance(plan, list):
-                if len(plan) == 0 or len(plan) == 1 and len(plan[0].replace("-", "")) == 0:
+                if (
+                    len(plan) == 0
+                    or len(plan) == 1
+                    and len(plan[0].replace("-", "")) == 0
+                ):
                     self.staging_tool = {"name": "task_complete", "args": {}}
                     self.staging_response = resp
             else:

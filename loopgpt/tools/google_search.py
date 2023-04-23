@@ -57,7 +57,6 @@ class GoogleSearch(BaseTool):
             entry += "\n"
             self.agent.memory.add(entry)
 
-
     def run(self, query, num_results=8):
         try:
             return self._google_search(query, num_results)

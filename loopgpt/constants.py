@@ -18,7 +18,6 @@ DEFAULT_RESPONSE_FORMAT_ = {
 }
 
 
-
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
 
@@ -54,7 +53,7 @@ EXPERIMENTAL_NEXT_PROMPT = (
 NEXT_PROMPT = (
     "INSTRUCTIONS:\n"
     + "1 - Check the progress of your goals.\n"
-    + "2 - If you have achieved all your goals, execute the \"task_complete\" command IMMEDIATELY. Otherwise,\n"
+    + '2 - If you have achieved all your goals, execute the "task_complete" command IMMEDIATELY. Otherwise,\n'
     + "3 - Use the command responses in previous system messages to plan your next command to work towards your goals\n"
     + "4 - Only use available commmands.\n"
     + "5 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
@@ -62,7 +61,7 @@ NEXT_PROMPT = (
     + "7 - A command is not considered executed just becauses it was in your plan.\n"
     + "8 - Remember to use the output of previous command. If it contains useful information, save it to a file.\n"
     + "9 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
-    + "10 - Execute the \"do_nothing\" command ONLY if there is no other command to execute.\n"
+    + '10 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
     + "11 - Make sure to execute commands only with supported arguments.\n"
     + "12 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
@@ -78,27 +77,6 @@ INIT_PROMPT = (
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
 )
-
-# INIT_PROMPT = (
-#     "INSTRUCTIONS:\n"
-#     + "1 - Execute the next best command to achieve the goals.\n"
-#     + "2 - Fill the following form and respond with the form ONLY:\n"
-#     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
-#     + "\n"
-# )
-
-# NEXT_PROMPT = (
-#     "INSTRUCTIONS:\n"
-#     + "1 - Use commands to achieve your goals.\n"
-#     + "2 - Tell the user the progress of your goals.\n"
-#     + "3 - Tell the user what you learned from the output of the previous command.\n"
-#     + "4 - Save the output of the previous command to a file if needed.\n"
-#     + "6 - Tell the user why you are executing the next command.\n"
-#     + "7 - Do not write explanations. Fill the following form and respond with this form ONLY:\n"
-#     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
-#     + "\n"
-#     + "8 - If \"command\" is empty, set it to \"do_nothing\" with args \"{}\".\n"
-# )
 
 
 DEFAULT_AGENT_NAME = "LoopGPT"

@@ -24,7 +24,6 @@ for req in all_requires:
         install_requires.append(req)
 
 
-
 if __name__ == "__main__":
     setup(
         install_requires=install_requires,

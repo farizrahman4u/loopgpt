@@ -35,7 +35,7 @@ class Summarizer:
             [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
         )
         if "NO ANSWER" in resp.upper():
-            return ""  # FixME
+            return ""  # FIXME
         return resp
 
     def summarize_chunk(self, text, query):
@@ -64,7 +64,6 @@ class Summarizer:
         if spinner:
             spinner.hide()
         summaries = []
-        # all_summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
             if not query:
                 summary = self.summarize_chunk(chunk, query)
@@ -73,13 +72,6 @@ class Summarizer:
                 ans = self.qa_chunk(chunk, query)
                 if ans:
                     summaries.append(ans)
-            # resp = self.qa_or_summarize_chunk(chunk, query)
-            # if resp["has_answer"]:
-            #     summary = resp["answer"]
-            #     summaries.append(summary)
-            #     all_summaries.append(summary)
-            # else:
-            #     all_summaries.append(resp["summary"])
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
