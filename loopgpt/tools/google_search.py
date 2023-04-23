@@ -23,12 +23,11 @@ class GoogleSearch(BaseTool):
         from duckduckgo_search import ddg
 
         results = []
-        if getattr(self, "agent", None):
-            for result in ddg(query, max_results=num_results):
-                self.agent.memory.add(
-                    f"Search result for {query}: [{result['title']}]({result['href']})"
-                )
-                results.append([result["title"], result["href"], result["body"]])
+
+        for result in ddg(query, max_results=num_results):
+            results.append([result["title"], result["href"], result["body"]])
+
+        self._add_to_memory(query, results)
         return {"results": results}
 
     def _google_search(self, query, num_results=8):
@@ -42,14 +41,22 @@ class GoogleSearch(BaseTool):
             .get("items", [])
         )
         results_ = []
-        if getattr(self, "agent", None):
-            for result in results:
-                self.agent.memory.add(
-                    f"Search result for {query}: [{result['title']}]({result['link']})"
-                )
-                results_.append([result["title"], result["link"], result["snippet"]])
+
+        for result in results:
+            results_.append([result["title"], result["link"], result["snippet"]])
+
+        self._add_to_memory(query, results_)
 
         return {"results": results_}
+
+    def _add_to_memory(self, query, results):
+        if hasattr(self, "agent"):
+            entry = f"Search result for {query}:\n"
+            for r in results:
+                entry += f"\t{r[0]}: {r[1]}\n"
+            entry += "\n"
+            self.agent.memory.add(entry)
+
 
     def run(self, query, num_results=8):
         try:

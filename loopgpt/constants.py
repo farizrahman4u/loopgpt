@@ -9,12 +9,15 @@ DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
         "text": "thought",
         "reasoning": "reasoning",
+        "progress": "what you have done so far",
         "plan": "- short bulleted\n- list that conveys\n- long-term plan",
-        "criticism": "constructive self-criticism",
+        # "criticism": "constructive self-criticism",
         "speak": "thoughts summary to say to user",
     },
     "command": {"name": "next command in your plan", "args": {"arg name": "value"}},
 }
+
+
 
 DEFAULT_RESPONSE_FORMAT = f"You should only respond in JSON format as described below \nResponse Format: \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the response can be parsed by Python json.loads"
 
@@ -74,6 +77,27 @@ INIT_PROMPT = (
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
 )
+
+# INIT_PROMPT = (
+#     "INSTRUCTIONS:\n"
+#     + "1 - Execute the next best command to achieve the goals.\n"
+#     + "2 - Fill the following form and respond with the form ONLY:\n"
+#     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+#     + "\n"
+# )
+
+# NEXT_PROMPT = (
+#     "INSTRUCTIONS:\n"
+#     + "1 - Use commands to achieve your goals.\n"
+#     + "2 - Tell the user the progress of your goals.\n"
+#     + "3 - Tell the user what you learned from the output of the previous command.\n"
+#     + "4 - Save the output of the previous command to a file if needed.\n"
+#     + "6 - Tell the user why you are executing the next command.\n"
+#     + "7 - Do not write explanations. Fill the following form and respond with this form ONLY:\n"
+#     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
+#     + "\n"
+#     + "8 - If \"command\" is empty, set it to \"do_nothing\" with args \"{}\".\n"
+# )
 
 
 DEFAULT_AGENT_NAME = "LoopGPT"

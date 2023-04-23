@@ -56,6 +56,7 @@ class Agent:
         self.tool_response = None
         self.init_prompt = INIT_PROMPT
         self.next_prompt = NEXT_PROMPT
+        self.progress = []
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -73,7 +74,7 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         msgs = self._get_non_user_messages(10)
-        relevant_memory = []#self.memory.get(str(msgs), 5)  # if len(msgs) > 5 else []
+        relevant_memory = self.memory.get(str(msgs), 5)  # if len(msgs) > 5 else []
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         history = self._get_compressed_history()
 
@@ -111,36 +112,40 @@ class Agent:
     def _get_compressed_history(self):
         hist = self.history[:]
         system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
-        for i in system_msgs[:-1]:
-            entry = hist[i].copy()
-            msg = entry["content"]
-            if msg.startswith("Response from "):
-                tool = msg[len("Response from ") :].split(":", 1)[0]
-                entry["content"] = f"<Response from {tool}>"
-                hist[i] = entry
+        # for i in system_msgs[:-1]:
+        #     entry = hist[i].copy()
+        #     msg = entry["content"]
+        #     if msg.startswith("Response from "):
+        #         tool = msg[len("Response from ") :].split(":", 1)[0]
+        #         entry["content"] = f"<Response from {tool}>"
+        #         hist[i] = entry
+        # toremove = system_msgs[:-1]
+        # hist = [hist[i] for i in range(len(hist)) if i not in toremove]
         assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs[:-1]:
+        for i in assist_msgs:
             entry = hist[i].copy()
             try:
                 respd = json.loads(entry["content"])
+                # respd.pop("command", None)
                 thoughts = respd.get("thoughts")
                 if thoughts:
                     thoughts.pop("reasoning", None)
                     thoughts.pop("speak", None)
-                    thoughts.pop("criticism", None)
                     # if False and i < len(assist_msgs) - 2:
                     thoughts.pop("text", None)
+                    thoughts.pop("plan", None)
                 entry["content"] = json.dumps(respd, indent=2)
                 hist[i] = entry
             except:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        for i in user_msgs:
-            entry = hist[i].copy()
-            msg = entry["content"]
-            if msg in [self.next_prompt, self.init_prompt]:
-                entry["content"] = NEXT_PROMPT_SMALL
-                hist[i] = entry
+        # for i in user_msgs:
+        #     entry = hist[i].copy()
+        #     msg = entry["content"]
+        #     if msg in [self.next_prompt, self.init_prompt]:
+        #         entry["content"] = NEXT_PROMPT_SMALL
+        #         hist[i] = entry
+        hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
 
     @spinner
@@ -195,6 +200,9 @@ class Agent:
             self.staging_response = resp
         except Exception as e:
             pass
+        progress = resp.get("thoughts", {}).get("progress")
+        if progress:
+            self.progress.append(progress)
         self.history.append({"role": "user", "content": message})
         self.history.append(
             {
@@ -320,10 +328,16 @@ class Agent:
             prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
+        if self.progress:
+            prompt.append(self.progress_prompt())
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
         return f"You are {self.name}, {self.description}."
+
+    def progress_prompt(self):
+        progress = '\n'.join(self.progress)
+        return f"CURRENT PROGRESS:\n{progress}\n"
 
     def goals_prompt(self):
         prompt = []

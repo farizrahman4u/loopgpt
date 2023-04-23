@@ -36,10 +36,8 @@ class Summarizer:
         resp = self.model.chat(
             [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
         )
-        if resp.strip().upper() in ("NO ANSWER", '"NO ANSWER"', "'NO ANSWER'"):
-            return ""
-        # if "NO ANSWER " in resp.upper():
-        #     return ""
+        if "NO ANSWER" in resp.upper():
+            return ""  # FixME
         return resp
 
     def summarize_chunk(self, text, query):
@@ -87,8 +85,7 @@ class Summarizer:
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        if self._count_tokens(summary) > 500:
-            summary = self.summarize_chunk(summary, query)
+        summary = self.summarize_chunk(summary, query)
         if spinner:
             spinner.show()
         return summary, summaries

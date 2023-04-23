@@ -20,7 +20,7 @@ import os
 LOOP_GPT = Fore.GREEN + "LoopGPT"
 REASONING = Fore.LIGHTBLUE_EX + "REASONING"
 PLAN = Fore.LIGHTYELLOW_EX + "PLAN"
-CRITICISM = Fore.LIGHTRED_EX + "CRITICISM"
+PROGRESS = Fore.LIGHTRED_EX + "PROGRESS"
 SPEAK = Fore.LIGHTGREEN_EX + "SPEAK"
 COMMAND = Fore.LIGHTMAGENTA_EX + "NEXT_COMMAND"
 SYSTEM = Fore.LIGHTYELLOW_EX + "SYSTEM"
@@ -30,7 +30,7 @@ profiles = {
     "loopgpt": LOOP_GPT,
     "reasoning": REASONING,
     "plan": PLAN,
-    "criticism": CRITICISM,
+    "progress": PROGRESS,
     "speak": SPEAK,
     "command": COMMAND,
     "system": SYSTEM,
@@ -130,8 +130,8 @@ def cli(agent, continuous=False):
                         if isinstance(thoughts["plan"], str)
                         else thoughts["plan"]
                     )
-                if "criticism" in thoughts:
-                    msgs["criticism"] = thoughts["criticism"]
+                if "progress" in thoughts:
+                    msgs["progress"] = thoughts["progress"]
                 if "speak" in thoughts:
                     msgs["speak"] = "(voice) " + thoughts["speak"]
                 for kind, msg in msgs.items():
