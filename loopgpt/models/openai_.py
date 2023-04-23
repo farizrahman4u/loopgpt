@@ -29,8 +29,6 @@ class OpenAIModel(BaseModel):
         import openai
         from openai.error import RateLimitError
 
-        print("=====================================")
-        print(messages)
         api_key = _getkey(self.api_key)
         num_retries = 3
         for _ in range(num_retries):
@@ -42,9 +40,6 @@ class OpenAIModel(BaseModel):
                     max_tokens=max_tokens,
                     temperature=temperature,
                 )["choices"][0]["message"]["content"]
-                print("------------------------------")
-                print(resp)
-                print("==============================")
                 return resp
 
             except RateLimitError:

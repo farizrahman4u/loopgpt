@@ -50,20 +50,21 @@ EXPERIMENTAL_NEXT_PROMPT = (
     + "    return json_format\n"
 )
 
+
 NEXT_PROMPT = (
     "INSTRUCTIONS:\n"
-    + "1 - Use the command repsonses mentioned in previous system messages to plan your next command to work towards your goals.\n"
-    + "2 - Only use available commmands.\n"
-    + "3 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
-    + "4 - A command is considered executed only if it is confirmed by a system message.\n"
-    + "5 - A command is not considered executed just becauses it was in your plan.\n"
-    + "6 - Rmember to use the output of previous command. If it contains useful information, save it to a file.\n"
-    + "7 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
-    + '8 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
-    + '9 - Once all the planned commands are executed and ALL the goals are achieved, execute the "task_complete" command.\n'
-    # + "10 - Explicitly associate a command with each step in your plan.\n"
-    + "10 - Make sure to execute commands only with supported arguments.\n"
-    + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + "1 - Check the progress of your goals.\n"
+    + "2 - If you have achieved all your goals, execute the \"task_complete\" command IMMEDIATELY. Otherwise,\n"
+    + "3 - Use the command responses in previous system messages to plan your next command to work towards your goals\n"
+    + "4 - Only use available commmands.\n"
+    + "5 - Commands are expensive. Aim to complete tasks in the least number of steps.\n"
+    + "6 - A command is considered executed only if it is confirmed by a system message.\n"
+    + "7 - A command is not considered executed just becauses it was in your plan.\n"
+    + "8 - Remember to use the output of previous command. If it contains useful information, save it to a file.\n"
+    + "9 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
+    + "10 - Execute the \"do_nothing\" command ONLY if there is no other command to execute.\n"
+    + "11 - Make sure to execute commands only with supported arguments.\n"
+    + "12 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
 )

@@ -31,8 +31,6 @@ class Summarizer:
 
     def qa_chunk(self, text, query):
         prompt = f"""{text}\n\nUsing the above text, try to answer the following query: "{query}". -- if the query cannot be answered using the text, say \"NO ANSWER\"\n"""
-        print("length of text:", len(text))
-        print("number of tokens:", self.model.count_tokens([{ "role": "user", "content": prompt}]))
         resp = self.model.chat(
             [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
         )
