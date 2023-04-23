@@ -2,23 +2,28 @@ from typing import Dict, List, Optional, Union
 from loopgpt.models.base import BaseModel
 
 try:
-    from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
-except ImportError as e:
-    raise ImportError(
-        "Please install transformers (pip install transformers) to use hugging face model."
-    ) from e
+    from transformers import StoppingCriteria
 
-class StopOnTokens(StoppingCriteria):
-    def __call__(self, input_ids, scores, **kwargs) -> bool:
-        stop_ids = [50278, 50279, 50277, 1, 0]
-        for stop_id in stop_ids:
-            if input_ids[0][-1] == stop_id:
-                return True
-        return False
+    class StopOnTokens(StoppingCriteria):
+        def __call__(self, input_ids, scores, **kwargs) -> bool:
+            stop_ids = [50278, 50279, 50277, 1, 0]
+            for stop_id in stop_ids:
+                if input_ids[0][-1] == stop_id:
+                    return True
+            return False
+except ImportError:
+    pass
 
 class HuggingFaceModel(BaseModel):
     def __init__(self, model="stabilityai/stablelm-tuned-alpha-7b", load_in_8bit=False):
         import torch
+
+        try:
+            from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
+        except ImportError as e:
+            raise ImportError(
+                "Please install transformers (pip install transformers) to use hugging face model."
+            ) from e
 
         super(HuggingFaceModel, self).__init__()
         self.model = model
