@@ -30,12 +30,12 @@ class _BaseCodeTool(BaseTool):
 class ExecutePythonFile(_BaseCodeTool):
     @property
     def args(self):
-        return {"file": "The Python file path as a string."}
+        return {"file": "Path to the Python file as a string."}
 
     @property
     def resp(self):
         return {
-            "output": "Value of stdout if the execution was successfull. Else error message."
+            "output": "Value of stdout if the execution was successful. Else error message."
         }
 
     def run(self, file):
@@ -55,7 +55,7 @@ class ExecutePythonFile(_BaseCodeTool):
             return {"output": res.stdout}
 
 
-class EvaluateCode(_BaseCodeTool):
+class ReviewCode(_BaseCodeTool):
     @property
     def description(self):
         return "Returns a list of suggestions to improve a given piece of code."

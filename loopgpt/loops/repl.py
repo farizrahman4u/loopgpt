@@ -20,7 +20,7 @@ import os
 LOOP_GPT = Fore.GREEN + "LoopGPT"
 REASONING = Fore.LIGHTBLUE_EX + "REASONING"
 PLAN = Fore.LIGHTYELLOW_EX + "PLAN"
-CRITICISM = Fore.LIGHTRED_EX + "CRITICISM"
+PROGRESS = Fore.LIGHTRED_EX + "PROGRESS"
 SPEAK = Fore.LIGHTGREEN_EX + "SPEAK"
 COMMAND = Fore.LIGHTMAGENTA_EX + "NEXT_COMMAND"
 SYSTEM = Fore.LIGHTYELLOW_EX + "SYSTEM"
@@ -30,7 +30,7 @@ profiles = {
     "loopgpt": LOOP_GPT,
     "reasoning": REASONING,
     "plan": PLAN,
-    "criticism": CRITICISM,
+    "progress": PROGRESS,
     "speak": SPEAK,
     "command": COMMAND,
     "system": SYSTEM,
@@ -112,6 +112,7 @@ def cli(agent, continuous=False):
         return
     write_divider(big=True)
     resp = agent.chat()
+    n = 1
     while True:
         if isinstance(resp, str):
             print_line(agent.name, resp)
@@ -129,8 +130,8 @@ def cli(agent, continuous=False):
                         if isinstance(thoughts["plan"], str)
                         else thoughts["plan"]
                     )
-                if "criticism" in thoughts:
-                    msgs["criticism"] = thoughts["criticism"]
+                if "progress" in thoughts:
+                    msgs["progress"] = thoughts["progress"]
                 if "speak" in thoughts:
                     msgs["speak"] = "(voice) " + thoughts["speak"]
                 for kind, msg in msgs.items():
@@ -149,13 +150,18 @@ def cli(agent, continuous=False):
                             end="\n\n",
                         )
                     while True:
-                        if continuous:
+                        if continuous or n > 1:
                             yn = "y"
+                            n -= 1
                         else:
-                            yn = input(f"Execute? (Y/N): ")
-                            if yn.lower().strip() == "exit":
-                                return
+                            inp = input(
+                                f"Execute? (Y/N/Y:n to execute n steps continuously): "
+                            )
+                            yn, n = inp.split(":") if ":" in inp else (inp, 1)
+                            n = int(n)
                             yn = yn.lower().strip()
+                            if yn == "exit":
+                                return
                         if yn in ("y", "n"):
                             break
                     if yn == "y":
@@ -163,7 +169,7 @@ def cli(agent, continuous=False):
                         if cmd == "task_complete":
                             return
                         print_line("system", f"Executing command: {cmd}")
-                        resp = agent.chat(agent.next_prompt, True)
+                        resp = agent.chat("", True)
                         print_line("system", f"{cmd} output: {agent.tool_response}")
                     elif yn == "n":
                         feedback = input(
@@ -171,8 +177,6 @@ def cli(agent, continuous=False):
                         )
                         if feedback.lower().strip() == "exit":
                             return
-                        next_prompt = agent.next_prompt
-                        feedback = next_prompt + "\n\n" + feedback
                         resp = agent.chat(feedback, False)
                     write_divider()
                     continue

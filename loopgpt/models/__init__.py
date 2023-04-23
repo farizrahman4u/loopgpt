@@ -1,5 +1,6 @@
-from loopgpt.models.openai_ import OpenAIModel
 from loopgpt.models.stable_lm import StableLMModel
+from loopgpt.models.llama_cpp import LlamaCppModel
+from loopgpt.models.openai_ import OpenAIModel
 from loopgpt.models.hf import HuggingFaceModel
 from loopgpt.models.base import *
 
@@ -21,9 +22,3 @@ def from_config(config) -> BaseModel:
     class_name = config["class"]
     clss = user_providers.get(class_name) or globals()[class_name]
     return clss.from_config(config)
-
-def builtin_models():
-    return [
-        OpenAIModel,
-        StableLMModel,
-    ]

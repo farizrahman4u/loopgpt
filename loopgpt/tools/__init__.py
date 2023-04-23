@@ -6,7 +6,8 @@ from loopgpt.tools.agent_manager import (
 )
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.tools.browser import Browser
-from loopgpt.tools.code import ExecutePythonFile, EvaluateCode, ImproveCode, WriteTests
+from loopgpt.tools.code import ExecutePythonFile, ReviewCode, ImproveCode, WriteTests
+from loopgpt.tools.math import EvaluateMath
 from loopgpt.tools.google_search import GoogleSearch
 from loopgpt.tools.filesystem import (
     ReadFromFile,
@@ -49,8 +50,9 @@ def builtin_tools():
         ListAgents,
         DeleteAgent,
         *FileSystemTools,
-        EvaluateCode,
+        ReviewCode,
         ImproveCode,
         WriteTests,
         ExecutePythonFile,
+        EvaluateMath,
     ]

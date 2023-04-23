@@ -33,23 +33,25 @@ class OpenAIModel(BaseModel):
         num_retries = 3
         for _ in range(num_retries):
             try:
-                return openai.ChatCompletion.create(
+                resp = openai.ChatCompletion.create(
                     model=self.model,
                     messages=messages,
                     api_key=api_key,
                     max_tokens=max_tokens,
                     temperature=temperature,
                 )["choices"][0]["message"]["content"]
+                return resp
+
             except RateLimitError:
                 logger.warn("Rate limit exceeded. Retrying after 20 seconds.")
                 time.sleep(20)
                 continue
 
-
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
-        tokens_per_message, tokens_per_name = {"gpt-3.5-turbo": (4, -1), "gpt-4": (3, 1)}[
-            self.model
-        ]
+        tokens_per_message, tokens_per_name = {
+            "gpt-3.5-turbo": (4, -1),
+            "gpt-4": (3, 1),
+        }[self.model]
         enc = tiktoken.encoding_for_model(self.model)
         num_tokens = 0
         for message in messages:
@@ -61,7 +63,6 @@ class OpenAIModel(BaseModel):
         num_tokens += 3
         return num_tokens
 
-
     def get_token_limit(self) -> int:
         return {
             "gpt-3.5-turbo": 4000,
@@ -70,12 +71,14 @@ class OpenAIModel(BaseModel):
 
     def config(self):
         cfg = super().config()
-        cfg.update({
-            "model": self.model,
-            "api_key": self.api_key,
-        })
+        cfg.update(
+            {
+                "model": self.model,
+                "api_key": self.api_key,
+            }
+        )
         return cfg
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config["api_key"])
+        return cls(config["model"], config.get("api_key", None))

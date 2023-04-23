@@ -1,4 +1,4 @@
-from loopgpt.models.base import BaseModel
+from loopgpt.models.hf import HuggingFaceModel
 
-class StableLMModel(BaseModel):
-    ...
+class StableLMModel(HuggingFaceModel):
+    pass

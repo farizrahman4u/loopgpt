@@ -56,6 +56,9 @@ class Agent:
         self.tool_response = None
         self.init_prompt = INIT_PROMPT
         self.next_prompt = NEXT_PROMPT
+        self.progress = None
+        self.plan = []
+        self.constraints = []
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -72,55 +75,46 @@ class Agent:
             "role": "system",
             "content": f"The current time and date is {time.strftime('%c')}",
         }
-        prompt = [header, dtime]
         msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 5) if len(msgs) > 5 else []
-        memory_added = False
-        if relevant_memory:
-            # Add as many documents from memory as possible while staying under the token limit
-            token_limit = 1500
-            while relevant_memory:
+        relevant_memory = self.memory.get(str(msgs), 5)
+        user_prompt = [{"role": "user", "content": user_input}] if user_input else []
+        history = self._get_compressed_history()
+
+        def _msgs():
+            msgs = [header, dtime]
+            msgs += history[:-1]
+            if relevant_memory:
                 memstr = "\n".join(relevant_memory)
                 context = {
                     "role": "system",
-                    "content": f"This reminds you of these events from your past:\n{memstr}\n",
+                    "content": f"You have the following items in your memory as a result of previously executed commands:\n{memstr}\n",
                 }
-                token_count = self.model.count_tokens(prompt + [context])
-                if token_count < token_limit:
+                msgs.append(context)
+            msgs += history[-1:]
+            msgs += user_prompt
+            msgs += [{"role": "system", "content": self.next_prompt}]
+            return msgs
+
+        maxtokens = self.model.get_token_limit() - 1000
+        while True:
+            msgs = _msgs()
+            ntokens = self.model.count_tokens(msgs)
+            if ntokens < maxtokens:
+                break
+            else:
+                if len(history) > 1:
+                    history = history[1:]
+                elif relevant_memory:
+                    relevant_memory = relevant_memory[1:]
+                else:
                     break
-                relevant_memory = relevant_memory[:-1]
-            if relevant_memory:
-                memory_added = True
-                prompt.append(context)
-        history = self._get_compressed_history()
-        user_prompt = [{"role": "user", "content": user_input}] if user_input else []
-        prompt = prompt[:2] + history + prompt[2:]
-        token_limit = self.model.get_token_limit() - 1000  # 1000 reserved for response
-        token_count = self.model.count_tokens(prompt + user_prompt)
-        while history[:-1] and token_count > token_limit:
-            history = history[1:]
-            prompt.pop(2)
-            token_count = self.model.count_tokens(prompt + user_prompt)
-        if memory_added and len(prompt) > 4:
-            sys_resp = prompt.pop(-2)
-            agent_resp = prompt.pop(-2)
-            prompt.append(agent_resp)
-            prompt.append(sys_resp)
-        prompt += user_prompt
-        return prompt, token_count
+        return msgs, ntokens
 
     def _get_compressed_history(self):
         hist = self.history[:]
         system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
-        for i in system_msgs[:-1]:
-            entry = hist[i].copy()
-            msg = entry["content"]
-            if msg.startswith("Response from "):
-                tool = msg[len("Response from ") :].split(":", 1)[0]
-                entry["content"] = f"<Response from {tool}>"
-                hist[i] = entry
         assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs[:-1]:
+        for i in assist_msgs:
             entry = hist[i].copy()
             try:
                 respd = json.loads(entry["content"])
@@ -128,20 +122,14 @@ class Agent:
                 if thoughts:
                     thoughts.pop("reasoning", None)
                     thoughts.pop("speak", None)
-                    thoughts.pop("criticism", None)
-                    # if False and i < len(assist_msgs) - 2:
                     thoughts.pop("text", None)
+                    thoughts.pop("plan", None)
                 entry["content"] = json.dumps(respd, indent=2)
                 hist[i] = entry
             except:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        for i in user_msgs:
-            entry = hist[i].copy()
-            msg = entry["content"]
-            if msg in [self.next_prompt, self.init_prompt]:
-                entry["content"] = NEXT_PROMPT_SMALL
-                hist[i] = entry
+        hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
 
     @spinner
@@ -181,19 +169,40 @@ class Agent:
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = self.model.get_token_limit()
-        maxt_tokens = max(1000, token_limit - token_count)
+        max_tokens = min(1000, max(token_limit - token_count, 0))
+        assert max_tokens
         resp = self.model.chat(
             full_prompt,
-            max_tokens=maxt_tokens,
+            max_tokens=max_tokens,
             temperature=self.temperature,
         )
         try:
             resp = self._load_json(resp)
-            if "name" in resp:
-                resp = {"command": resp}
-            self.staging_tool = resp["command"]
-            self.staging_response = resp
-        except Exception as e:
+            plan = resp.get("plan")
+            if plan and isinstance(plan, list):
+                if (
+                    len(plan) == 0
+                    or len(plan) == 1
+                    and len(plan[0].replace("-", "")) == 0
+                ):
+                    self.staging_tool = {"name": "task_complete", "args": {}}
+                    self.staging_response = resp
+            else:
+                if "name" in resp:
+                    resp = {"command": resp}
+                self.staging_tool = resp["command"]
+                self.staging_response = resp
+
+            progress = resp.get("thoughts", {}).get("progress")
+            if progress:
+                self.progress = progress
+            plan = resp.get("thoughts", {}).get("plan")
+            if plan:
+                if isinstance(plan, str):
+                    self.plan = [plan]
+                if isinstance(plan, list):
+                    self.plan = plan
+        except:
             pass
         self.history.append({"role": "user", "content": message})
         self.history.append(
@@ -309,9 +318,12 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
+        self.progress = None
         self.history.clear()
         self.sub_agents.clear()
         self.memory.clear()
+        self.plan.clear()
+        self.constraints.clear()
 
     def header_prompt(self):
         prompt = []
@@ -320,16 +332,36 @@ class Agent:
             prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
+        if self.constraints:
+            prompt.append(self.constraints_prompt())
+        if self.plan:
+            prompt.append(self.plan_prompt())
+        if self.progress:
+            prompt.append(self.progress_prompt())
         return "\n".join(prompt) + "\n"
 
     def persona_prompt(self):
         return f"You are {self.name}, {self.description}."
+
+    def progress_prompt(self):
+        return f"CURRENT PROGRESS:\n{self.progress}\n"
+
+    def plan_prompt(self):
+        plan = "\n".join(self.plan)
+        return f"CURRENT PLAN:\n{plan}\n"
 
     def goals_prompt(self):
         prompt = []
         prompt.append(f"GOALS:")
         for i, g in enumerate(self.goals):
             prompt.append(f"{i + 1}. {g}")
+        return "\n".join(prompt) + "\n"
+
+    def constraints_prompt(self):
+        prompt = []
+        prompt.append(f"CONSTRAINTS:")
+        for i, c in enumerate(self.constraints):
+            prompt.append(f"{i + 1}. {c}")
         return "\n".join(prompt) + "\n"
 
     def tools_prompt(self):
@@ -340,7 +372,7 @@ class Agent:
             prompt.append(f"{i + 1}. {tool.prompt()}")
         task_complete_command = {
             "name": "task_complete",
-            "description": "Execute when all tasks are completed.",
+            "description": "Execute when all tasks are completed. This will terminate the session.",
             "args": {},
             "response_format": {"success": "true"},
         }
@@ -368,6 +400,7 @@ class Agent:
             "name": self.name,
             "description": self.description,
             "goals": self.goals[:],
+            "constraints": self.constraints[:],
             "model": self.model.config(),
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
@@ -375,6 +408,8 @@ class Agent:
         if include_state:
             cfg.update(
                 {
+                    "progress": self.progress,
+                    "plan": self.plan[:],
                     "sub_agents": {
                         k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()
                     },
@@ -393,9 +428,12 @@ class Agent:
         agent.name = config["name"]
         agent.description = config["description"]
         agent.goals = config["goals"][:]
+        agent.constraints = config["constraints"][:]
         agent.temperature = config["temperature"]
         agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
+        agent.progress = config.get("progress", None)
+        agent.plan = config.get("plan", [])
         agent.sub_agents = {
             k: (cls.from_config(v[0]), v[1])
             for k, v in config.get("sub_agents", {}).items()
