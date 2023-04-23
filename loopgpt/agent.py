@@ -73,7 +73,7 @@ class Agent:
             "content": f"The current time and date is {time.strftime('%c')}",
         }
         msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 5)  # if len(msgs) > 5 else []
+        relevant_memory = []#self.memory.get(str(msgs), 5)  # if len(msgs) > 5 else []
         user_prompt = [{"role": "user", "content": user_input}] if user_input else []
         history = self._get_compressed_history()
 
