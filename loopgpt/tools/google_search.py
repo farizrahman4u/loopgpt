@@ -49,7 +49,7 @@ class GoogleSearch(BaseTool):
                 )
                 results_.append([result["title"], result["link"], result["snippet"]])
 
-        return {"results": results}
+        return {"results": results_}
 
     def run(self, query, num_results=8):
         try:
