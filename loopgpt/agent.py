@@ -104,7 +104,8 @@ class Agent:
                     relevant_memory = relevant_memory[1:]
                 else:
                     break
-
+        
+        print(ntokens, maxtokens)
         return msgs, ntokens
 
     def _get_compressed_history(self):
