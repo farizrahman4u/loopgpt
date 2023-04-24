@@ -29,6 +29,11 @@ class OpenAIModel(BaseModel):
         import openai
         from openai.error import RateLimitError
 
+        print("=====================OPENAI MESSAGES========================")
+        for message in messages:
+            print(f"{message['role']}: {message['content']}")
+        print("============================================================")
+
         api_key = _getkey(self.api_key)
         num_retries = 3
         for _ in range(num_retries):

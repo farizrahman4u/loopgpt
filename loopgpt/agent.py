@@ -56,7 +56,7 @@ class Agent:
         self.tool_response = None
         self.init_prompt = INIT_PROMPT
         self.next_prompt = NEXT_PROMPT
-        self.progress = None
+        self.progress = []
         self.plan = []
         self.constraints = []
 
@@ -194,7 +194,10 @@ class Agent:
 
             progress = resp.get("thoughts", {}).get("progress")
             if progress:
-                self.progress = progress
+                if isinstance(plan, str):
+                    self.progress += [progress]
+                elif isinstance(progress, list):
+                    self.progress += progress
             plan = resp.get("thoughts", {}).get("plan")
             if plan:
                 if isinstance(plan, str):
@@ -343,7 +346,11 @@ class Agent:
         return f"You are {self.name}, {self.description}."
 
     def progress_prompt(self):
-        return f"CURRENT PROGRESS:\n{self.progress}\n"
+        prompt = []
+        prompt.append(f"PROGRESS SO FAR:")
+        for i, p in enumerate(self.progress):
+            prompt.append(f"{i + 1}. DONE - {p}")
+        return "\n".join(prompt) + "\n"
 
     def plan_prompt(self):
         plan = "\n".join(self.plan)

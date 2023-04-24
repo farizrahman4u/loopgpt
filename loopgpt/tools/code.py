@@ -16,7 +16,7 @@ def ai_function(func, desc, args, model: BaseModel):
         },
         {"role": "user", "content": ", ".join(map(str, args))},
     ]
-    return model.chat(messages=msgs, model=model, temperature=0.0)
+    return model.chat(messages=msgs, temperature=0.0)
 
 
 class _BaseCodeTool(BaseTool):

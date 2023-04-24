@@ -7,9 +7,9 @@ Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 
 DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
-        "text": "thought",
-        "reasoning": "reasoning",
-        "progress": "what you have done so far",
+        "text": "What do you want to say to the user?",
+        "reasoning": "Why do you want to say this?",
+        "progress": "- A detailed list\n - of everything you have done so far",
         "plan": "- short bulleted\n- list that conveys\n- long-term plan",
         "speak": "thoughts summary to say to user",
     },
