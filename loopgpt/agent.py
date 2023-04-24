@@ -414,7 +414,7 @@ class Agent:
         if include_state:
             cfg.update(
                 {
-                    "progress": self.progress,
+                    "progress": self.progress[:],
                     "plan": self.plan[:],
                     "sub_agents": {
                         k: (v[0].config(), v[1]) for k, v in self.sub_agents.items()
@@ -438,7 +438,7 @@ class Agent:
         agent.temperature = config["temperature"]
         agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
-        agent.progress = config.get("progress", None)
+        agent.progress = config.get("progress", [])
         agent.plan = config.get("plan", [])
         agent.sub_agents = {
             k: (cls.from_config(v[0]), v[1])
