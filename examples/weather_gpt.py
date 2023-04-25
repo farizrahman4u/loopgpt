@@ -22,6 +22,8 @@ class GetWeather(BaseTool):
     
     def run(self, city):
         try:
+            if not isinstance(city, str):
+                return "Error: The city name should be a string."
             url = "https://wttr.in/{}?format=%l+%C+%h+%t+%w+%p+%P".format(city)
             data = requests.get(url).text.split(" ")
             keys = ("location", "condition", "humidity", "temperature", "wind", "precipitation", "pressure")
@@ -36,7 +38,8 @@ agent.description = "an AI assistant that tells you the weather"
 agent.goals = [
     "Get the weather for NewYork and Beijing",
     "Give the user tips on how to dress for the weather in NewYork and Beijing",
-    "Write the tips to a file called 'dressing_tips.txt'"
+    "Write the tips to a file called 'dressing_tips.txt'",
+    "Terminate the session when the file is written"
 ]
 
 # register tool
