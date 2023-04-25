@@ -14,8 +14,14 @@ from loopgpt.embeddings import from_config as embedding_provider_from_config
 from loopgpt.logger import logger
 from colorama import Fore, Style
 
+from dotenv import load_dotenv
+
 import os
 
+
+load_dotenv()
+
+os.environ.get('OPENAI_API_KEY')
 
 def check_openai_key():
     if "OPENAI_API_KEY" not in os.environ:

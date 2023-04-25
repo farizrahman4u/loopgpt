@@ -14,3 +14,4 @@ sentence_transformers[hf]
 accelerate[hf]
 bitsandbytes[hf]
 torch[hf]
+python-dotenv
