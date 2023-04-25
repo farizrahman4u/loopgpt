@@ -186,4 +186,4 @@ def cli(agent, continuous=False):
         inp = input(INPUT_PROMPT)
         if inp.lower().strip() == "exit":
             return
-        resp = agent.chat(inp)
+        resp = agent.chat(agent.next_prompt + "\n\n" + inp)
