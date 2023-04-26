@@ -39,7 +39,7 @@ class GetWeather(BaseTool):
             data = {"report": dict(zip(keys, data))}
             return data
         except Exception as e:
-            return f"An error occured while getting the weather: {e}."
+            return f"An error occurred while getting the weather: {e}."
 
 
 agent = Agent()

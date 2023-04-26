@@ -143,7 +143,7 @@ class Browser(BaseTool):
                 "links": links[:5],
             }
         except Exception as e:
-            return f"An error occured while scraping the website: {e}. Make sure the URL is valid."
+            return f"An error occurred while scraping the website: {e}. Make sure the URL is valid."
 
     def config(self):
         config = super().config()
