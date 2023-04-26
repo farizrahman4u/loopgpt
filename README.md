@@ -315,5 +315,4 @@ Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
 
 
 ## ⭐ Star History 📈
-
-[![Star History Chart](https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date)](https://star-history.com/#farizrahman4u/loopgpt&Date)
+<img src="[image name](https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date)" alt= "Star History Chart"height="200">
