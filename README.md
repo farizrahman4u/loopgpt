@@ -315,4 +315,4 @@ Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
 
 
 ## ⭐ Star History 📈
-<img src="https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date" alt= "Star History Chart" height="200">
+<img src="https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date" alt= "Star History Chart" height="350">
