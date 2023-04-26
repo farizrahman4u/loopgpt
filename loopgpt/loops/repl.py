@@ -88,6 +88,8 @@ def check_agent_config(agent):
         name = prompt("loopgpt", "Enter the name of your AI agent: ")
         if name.lower().strip() == "exit":
             return -1
+        if name.strip() == "":
+            name = "LoopGPT"
         agent.name = name
 
     if agent.description is None or agent.description == DEFAULT_AGENT_DESCRIPTION:
@@ -186,4 +188,4 @@ def cli(agent, continuous=False):
         inp = input(INPUT_PROMPT)
         if inp.lower().strip() == "exit":
             return
-        resp = agent.chat(inp)
+        resp = agent.chat(agent.next_prompt + "\n\n" + inp)
