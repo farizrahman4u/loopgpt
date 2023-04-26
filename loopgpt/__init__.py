@@ -21,8 +21,6 @@ import os
 
 load_dotenv()
 
-os.environ.get('OPENAI_API_KEY')
-
 def check_openai_key():
     if "OPENAI_API_KEY" not in os.environ:
         logger.warn(
