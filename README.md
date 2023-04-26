@@ -312,3 +312,10 @@ Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
 
 [google-console]: https://console.developers.google.com
 [google-custom-search]: https://programmablesearchengine.google.com/controlpanel/create
+
+
+## ⭐⭐⭐
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date)](https://star-history.com/#farizrahman4u/loopgpt&Date)
