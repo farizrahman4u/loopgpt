@@ -50,7 +50,8 @@ pip install git+https://www.github.com/farizrahman4u/loopgpt.git@main
 
 ```bash
 git clone https://www.github.com/farizrahman4u/loopgpt.git@main
-pip install -e loopgpt
+cd  loopgpt
+pip install -e .
 ```
 
 ## 🏎️ Getting Started
