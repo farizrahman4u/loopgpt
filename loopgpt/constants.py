@@ -59,7 +59,7 @@ NEXT_PROMPT = (
     + "6 - A command is considered executed only if it is confirmed by a system message.\n"
     + "7 - A command is not considered executed just becauses it was in your plan.\n"
     + "8 - Remember to use the output of previous command. If it contains useful information, save it to a file.\n"
-    + "9 - Do not use commands to retireve or analyze information you already have. Use your long term memory instead.\n"
+    + "9 - Do not use commands to retrieve or analyze information you already have. Use your long term memory instead.\n"
     + '10 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
     + "11 - Make sure to execute commands only with supported arguments.\n"
     + "12 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
