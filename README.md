@@ -297,7 +297,7 @@ agent = loopgpt.Agent.from_config(agent_config)
             - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
             - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
             - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
-    OR
+    - OR
     - Create a file called `.env` in your current directory (where your terminal is running from) and add the following line to it:
         ```
         OPENAI_API_KEY="your-api-key"
