@@ -30,11 +30,15 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 
 ## 🧑‍💻 Installation
 
+This installs the latest stable version of L♾️pGPT. This is recommended for most users:
+
 ### Install from PyPI
 
 ```bash
 pip install loopgpt
 ```
+
+The below two methods install the latest development version of L♾️pGPT. Note that this version maybe unstable:
 
 ### Install from source
 
@@ -46,15 +50,16 @@ pip install git+https://www.github.com/farizrahman4u/loopgpt.git@main
 
 ```bash
 git clone https://www.github.com/farizrahman4u/loopgpt.git@main
-cd loopgpt
-python setup.py develop
+pip install -e loopgpt
 ```
 
 ## 🏎️ Getting Started
 
-**You must set your OpenAI API Key 🔑 in your environment variables for anything to work. See the [Requirements secion](#-requirements) below.**
+**You must set your OpenAI API Key 🔑 in your environment variables or setup your `.env` file for anything to work. See the [Requirements secion](#-requirements) below.**
 
 ### Create a new L♾️pGPT Agent🕵️:
+
+Let's create an agent in a new [Python](https://python.org) script.
 
 ```python
 from loopgpt.agent import Agent
@@ -88,9 +93,15 @@ And we're off! Let's run the Agent🕵️'s CLI:
 agent.cli()
 ```
 
-You can exit the CLI by typing "exit".
+Save your Python file as `research_gpt.py` and run it:
+
+```bash
+python research_gpt.py
+```
 
 <img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true" height="350">
+
+You can exit the CLI by typing "exit".
 
 ### 🔁 Continuous Mode 🔁
 
@@ -282,10 +293,15 @@ agent = loopgpt.Agent.from_config(agent_config)
 - Python 3.8+
 - [An OpenAI API Key](https://platform.openai.com/account/api-keys)
     - Set environment variable `OPENAI_API_KEY` to the API key
-    - How to set environment variables:
-        - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
-        - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
-        - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
+        - How to set environment variables:
+            - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
+            - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
+            - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
+    OR
+    - Create a file called `.env` in your current directory (where your terminal is running from) and add the following line to it:
+        ```
+        OPENAI_API_KEY="your-api-key"
+        ```
 - Google Chrome
 
 ### Optional Requirements
