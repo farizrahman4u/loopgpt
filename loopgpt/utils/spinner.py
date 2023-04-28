@@ -137,3 +137,17 @@ def spinner(func):
             return func(*args, **kwargs)
 
     return inner
+
+
+def hide_spinner(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if ACTIVE_SPINNER:
+            ACTIVE_SPINNER.hide()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            if ACTIVE_SPINNER:
+                ACTIVE_SPINNER.show()
+
+    return inner

@@ -4,6 +4,7 @@ from loopgpt.tools.agent_manager import (
     DeleteAgent,
     ListAgents,
 )
+from loopgpt.tools.user_manager import AskUser
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile, ReviewCode, ImproveCode, WriteTests
@@ -55,4 +56,6 @@ def builtin_tools():
         WriteTests,
         ExecutePythonFile,
         EvaluateMath,
+        AskUser,
+        Shell,
     ]
