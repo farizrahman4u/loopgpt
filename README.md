@@ -74,10 +74,10 @@ Windows users, please make sure "show file extensions" is enabled in your file e
 
 Set an environment variable called `OPENAI_API_KEY` to your OpenAI API Key.
 
-- How to set environment variables:
-    - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
-    - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
-    - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
+How to set environment variables:
+- [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
+- [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
+- [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
 
 ### Create a new L♾️pGPT Agent🕵️:
 
