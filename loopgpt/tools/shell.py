@@ -5,7 +5,7 @@ import subprocess
 class Shell(BaseTool):
     @property
     def desc(self):
-        return "Command line shell. (Non interactive commands only)"
+        return "Use this command to execute any terminal commands. (Non interactive commands only)"
 
     @property
     def args(self):

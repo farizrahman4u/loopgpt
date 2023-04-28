@@ -382,14 +382,14 @@ class Agent:
             "args": {},
             "response_format": {"success": "true"},
         }
-        # do_nothing_command = {
-        #     "name": "do_nothing",
-        #     "description": "Do nothing.",
-        #     "args": {},
-        #     "response_format": {"response": "Nothing Done."},
-        # }
+        do_nothing_command = {
+            "name": "do_nothing",
+            "description": "Do nothing.",
+            "args": {},
+            "response_format": {"response": "Nothing Done."},
+        }
         prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
-        # prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
+        prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
         return "\n".join(prompt) + "\n"
 
     def resources_prompt(self):

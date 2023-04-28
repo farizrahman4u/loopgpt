@@ -57,4 +57,5 @@ def builtin_tools():
         ExecutePythonFile,
         EvaluateMath,
         AskUser,
+        Shell,
     ]
