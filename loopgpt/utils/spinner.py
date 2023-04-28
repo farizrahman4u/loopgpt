@@ -138,6 +138,7 @@ def spinner(func):
 
     return inner
 
+
 def hide_spinner(func):
     @wraps(func)
     def inner(*args, **kwargs):
