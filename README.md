@@ -58,6 +58,27 @@ pip install -e .
 
 **You must set your OpenAI API Key 🔑 in your environment variables or setup your `.env` file for anything to work. See the [Requirements secion](#-requirements) below.**
 
+### Setup your OpenAI API Key 🔑
+
+#### Option 1: Via a `.env` file
+
+Create a `.env` file in your current working directory and add the following line to it:
+
+```bash
+OPENAI_API_KEY="<your-openai-api-key>"
+```
+
+**Windows users: Please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.**
+
+#### Option 2: Via environment variables
+
+Set an environment variable called `OPENAI_API_KEY` to your OpenAI API Key.
+
+- How to set environment variables:
+    - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
+    - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
+    - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
+
 ### Create a new L♾️pGPT Agent🕵️:
 
 Let's create an agent in a new [Python](https://python.org) script.
@@ -293,16 +314,6 @@ agent = loopgpt.Agent.from_config(agent_config)
 
 - Python 3.8+
 - [An OpenAI API Key](https://platform.openai.com/account/api-keys)
-    - Set environment variable `OPENAI_API_KEY` to the API key
-        - How to set environment variables:
-            - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
-            - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
-            - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
-    - OR
-    - Create a file called `.env` in your current directory (where your terminal is running from) and add the following line to it:
-        ```
-        OPENAI_API_KEY="your-api-key"
-        ```
 - Google Chrome
 
 ### Optional Requirements
