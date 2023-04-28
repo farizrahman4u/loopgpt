@@ -26,7 +26,7 @@ class Browser(BaseTool):
         self.summarizer = Summarizer()
         self.cache = {}
         atexit.register(self.close)
-    
+
     def _set_browser_options(self, browser_type):
         self.browser_type = browser_type
         if self.browser_type == "chrome":
@@ -37,20 +37,25 @@ class Browser(BaseTool):
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
         )
-        options.add_experimental_option("excludeSwitches", ["enable-logging"])
-        options.headless = True
+        if self.browser_type == "chrome":
+            options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        elif self.browser_type == "firefox":
+            options.add_argument("TRACE")
+        options.add_argument("--headless")
         self.options = options
-    
+
     def _init_chrome_driver(self):
         try:
             self.driver = webdriver.Chrome(
                 executable_path=ChromeDriverManager().install(), options=self.options
             )
         except:
-            logger.log(logging.INFO, "Failed to initialize Chrome driver. Trying Firefox...")
+            logger.log(
+                logging.INFO, "Failed to initialize Chrome driver. Trying Firefox..."
+            )
             self._set_browser_options("firefox")
             self._init_driver()
-    
+
     def _init_firefox_driver(self):
         self.driver = webdriver.Firefox(options=self.options)
 
@@ -97,11 +102,14 @@ class Browser(BaseTool):
 
     @property
     def desc(self):
-        return "Scrape answers for a question in a given web page"
+        return "Open a single webpage"
 
     @property
     def args(self):
-        return {"url": "URL of the website to scrape", "query": "The search query"}
+        return {
+            "url: str": "URL of the web page",
+            "question: str": "Question to answer",
+        }
 
     @property
     def resp(self):
@@ -116,7 +124,7 @@ class Browser(BaseTool):
         except Exception:
             pass
 
-    def run(self, url: str, query: str):
+    def run(self, url: str, question: str):
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         try:
@@ -125,7 +133,7 @@ class Browser(BaseTool):
             links = self._extract_links_from_soup(soup)[:5]
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
-            summary, chunks = self.summarizer.summarize(text, query)
+            summary, chunks = self.summarizer.summarize(text, question)
             if getattr(self, "agent", None):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")
@@ -135,8 +143,8 @@ class Browser(BaseTool):
                 "links": links[:5],
             }
         except Exception as e:
-            return f"An error occured while scraping the website: {e}. Make sure the URL is valid."
-    
+            return f"An error occurred while scraping the website: {e}. Make sure the URL is valid."
+
     def config(self):
         config = super().config()
         config["browser_type"] = self.browser_type

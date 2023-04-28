@@ -2,9 +2,16 @@ openai
 bs4
 selenium
 numpy
-tiktoken
+tiktoken>=0.3.3
 requests
 colorama
 duckduckgo-search
 google-api-python-client
 webdriver_manager
+simpleeval
+transformers[hf]
+sentence_transformers[hf]
+accelerate[hf]
+bitsandbytes[hf]
+torch[hf]
+python-dotenv

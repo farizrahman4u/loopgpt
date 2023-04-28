@@ -1,11 +1,11 @@
 from loopgpt.tools.base_tool import BaseTool
-from loopgpt.models.openai_ import chat
+from loopgpt.models import BaseModel, OpenAIModel
 import subprocess
 import sys
 import os
 
 
-def ai_function(func, desc, args, model="gpt-3.5-turbo"):
+def ai_function(func, desc, args, model: BaseModel):
     """Credits: Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
     Also see: https://github.com/Torantulino/AI-Functions
     """
@@ -16,7 +16,7 @@ def ai_function(func, desc, args, model="gpt-3.5-turbo"):
         },
         {"role": "user", "content": ", ".join(map(str, args))},
     ]
-    return chat(messages=msgs, model=model, temperature=0.0)
+    return model.chat(messages=msgs, temperature=0.0)
 
 
 class _BaseCodeTool(BaseTool):
@@ -24,18 +24,18 @@ class _BaseCodeTool(BaseTool):
     def model(self):
         if hasattr(self, "agent"):
             return self.agent.model
-        return "gpt-3.5-turbo"
+        return OpenAIModel("gpt-3.5-turbo")
 
 
 class ExecutePythonFile(_BaseCodeTool):
     @property
     def args(self):
-        return {"file": "The Python file path as a string."}
+        return {"file": "Path to the Python file as a string."}
 
     @property
     def resp(self):
         return {
-            "output": "Value of stdout if the execution was successfull. Else error message."
+            "output": "Value of stdout if the execution was successful. Else error message."
         }
 
     def run(self, file):
@@ -55,7 +55,7 @@ class ExecutePythonFile(_BaseCodeTool):
             return {"output": res.stdout}
 
 
-class EvaluateCode(_BaseCodeTool):
+class ReviewCode(_BaseCodeTool):
     @property
     def description(self):
         return "Returns a list of suggestions to improve a given piece of code."

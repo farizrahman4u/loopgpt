@@ -41,6 +41,10 @@ class WriteToFile(BaseTool):
 
 class AppendToFile(BaseTool):
     @property
+    def desc(self):
+        return "Appends content to the end of a file."
+
+    @property
     def args(self):
         return {
             "file": "Path of the file to append to as a string.",

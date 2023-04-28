@@ -32,9 +32,13 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 
 ### Install from PyPI
 
+📗 **This installs the latest stable version of L♾️pGPT. This is recommended for most users:**
+
 ```bash
 pip install loopgpt
 ```
+
+📕 The below two methods install the latest development version of L♾️pGPT. Note that this version maybe unstable:
 
 ### Install from source
 
@@ -46,15 +50,38 @@ pip install git+https://www.github.com/farizrahman4u/loopgpt.git@main
 
 ```bash
 git clone https://www.github.com/farizrahman4u/loopgpt.git@main
-cd loopgpt
-python setup.py develop
+cd  loopgpt
+pip install -e .
 ```
 
 ## 🏎️ Getting Started
 
-**You must set your OpenAI API Key 🔑 in your environment variables for anything to work. See the [Requirements secion](#-requirements) below.**
+### Setup your OpenAI API Key 🔑
+
+#### Option 1️⃣: Via a `.env` file
+
+Create a `.env` file in your current working directory (wherever you are going to run L♾️pGPT from) and add the following line to it:
+
+```bash
+OPENAI_API_KEY="<your-openai-api-key>"
+```
+
+🛑 **IMPORTANT** 🛑
+
+Windows users, please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.
+
+#### Option 2️⃣: Via environment variables
+
+Set an environment variable called `OPENAI_API_KEY` to your OpenAI API Key.
+
+How to set environment variables:
+- [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
+- [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
+- [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
 
 ### Create a new L♾️pGPT Agent🕵️:
+
+Let's create an agent in a new [Python](https://python.org) script.
 
 ```python
 from loopgpt.agent import Agent
@@ -88,9 +115,15 @@ And we're off! Let's run the Agent🕵️'s CLI:
 agent.cli()
 ```
 
-You can exit the CLI by typing "exit".
+Save your Python file as `research_gpt.py` and run it:
+
+```bash
+python research_gpt.py
+```
 
 <img src="/docs/assets/imgs/loopgpt_demo_pic.png?raw=true" height="350">
+
+You can exit the CLI by typing "exit".
 
 ### 🔁 Continuous Mode 🔁
 
@@ -175,7 +208,7 @@ class GetWeather(BaseTool):
             data = {"report": dict(zip(keys, data))}
             return data
         except Exception as e:
-            return {"report": f"An error occured while getting the weather: {e}."}
+            return {"report": f"An error occurred while getting the weather: {e}."}
 ```
 
 That's it! You've built your first custom tool. Let's register it with a new agent and run it:
@@ -281,11 +314,6 @@ agent = loopgpt.Agent.from_config(agent_config)
 
 - Python 3.8+
 - [An OpenAI API Key](https://platform.openai.com/account/api-keys)
-    - Set environment variable `OPENAI_API_KEY` to the API key
-    - How to set environment variables:
-        - [Windows](https://www.architectryan.com/2018/08/31/how-to-change-environment-variables-on-windows-10/)
-        - [Linux](https://www.freecodecamp.org/news/how-to-set-an-environment-variable-in-linux/)
-        - [Mac](https://phoenixnap.com/kb/set-environment-variable-mac)
 - Google Chrome
 
 ### Optional Requirements
@@ -312,3 +340,7 @@ Need help? Join our [Discord](https://discord.gg/rqs26cqx7v).
 
 [google-console]: https://console.developers.google.com
 [google-custom-search]: https://programmablesearchengine.google.com/controlpanel/create
+
+
+## ⭐ Star History 📈
+<img src="https://api.star-history.com/svg?repos=farizrahman4u/loopgpt&type=Date" alt= "Star History Chart" height="350">

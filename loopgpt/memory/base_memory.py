@@ -2,7 +2,7 @@ from typing import *
 
 
 class BaseMemory:
-    def add(doc: str):
+    def add(doc: str, key: Optional[str] = None):
         raise NotImplementedError()
 
     def get(query: str, k: int) -> List[str]:
