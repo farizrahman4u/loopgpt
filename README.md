@@ -60,7 +60,7 @@ pip install -e .
 
 ### Setup your OpenAI API Key 🔑
 
-#### Option 1: Via a `.env` file
+-  **Option 1: Via a `.env` file**
 
 Create a `.env` file in your current working directory and add the following line to it:
 
@@ -68,9 +68,9 @@ Create a `.env` file in your current working directory and add the following lin
 OPENAI_API_KEY="<your-openai-api-key>"
 ```
 
-**Windows users: Please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.**
+<span style="color:red">**Windows users: Please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.**</span>
 
-#### Option 2: Via environment variables
+- **Option 2: Via environment variables**
 
 Set an environment variable called `OPENAI_API_KEY` to your OpenAI API Key.
 
