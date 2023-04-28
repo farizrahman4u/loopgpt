@@ -60,9 +60,8 @@ NEXT_PROMPT = (
     + "7 - A command is not considered executed just becauses it was in your plan.\n"
     + "8 - Remember to use the output of previous command. If it contains useful information, save it to a file.\n"
     + "9 - Do not use commands to retrieve or analyze information you already have. Use your long term memory instead.\n"
-    + '10 - Execute the "do_nothing" command ONLY if there is no other command to execute.\n'
-    + "11 - Make sure to execute commands only with supported arguments.\n"
-    + "12 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + "10 - Make sure to execute commands only with supported arguments.\n"
+    + "11 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
 )
@@ -71,8 +70,7 @@ NEXT_PROMPT = (
 INIT_PROMPT = (
     "Do the following:\n"
     + "1 - Execute the next best command to achieve the goals.\n"
-    + '2 - Execute the "do_nothing" command if there is no other command to execute.\n'
-    + "3 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
+    + "2 - ONLY RESPOND IN THE FOLLOWING FORMAT: (MAKE SURE THAT IT CAN BE DECODED WITH PYTHON JSON.LOADS())\n"
     + json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)
     + "\n"
 )
