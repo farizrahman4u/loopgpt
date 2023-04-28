@@ -32,7 +32,7 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 
 ### Install from PyPI
 
-- **This installs the latest stable version of L♾️pGPT. This is recommended for most users:**
+📗 **This installs the latest stable version of L♾️pGPT. This is recommended for most users:**
 
 ```bash
 pip install loopgpt
