@@ -62,13 +62,15 @@ pip install -e .
 
 -  **Option 1: Via a `.env` file**
 
-Create a `.env` file in your current working directory and add the following line to it:
+Create a `.env` file in your current working directory (wherever you are going to run L♾️pGPT from) and add the following line to it:
 
 ```bash
 OPENAI_API_KEY="<your-openai-api-key>"
 ```
 
-<span style="color:red">**Windows users: Please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.**</span>
+🛑 **IMPORTANT** 🛑
+
+Windows users, please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.
 
 - **Option 2: Via environment variables**
 
