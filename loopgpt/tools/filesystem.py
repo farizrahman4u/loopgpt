@@ -99,11 +99,23 @@ class ListFiles(BaseTool):
     @property
     def resp(self):
         return {
-            "files": "list of files",
+            "files": "list of files and directories",
         }
+    
+    @property
+    def desc(self):
+        return "List files and directories in a given path. Directories end with a trailing slash."
 
     def run(self, *_, **__):
-        return os.listdir()
+        entries_list = []
+        with os.scandir('.') as entries:
+            for entry in entries:
+                if entry.is_dir():
+                    entry_str = f"{entry.name}/"
+                else:
+                    entry_str = entry.name
+                entries_list.append(entry_str)
+            return entries_list
 
 
 FileSystemTools = [
