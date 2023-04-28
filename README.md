@@ -56,11 +56,9 @@ pip install -e .
 
 ## 🏎️ Getting Started
 
-**You must set your OpenAI API Key 🔑 in your environment variables or setup your `.env` file for anything to work. See the [Requirements secion](#-requirements) below.**
-
 ### Setup your OpenAI API Key 🔑
 
--  **Option 1: Via a `.env` file**
+#### Option 1: Via a `.env` file**
 
 Create a `.env` file in your current working directory (wherever you are going to run L♾️pGPT from) and add the following line to it:
 
@@ -72,7 +70,7 @@ OPENAI_API_KEY="<your-openai-api-key>"
 
 Windows users, please make sure "show file extensions" is enabled in your file explorer. Otherwise, your file will be named `.env.txt` instead of `.env`.
 
-- **Option 2: Via environment variables**
+#### Option 2: Via environment variables**
 
 Set an environment variable called `OPENAI_API_KEY` to your OpenAI API Key.
 
