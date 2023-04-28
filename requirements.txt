@@ -2,7 +2,7 @@ openai
 bs4
 selenium
 numpy
-tiktoken
+tiktoken>=0.3.3
 requests
 colorama
 duckduckgo-search

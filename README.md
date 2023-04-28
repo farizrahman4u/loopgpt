@@ -38,7 +38,7 @@ L♾️pGPT is a re-implementation of the popular [Auto-GPT](https://github.com/
 pip install loopgpt
 ```
 
-The below two methods install the latest development version of L♾️pGPT. Note that this version maybe unstable:
+📕 The below two methods install the latest development version of L♾️pGPT. Note that this version maybe unstable:
 
 ### Install from source
 
