@@ -46,15 +46,18 @@ def main():
         if args.reset:
             agent.clear_state()
 
-        agent.cli()
-
-        if not args.readonly:
-            with open(filename, "w") as f:
-                json.dump(agent.config(), f)
+        try:
+            agent.cli()
+        finally:
+            if not args.readonly:
+                with open(filename, "w") as f:
+                    json.dump(agent.config(), f)
     else:
         agent = Agent()
-        agent.cli(continuous=args.continuous)
 
-        if args.save:
-            with open(args.save, "w") as f:
-                json.dump(agent.config(), f)
+        try:
+            agent.cli(continuous=args.continuous)
+        finally:
+            if args.save:
+                with open(args.save, "w") as f:
+                    json.dump(agent.config(), f)
