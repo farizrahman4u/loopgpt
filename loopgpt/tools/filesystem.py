@@ -94,28 +94,36 @@ class CheckIfFileExists(BaseTool):
 class ListFiles(BaseTool):
     @property
     def args(self):
-        return {}
+        return {
+            "path": "Path to the directory to list files and directories in as a string. This is a required argument.",
+            "recursive": "If true, list files and directories recursively. Else, list only the files and directories in the given path. This is a required argument.",
+            "show_hidden": "If true, show hidden files and directories. Defaults to False.",
+            "exclude_dirs": "If true, exclude directories from the result. Defaults to False.",
+        }
 
     @property
     def resp(self):
         return {
-            "files": "list of files and directories",
+            "result": "list of files and directories",
         }
     
     @property
     def desc(self):
         return "List files and directories in a given path. Directories end with a trailing slash."
 
-    def run(self, *_, **__):
+    def run(self, path, recursive, show_hidden=False, exclude_dirs=False):
         entries_list = []
-        with os.scandir('.') as entries:
+        with os.scandir(path) as entries:
             for entry in entries:
-                if entry.is_dir():
-                    entry_str = f"{entry.name}/"
-                else:
-                    entry_str = entry.name
-                entries_list.append(entry_str)
-            return entries_list
+                if show_hidden or not entry.name.startswith("."):
+                    if entry.is_dir():
+                        if not exclude_dirs:
+                            entries_list.append(f"{entry.name}/")
+                        if recursive:
+                            entries_list.extend(self.run(os.path.join(path, entry.name), recursive)["result"])
+                    else:
+                        entries_list.append(entry.name)
+        return {"result": entries_list}
 
 
 FileSystemTools = [
