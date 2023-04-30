@@ -22,7 +22,7 @@ def test_add_key_prompt(monkeypatch):
     monkeypatch.setattr('builtins.input', lambda _: 'my-api-key')
 
     # Run the function
-    AddKeyPrompt()
+    AddKeyPrompt(user_input=input)
 
     # Assert that the .env file was created with the correct key value
     with open(".env") as f:
