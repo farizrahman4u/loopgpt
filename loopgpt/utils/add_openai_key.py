@@ -39,7 +39,8 @@ class AddKeyPrompt():
         response = input(
             f"Key not found in {env_file}. Would you like to add it now? (y/n) ")
         if response.lower() == "y":
-          f.write(f"\n{key}=\n")
+          key_value = input("Please enter the value of the key: ")
+          f.write(f"\n{key}={key_value}\n")
           print(f"Key added to {env_file}")
         else:
           print("Exiting program...")
