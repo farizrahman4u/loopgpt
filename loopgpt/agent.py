@@ -347,7 +347,6 @@ class Agent:
         self.sub_agents.clear()
         self.memory.clear()
         self.plan.clear()
-        self.constraints.clear()
 
     def header_prompt(self):
         prompt = []
