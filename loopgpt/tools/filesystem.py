@@ -120,7 +120,7 @@ class ListFiles(BaseTool):
                         if not exclude_dirs:
                             entries_list.append(f"{entry.name}/")
                         if recursive:
-                            entries_list.extend(self.run(os.path.join(path, entry.name), recursive)["result"])
+                            entries_list.extend(self.run(os.path.join(path, entry.name), recursive, show_hidden, exclude_dirs)["result"])
                     else:
                         entries_list.append(entry.name)
         return {"result": entries_list}
