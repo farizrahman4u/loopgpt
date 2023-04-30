@@ -106,6 +106,50 @@ class ListFiles(BaseTool):
         return os.listdir()
 
 
+class GetCWD(BaseTool):
+    @property
+    def args(self):
+        return {}
+
+    @property
+    def resp(self):
+        return {"path": "Path to the current working directory"}
+
+    @property
+    def desc(self):
+        return "Path to the current working directory/folder"
+
+    def run(self):
+        try:
+            cwd = os.getcwd()
+            return {"path": cwd}
+        except Exception as e:
+            return (
+                f"An error occurred while getting the current working directory: {e}."
+            )
+
+
+class MakeDirectory(BaseTool):
+    @property
+    def args(self):
+        return {"path": "Path of the directory to be made"}
+
+    @property
+    def resp(self):
+        return {"success": "True if the directory was created, False otherwise."}
+
+    @property
+    def desc(self):
+        return "Make a new directory at the given path"
+
+    def run(self, path):
+        try:
+            os.makedirs(path)
+            return {"success": True}
+        except Exception as e:
+            return f"An error occurred while creating a new directory path: {e}."
+
+
 FileSystemTools = [
     WriteToFile,
     ReadFromFile,
@@ -113,4 +157,6 @@ FileSystemTools = [
     DeleteFile,
     CheckIfFileExists,
     ListFiles,
+    GetCWD,
+    MakeDirectory,
 ]
