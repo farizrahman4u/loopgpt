@@ -17,6 +17,8 @@ from loopgpt.tools.filesystem import (
     DeleteFile,
     CheckIfFileExists,
     ListFiles,
+    GetCWD,
+    MakeDirectory,
     FileSystemTools,
 )
 from loopgpt.tools.shell import Shell
