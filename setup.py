@@ -30,7 +30,7 @@ if __name__ == "__main__":
         extras_require=extras_require,
         packages=find_packages(),
         name=package_name,
-        version="0.0.12",
+        version="0.0.13",
         description="Modular Auto-GPT Framework",
         entry_points={"console_scripts": ["loopgpt = loopgpt.loops.cli:main"]},
     )
