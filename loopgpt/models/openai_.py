@@ -10,7 +10,7 @@ def _getkey(key: Optional[str] = None):
     key = key or os.getenv("OPENAI_API_KEY")
     if key is None:
         raise ValueError(
-            "OpenAI API Key not found. Please set the `OPENAI_API_KEY` environment variable. "
+            f"OpenAI API Key not found in the current working directory: {os.getcwd()}. Please set the `OPENAI_API_KEY` environment variable. "
             "See https://github.com/farizrahman4u/loopgpt#-requirements for more details"
         )
 
