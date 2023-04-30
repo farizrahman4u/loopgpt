@@ -23,14 +23,14 @@ agent = loopgpt.Agent()
 `agent.chat()` deals with sending prompts to the agent and executing commands. It returns the Agent's response (see [loopgpt/constants.py](https://github.com/farizrahman4u/loopgpt/blob/main/loopgpt/constants.py) for the response format).
 
 It takes two arguments:
-- **`**message: Optional[str]`**: The message to send to the agent. Defaults to `None`.
-- **`run_tool: bool`**: If specified as `True`, any staged command will be executed. Defaults to `False`.
+- `message: Optional[str]`: The message to send to the agent. Defaults to `None`.
+- `run_tool: bool`: If specified as `True`, any staged command will be executed. Defaults to `False`.
 
 ### Prompts
 
 There are two kinds of prompts that are attached with the `message` argument:
-- **`agent.init_prompt`**: This prompt is sent along with the first message and in case `message` is `None`.
-- **`agent.next_prompt`**: This prompt is sent along with the subsequent messages.
+- `agent.init_prompt`: This prompt is sent along with the first message and in case `message` is `None`.
+- `agent.next_prompt`: This prompt is sent along with the subsequent messages.
 
 ### Staged tool
 
