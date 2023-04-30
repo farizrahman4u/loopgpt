@@ -117,7 +117,7 @@ class GetCWD(BaseTool):
 
     @property
     def desc(self):
-        return "Path to the current working directory/folder"
+        return "Find the current working directory using this command"
 
     def run(self):
         try:
