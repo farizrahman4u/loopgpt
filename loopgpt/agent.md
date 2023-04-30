@@ -18,6 +18,14 @@ import loopgpt
 agent = loopgpt.Agent()
 ```
 
+## Goals and constraints
+
+You can set goals and constraints for the Agent by simply updating the corresponding lists:
+```python
+agent.goals = [...]
+agent.constraints = [...]
+```
+
 ## Chat with Agent
 
 `agent.chat()` deals with sending prompts to the agent and executing commands. It returns the Agent's response (see [loopgpt/constants.py](https://github.com/farizrahman4u/loopgpt/blob/main/loopgpt/constants.py) for the response format).
