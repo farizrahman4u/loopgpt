@@ -5,6 +5,7 @@ from loopgpt.constants import (
     DEFAULT_AGENT_DESCRIPTION,
     NEXT_PROMPT,
     NEXT_PROMPT_SMALL,
+    AgentStates
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models import OpenAIModel, from_config as model_from_config
@@ -59,6 +60,7 @@ class Agent:
         self.progress = []
         self.plan = []
         self.constraints = []
+        self.state = AgentStates.START
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -130,14 +132,26 @@ class Agent:
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
+    
+    def get_full_message(self, message: Optional[str]):
+        if self.state == AgentStates.START:
+            return self.init_prompt + "\n\n" + (message or "")
+        else:
+            return self.next_prompt + "\n\n" + (message or "")
 
     @spinner
-    def chat(self, message: Optional[str] = None, run_tool=False) -> Union[str, Dict]:
-        if message is None:
-            message = self.init_prompt
+    def chat(self, message: Optional[str] = None, run_tool=False) -> Optional[Union[str, Dict]]:
+        if self.state == AgentStates.STOP:
+            raise ValueError(
+                "This agent has completed its tasks. It will not accept any more messages."
+                " You can do `agent.clear_state()` to start over with the same goals."
+            )
+        message = self.get_full_message(message)
         if self.staging_tool:
             tool = self.staging_tool
             if run_tool:
+                output = self.run_staging_tool()
+                self.tool_response = output
                 if tool.get("name") == "task_complete":
                     self.history.append(
                         {
@@ -145,9 +159,8 @@ class Agent:
                             "content": "Completed all user specified tasks.",
                         }
                     )
-                    message = ""
-                output = self.run_staging_tool()
-                self.tool_response = output
+                    self.state = AgentStates.STOP
+                    return
                 if tool.get("name") != "do_nothing":
                     pass
                     # TODO We dont have enough space for this in gpt3
@@ -186,11 +199,19 @@ class Agent:
                 ):
                     self.staging_tool = {"name": "task_complete", "args": {}}
                     self.staging_response = resp
+                    self.state = AgentStates.STOP
             else:
-                if "name" in resp:
-                    resp = {"command": resp}
-                self.staging_tool = resp["command"]
-                self.staging_response = resp
+                if isinstance(resp, dict):
+                    if "name" in resp:
+                        resp = {"command": resp}
+                    if "command" in resp:
+                        self.staging_tool = resp["command"]
+                        self.staging_response = resp
+                        self.state = AgentStates.TOOL_STAGED
+                    else:
+                        self.state = AgentStates.IDLE
+                else:
+                    self.state = AgentStates.IDLE
 
             progress = resp.get("thoughts", {}).get("progress")
             if progress:
@@ -321,6 +342,7 @@ class Agent:
         self.staging_response = None
         self.tool_response = None
         self.progress = None
+        self.state = AgentStates.START
         self.history.clear()
         self.sub_agents.clear()
         self.memory.clear()
@@ -407,6 +429,7 @@ class Agent:
             "description": self.description,
             "goals": self.goals[:],
             "constraints": self.constraints[:],
+            "state": self.state,
             "model": self.model.config(),
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
@@ -435,6 +458,7 @@ class Agent:
         agent.description = config["description"]
         agent.goals = config["goals"][:]
         agent.constraints = config["constraints"][:]
+        agent.state = config["state"]
         agent.temperature = config["temperature"]
         agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
