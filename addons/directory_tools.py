@@ -25,31 +25,6 @@ class CurrentWorkingDir(BaseTool):
             return data
         except Exception as e:
             return {"report": f"An error occurred while getting the current working directory: {e}."}
-        
-class ListDirectories(BaseTool): 
-    @property
-    def args(self):
-        return {"path": "path/to/directory"}
-    
-    @property
-    def resp(self):
-        return {"report": "The list of directories in the path"}
-    
-    @property
-    def id(self):
-        return "list_directories"
-
-    @property
-    def desc(self):
-        return "List directories in a given path"
-
-    def run(self, path):
-        try:
-            data = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
-            data = {"report": data}
-            return data
-        except Exception as e:
-            return {"report": f"An error occurred while getting directories list: {e}."}
 
 class MakeDirectory(BaseTool): 
     @property
@@ -80,6 +55,5 @@ class MakeDirectory(BaseTool):
 
 DirectoryTools = [
     CurrentWorkingDir,
-    ListDirectories,
     MakeDirectory
 ]
