@@ -171,7 +171,7 @@ def cli(agent, continuous=False):
                         if cmd == "task_complete":
                             return
                         print_line("system", f"Executing command: {cmd}")
-                        resp = agent.chat(agent.next_prompt, True)
+                        resp = agent.chat(run_tool=True)
                         print_line("system", f"{cmd} output: {agent.tool_response}")
                     elif yn == "n":
                         feedback = input(
@@ -179,8 +179,6 @@ def cli(agent, continuous=False):
                         )
                         if feedback.lower().strip() == "exit":
                             return
-                        next_prompt = agent.next_prompt
-                        feedback = next_prompt + "\n\n" + feedback
                         resp = agent.chat(feedback, False)
                     write_divider()
                     continue
@@ -188,4 +186,4 @@ def cli(agent, continuous=False):
         inp = input(INPUT_PROMPT)
         if inp.lower().strip() == "exit":
             return
-        resp = agent.chat(agent.next_prompt + "\n\n" + inp)
+        resp = agent.chat(inp)
