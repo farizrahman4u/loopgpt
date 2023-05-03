@@ -13,6 +13,5 @@ def check_openai_key():
                 f.write(f'OPENAI_API_KEY = "{key}"')
                 print("Key added to `.env`")
             load_dotenv()
-            assert os.environ["OPENAI_API_KEY"] == key
         else:
             print("Please set the `OPENAI_API_KEY` environment variable or add it to `.env`. LoopGPT cannot work without it.")
