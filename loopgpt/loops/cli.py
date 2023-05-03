@@ -13,7 +13,9 @@ def main():
         help="Action to perform. If no file is specified, a new agent is created.",
     )
     parser.add_argument("filename", nargs="?", help="Agent state JSON.", default=None)
-    parser.add_argument("--model", help="Model to use, uses gpt-3.5-turbo by default.", default=None)
+    parser.add_argument(
+        "--model", help="Model to use, uses gpt-3.5-turbo by default.", default=None
+    )
     parser.add_argument(
         "--readonly",
         help="Read only mode. Does not write agent state to disk.",

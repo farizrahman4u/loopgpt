@@ -2,6 +2,7 @@ import loopgpt
 
 from loopgpt.tools import Browser
 
+
 def test_serde_basic():
     agent = loopgpt.Agent()
     cfg = agent.config()

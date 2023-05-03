@@ -19,6 +19,7 @@ import sys
 
 load_dotenv()
 
+
 def from_config(config):
     return globals()[config["type"] + "_from_config"](config)
 

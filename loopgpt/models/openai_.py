@@ -6,6 +6,7 @@ import tiktoken
 import time
 import os
 
+
 def _getkey(key: Optional[str] = None):
     key = key or os.getenv("OPENAI_API_KEY")
     if key is None:
@@ -15,6 +16,7 @@ def _getkey(key: Optional[str] = None):
             "See https://github.com/farizrahman4u/loopgpt#setup-your-openai-api-key- for more details"
         )
     return key
+
 
 class OpenAIModel(BaseModel):
     def __init__(self, model: str = "gpt-3.5-turbo", api_key: Optional[str] = None):
