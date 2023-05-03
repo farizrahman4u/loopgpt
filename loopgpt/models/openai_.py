@@ -1,6 +1,7 @@
 from typing import *
 from loopgpt.logger import logger
 from loopgpt.models.base import BaseModel
+
 import tiktoken
 import time
 import os
@@ -10,9 +11,11 @@ def _getkey(key: Optional[str] = None):
     key = key or os.getenv("OPENAI_API_KEY")
     if key is None:
         raise ValueError(
-            "OpenAI API Key not found. Please set the `OPENAI_API_KEY` environment variable. "
-            "See https://github.com/farizrahman4u/loopgpt#-requirements for more details"
+            f"OpenAI API Key not found in the current working directory: {os.getcwd()}. "
+            "Please set the `OPENAI_API_KEY` environment variable or add it to `.env`. "
+            "See https://github.com/farizrahman4u/loopgpt#setup-your-openai-api-key- for more details"
         )
+    return key
 
 
 class OpenAIModel(BaseModel):

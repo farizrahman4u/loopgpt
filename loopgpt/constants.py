@@ -86,11 +86,13 @@ DEFAULT_GOALS = [
     "Always execute plans to completion",
 ]
 
+
 class AgentStates:
     START = "START"
     IDLE = "IDLE"
     TOOL_STAGED = "TOOL_STAGED"
     STOP = "STOP"
+
 
 # SPINNER
 SPINNER_ENABLED = True

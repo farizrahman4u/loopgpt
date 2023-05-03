@@ -5,7 +5,7 @@ from loopgpt.constants import (
     DEFAULT_AGENT_DESCRIPTION,
     NEXT_PROMPT,
     NEXT_PROMPT_SMALL,
-    AgentStates
+    AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.models import OpenAIModel, from_config as model_from_config
@@ -132,7 +132,7 @@ class Agent:
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
-    
+
     def get_full_message(self, message: Optional[str]):
         if self.state == AgentStates.START:
             return self.init_prompt + "\n\n" + (message or "")
@@ -140,7 +140,9 @@ class Agent:
             return self.next_prompt + "\n\n" + (message or "")
 
     @spinner
-    def chat(self, message: Optional[str] = None, run_tool=False) -> Optional[Union[str, Dict]]:
+    def chat(
+        self, message: Optional[str] = None, run_tool=False
+    ) -> Optional[Union[str, Dict]]:
         if self.state == AgentStates.STOP:
             raise ValueError(
                 "This agent has completed its tasks. It will not accept any more messages."
