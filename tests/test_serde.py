@@ -1,8 +1,8 @@
 import loopgpt
+import builtins
+import os
 
 from loopgpt.tools import Browser
-from loopgpt.utils.add_openai_key import AddKeyPrompt
-
 
 def test_serde_basic():
     agent = loopgpt.Agent()
@@ -18,13 +18,15 @@ def test_serde_browser():
 
 def test_add_key_prompt(monkeypatch):
     # Set up mock user input
-    monkeypatch.setattr('builtins.input', lambda _: 'y')
-    monkeypatch.setattr('builtins.input', lambda _: 'my-api-key')
+    responses = iter(["y", "my-api-key"])
+    monkeypatch.setattr(builtins, "input", lambda _: next(responses))
 
+    from loopgpt.utils.openai_key import check_openai_key
     # Run the function
-    AddKeyPrompt(user_input=input)
+    check_openai_key()
 
     # Assert that the .env file was created with the correct key value
-    with open(".env") as f:
-        env = dict(line.strip().split("=") for line in f if line.strip())
-        assert env["OPENAI_API_KEY"] == "my-api-key"
+    with open(".env", "r") as f:
+        assert f.read().strip() == 'OPENAI_API_KEY = "my-api-key"'
+    
+    os.remove(".env")

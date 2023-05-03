@@ -11,10 +11,10 @@ from loopgpt.tools import from_config as tool_from_config
 from loopgpt.memory import from_config as memory_from_config
 from loopgpt.embeddings import from_config as embedding_provider_from_config
 
+from loopgpt.utils.openai_key import check_openai_key
 from dotenv import load_dotenv
-from loopgpt.utils.add_openai_key import check_openai_key
 
-import os
+import sys
 
 
 load_dotenv()
@@ -23,4 +23,5 @@ def from_config(config):
     return globals()[config["type"] + "_from_config"](config)
 
 
-check_openai_key()
+if "pytest" not in sys.modules:
+    check_openai_key()
