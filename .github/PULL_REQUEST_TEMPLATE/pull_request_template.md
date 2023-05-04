@@ -43,17 +43,15 @@ Internal changes:
 
 - [ ] My code follows the code style of this project.
 - [ ] My change requires a change to the documentation.
-- [ ] I have [updated the documentation](https://github.com/farizrahman4u/loopgpt/blob/main/README.md) accordingly. 
-- [ ] My change has adequate [Unit Test coverage]({TestCoverage}).
+- [ ] I have updated the documentation accordingly. 
+- [ ] My change have been tested.
 
 ## Terms
 
 <!--
 By submitting this pull request, you must agree to follow our
-[contributing guide](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CONTRIBUTING.md) and
-[Code of Conduct](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CODE_OF_CONDUCT.md).
+[contributing guide](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CONTRIBUTING.md)
 Put an x in the boxes to confirm you agree.
 -->
 
-- [ ] My contribution follow this project's [contributing guide](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CONTRIBUTING.md)
-- [ ] I agree to follow this project's [Code of Conduct](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CODE_OF_CONDUCT.md)
+- [ ] My contribution follows this project's [contributing guide](https://github.com/farizrahman4u/LoopGPT/tree/main/.github/CONTRIBUTING.md)
