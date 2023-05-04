@@ -4,7 +4,6 @@ First of all, thank you for your interest in contributing to LoopGPT! We appreci
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [How to Contribute](#how-to-contribute)
   - [Reporting Bugs](#reporting-bugs)
@@ -14,10 +13,6 @@ First of all, thank you for your interest in contributing to LoopGPT! We appreci
   - [Code Style](#code-style)
   - [Commit Messages](#commit-messages)
 - [Additional Resources](#additional-resources)
-
-## Code of Conduct
-
-All contributors are expected to adhere to our [Code of Conduct](./CODE_OF_CONDUCT.md). Please read it before participating in the LoopGPT community.
 
 ## Getting Started
 
@@ -48,7 +43,7 @@ We welcome ideas for improvements and new features. To suggest an enhancement, o
 
 ### Code Style
 
-LoopGPT uses [{codestyle}]({URLofCodestyle}) as its code style guide. Please ensure that your code follows these guidelines. 
+LoopGPT uses [Black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html) as its code style guide. Do `pip install black` and run `black .` in the project's root folder to format your code in Black Code Style.
 
 ### Commit Messages
 
@@ -58,7 +53,7 @@ Write clear and concise commit messages that briefly describe the changes made i
 
 - [GitHub Help](https://help.github.com/)
 - [GitHub Pull Request Documentation](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests)
-- [{codestyle}]({URLofCodestyle})
+- [Black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
 
 Thank you once again for your interest in contributing to LoopGPT. We look forward to collaborating with you and creating an even better project together!
 
