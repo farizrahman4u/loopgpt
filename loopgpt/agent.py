@@ -59,6 +59,7 @@ class Agent:
         self.next_prompt = NEXT_PROMPT
         self.progress = []
         self.plan = []
+        self.criticism = None
         self.constraints = []
         self.state = AgentStates.START
 
@@ -125,6 +126,7 @@ class Agent:
                     thoughts.pop("speak", None)
                     thoughts.pop("text", None)
                     thoughts.pop("plan", None)
+                    thoughts.pop("criticism", None)
                 entry["content"] = json.dumps(respd, indent=2)
                 hist[i] = entry
             except:
@@ -227,6 +229,9 @@ class Agent:
                     self.plan = [plan]
                 if isinstance(plan, list):
                     self.plan = plan
+            criticism = resp.get("thoughts", {}).get("criticism")
+            if criticism:
+                self.criticism = criticism
         except:
             pass
         self.history.append({"role": "user", "content": message})
@@ -343,6 +348,7 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
+        self.criticism = None
         self.progress = None
         self.state = AgentStates.START
         self.history.clear()
@@ -361,6 +367,8 @@ class Agent:
             prompt.append(self.constraints_prompt())
         if self.plan:
             prompt.append(self.plan_prompt())
+        if self.criticism:
+            prompt.append(self.criticism_prompt())
         if self.progress:
             prompt.append(self.progress_prompt())
         return "\n".join(prompt) + "\n"
@@ -378,6 +386,10 @@ class Agent:
     def plan_prompt(self):
         plan = "\n".join(self.plan)
         return f"CURRENT PLAN:\n{plan}\n"
+
+    def criticism_prompt(self):
+        criticism = self.criticism
+        return f"CRITICISM: {criticism}"
 
     def goals_prompt(self):
         prompt = []

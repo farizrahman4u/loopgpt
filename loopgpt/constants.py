@@ -9,8 +9,9 @@ DEFAULT_RESPONSE_FORMAT_ = {
     "thoughts": {
         "text": "What do you want to say to the user?",
         "reasoning": "Why do you want to say this?",
-        "progress": "- A detailed list\n - of everything you have done so far",
+        "progress": "- A detailed list\n - of everything you have completed so far",
         "plan": "- short bulleted\n- list that conveys\n- long-term plan",
+        "criticism": "- A detailed list\n- of potential issues or inefficiencies\n- with your plan and reasoning",
         "speak": "thoughts summary to say to user",
     },
     "command": {"name": "next command in your plan", "args": {"arg name": "value"}},
