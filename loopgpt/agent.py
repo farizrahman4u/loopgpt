@@ -33,8 +33,16 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
+        **kwargs,
     ):
-        if model is None:
+        engine = kwargs.get("engine", None)
+        if engine is not None:
+            import openai
+            if openai.api_type == "azure":
+                model = OpenAIModel(engine)
+            else:
+                raise ValueError("`engine` parameter is only supported for Azure OpenAI API. Please use `model` instead.")
+        elif model is None:
             model = OpenAIModel("gpt-3.5-turbo")
         elif isinstance(model, str):
             model = OpenAIModel(model)
