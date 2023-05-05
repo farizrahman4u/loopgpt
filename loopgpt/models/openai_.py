@@ -62,6 +62,7 @@ class OpenAIModel(BaseModel):
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
         tokens_per_message, tokens_per_name = {
             "gpt-3.5-turbo": (4, -1),
+            "gpt-35-turbo": (4, -1),
             "gpt-4": (3, 1),
             "gpt-4-32k": (3, 1),
         }[self.model]
