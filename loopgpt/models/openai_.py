@@ -63,6 +63,7 @@ class OpenAIModel(BaseModel):
         tokens_per_message, tokens_per_name = {
             "gpt-3.5-turbo": (4, -1),
             "gpt-4": (3, 1),
+            "gpt-4-32k": (3, 1),
         }[self.model]
         enc = tiktoken.encoding_for_model(self.model)
         num_tokens = 0
@@ -78,7 +79,9 @@ class OpenAIModel(BaseModel):
     def get_token_limit(self) -> int:
         return {
             "gpt-3.5-turbo": 4000,
+            "gpt-35-turbo": 4000,
             "gpt-4": 8000,
+            "gpt-4-32k": 32000,
         }[self.model]
 
     def config(self):
