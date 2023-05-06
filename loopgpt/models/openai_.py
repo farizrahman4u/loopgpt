@@ -1,21 +1,13 @@
 from typing import *
 from loopgpt.logger import logger
 from loopgpt.models.base import BaseModel
+from loopgpt.utils.openai_key import get_openai_key
 
 import tiktoken
 import time
-import os
 
-
-def _getkey(key: Optional[str] = None):
-    key = key or os.getenv("OPENAI_API_KEY")
-    if key is None:
-        raise ValueError(
-            f"OpenAI API Key not found in the current working directory: {os.getcwd()}. "
-            "Please set the `OPENAI_API_KEY` environment variable or add it to `.env`. "
-            "See https://github.com/farizrahman4u/loopgpt#setup-your-openai-api-key- for more details"
-        )
-    return key
+from openai.error import RateLimitError
+import openai
 
 
 class OpenAIModel(BaseModel):
@@ -29,29 +21,17 @@ class OpenAIModel(BaseModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.8,
     ) -> str:
-        import openai
-        from openai.error import RateLimitError
-
-        api_key = _getkey(self.api_key)
+        api_key = get_openai_key(self.api_key)
         num_retries = 3
         for _ in range(num_retries):
             try:
-                if openai.api_type == "azure":
-                    resp = openai.ChatCompletion.create(
-                        engine=self.model,
-                        messages=messages,
-                        api_key=api_key,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                    )["choices"][0]["message"]["content"]
-                else:
-                    resp = openai.ChatCompletion.create(
-                        model=self.model,
-                        messages=messages,
-                        api_key=api_key,
-                        max_tokens=max_tokens,
-                        temperature=temperature,
-                    )["choices"][0]["message"]["content"]
+                resp = openai.ChatCompletion.create(
+                    model=self.model,
+                    messages=messages,
+                    api_key=api_key,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )["choices"][0]["message"]["content"]
                 return resp
 
             except RateLimitError:
@@ -62,7 +42,6 @@ class OpenAIModel(BaseModel):
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
         tokens_per_message, tokens_per_name = {
             "gpt-3.5-turbo": (4, -1),
-            "gpt-35-turbo": (4, -1),
             "gpt-4": (3, 1),
             "gpt-4-32k": (3, 1),
         }[self.model]
@@ -80,7 +59,6 @@ class OpenAIModel(BaseModel):
     def get_token_limit(self) -> int:
         return {
             "gpt-3.5-turbo": 4000,
-            "gpt-35-turbo": 4000,
             "gpt-4": 8000,
             "gpt-4-32k": 32000,
         }[self.model]
@@ -97,4 +75,4 @@ class OpenAIModel(BaseModel):
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config.get("api_key", None))
+        return cls(config["model"], config.get("api_key"))

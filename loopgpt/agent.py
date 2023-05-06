@@ -8,17 +8,18 @@ from loopgpt.constants import (
     AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
-from loopgpt.models import OpenAIModel, from_config as model_from_config
+from loopgpt.models import OpenAIModel, AzureOpenAIModel, from_config as model_from_config
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
-from loopgpt.embeddings import OpenAIEmbeddingProvider
+from loopgpt.embeddings import OpenAIEmbeddingProvider, AzureOpenAIEmbeddingProvider
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
 
 
 from typing import *
 
+import openai
 import json
 import time
 import ast
@@ -33,22 +34,23 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
-        **kwargs,
-    ):
-        engine = kwargs.get("engine", None)
-        if engine is not None:
-            import openai
-            if openai.api_type == "azure":
-                model = OpenAIModel(engine)
-            else:
-                raise ValueError("`engine` parameter is only supported for Azure OpenAI API. Please use `model` instead.")
-        elif model is None:
+    ):  
+        if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
         elif isinstance(model, str):
-            model = OpenAIModel(model)
+            if openai.api_type == "azure":
+                model = AzureOpenAIModel(model)
+            else:
+                model = OpenAIModel(model)
 
-        if embedding_provider is None:
-            embedding_provider = OpenAIEmbeddingProvider()
+        if openai.api_type == "azure":
+            if embedding_provider is None:
+                raise ValueError("You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API")
+            elif isinstance(embedding_provider, str):
+                embedding_provider = AzureOpenAIEmbeddingProvider(embedding_provider)
+        else:
+            if embedding_provider is None:
+                embedding_provider = OpenAIEmbeddingProvider()
 
         self.name = name
         self.description = description

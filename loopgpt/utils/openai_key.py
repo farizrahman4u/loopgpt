@@ -1,6 +1,7 @@
 import os
-import sys
+import openai
 
+from typing import Optional
 from dotenv import load_dotenv
 
 
@@ -19,3 +20,15 @@ def check_openai_key():
             print(
                 "Please set the `OPENAI_API_KEY` environment variable or add it to `.env`. LoopGPT cannot work without it."
             )
+
+def get_openai_key(key: Optional[str] = None):
+    # API Key precedence:
+    key = key or openai.api_key or os.getenv("OPENAI_API_KEY")
+    
+    if key is None:
+        raise ValueError(
+            f"OpenAI API Key not found. "
+            "Please set the `OPENAI_API_KEY` environment variable or add it to `.env`. "
+            "See https://github.com/farizrahman4u/loopgpt#setup-your-openai-api-key- for more details"
+        )
+    return key
