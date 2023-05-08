@@ -38,6 +38,13 @@ class Summarizer:
             return ""  # FIXME
         return resp
 
+    def summarize_chunk_prompt_template(self, query):
+        prompt = f"""Summarize the following text: \n" "\n"""
+        resp = self.model.chat(
+            [{"role": "user", "content": prompt}], temperature=0, max_tokens=300
+        )
+        return resp
+
     def summarize_chunk(self, text, query):
         prompt = f"""Summarize the following text: \n"{text}"\n"""
         resp = self.model.chat(
@@ -64,7 +71,9 @@ class Summarizer:
         if spinner:
             spinner.hide()
         summaries = []
-        for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
+        for chunk in tqdm(
+            list(self._chunk_text(text, query)), desc="Summarizing text..."
+        ):
             if not query:
                 summary = self.summarize_chunk(chunk, query)
                 summaries.append(summary)
@@ -90,21 +99,37 @@ class Summarizer:
             ],
         )
 
-    def _chunk_text(self, text: str, chunk_size=900) -> List[str]:
+    def _chunk_text(self, text: str, chunk_size=None) -> List[str]:
+        chunk_size = "" if chunk_size is None else chunk_size
+        if isinstance(chunk_size, str):
+            chunk_size = (self.model.get_token_limit() - 20) - len(
+                self.summarize_chunk_prompt_template(chunk_size)
+            )
+            if chunk_size < 20:
+                print("WARNING: Chunks are very small, likely due to large context.")
         paras = text.split("\n")
         curr_token_count = 0
         curr_chunk = []
-        for p in paras:
+        while len(paras) > 0:
+            p = paras[0]
             new_token_count = curr_token_count + self._count_tokens(p)
             if new_token_count < chunk_size:
                 curr_chunk.append(p)
                 curr_token_count = new_token_count
+                paras = paras[1:]
             else:
-                yield "\n".join(curr_chunk)
+                out = "\n".join(curr_chunk)
+                yield out[:chunk_size]
+                paras = [out[chunk_size:]] + paras[1:]
+                p = paras[0]
                 curr_chunk = [p]
                 curr_token_count = self._count_tokens(p)
         if curr_chunk:
-            yield "\n".join(curr_chunk)
+            outstr = "\n".join(curr_chunk)
+            for out in [
+                outstr[i : i + chunk_size] for i in range(0, len(outstr), chunk_size)
+            ]:
+                yield out
 
     def _prompt(self, text: str, query: str):
         return {
