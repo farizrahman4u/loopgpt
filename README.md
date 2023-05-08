@@ -54,6 +54,13 @@ cd  loopgpt
 pip install -e .
 ```
 
+### Install from source (dev) using Docker
+```bash
+git clone https://www.github.com/farizrahman4u/loopgpt.git@main
+cd  loopgpt
+docker build -t loopgpt:local-dev .
+```
+
 ## 🏎️ Getting Started
 
 ### Setup your OpenAI API Key 🔑
@@ -142,6 +149,19 @@ loopgpt run
 ```
 
 Run `loopgpt --help` to see all the available options.
+
+### 🐋 Docker Mode
+
+You can run L♾️pGPT in the previously mentioned modes, using Docker:
+
+```bash
+# CLI mode
+docker run -i --rm loopgpt:local-dev loopgpt run
+
+# Script mode example
+docker run -i --rm -v "$(pwd)/scripts:/scripts" loopgpt:local-dev python /scripts/myscript.py
+
+```
 
 ## ⚒️ Adding custom tools ⚒️
 
