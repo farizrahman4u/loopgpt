@@ -343,7 +343,7 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
-        self.progress = None
+        self.progress = []
         self.state = AgentStates.START
         self.history.clear()
         self.sub_agents.clear()
