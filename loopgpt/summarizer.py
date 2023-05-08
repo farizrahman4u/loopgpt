@@ -72,7 +72,8 @@ class Summarizer:
             spinner.hide()
         summaries = []
         for chunk in tqdm(
-            list(self._chunk_text(text, query)), desc="Summarizing text..."
+            list(self._chunk_text(text, query)),
+            desc="Summarizing text...",
         ):
             if not query:
                 summary = self.summarize_chunk(chunk, query)
