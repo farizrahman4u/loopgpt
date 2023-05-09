@@ -27,6 +27,39 @@ def get_deployment_model(endpoint, deployment_id, api_version, api_key):
 
 
 class AzureOpenAIModel(OpenAIModel):
+    """Creates an Azure OpenAI model from a deployment ID. Can be created only when ``openai.api_type`` is set to ``azure``.
+
+    :param deployment_id: The deployment ID of the model.
+    :type deployment_id: str
+    :param api_key: The API key to use for the model.
+        If not specified, it will be found from ``openai.api_key`` or ``.env`` file or the ``OPENAI_API_KEY`` environment variable.
+    :type api_key: str, optional
+    :raises AssertionError: If ``openai.api_type`` is not set to ``azure``.
+
+    .. note::
+        You will also need an embedding provider deployed (e.g., text-embedding-ada-002) for creating an agent.
+
+    Example:
+
+    .. code-block:: python
+        
+        import os
+        import openai
+        import loopgpt
+        from loopgpt.models import AzureOpenAIModel
+        from loopgpt.embeddings import AzureOpenAIEmbeddingProvider
+
+        openai.api_type = "azure"
+        openai.api_base = "https://<your deployment>.openai.azure.com/"
+        openai.api_version = "2023-03-15-preview"
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+
+        model = AzureOpenAIModel("my-gpt4-deployment")
+        embedding_provider = AzureOpenAIEmbeddingProvider("my-embeddings-deployment")
+
+        agent = loopgpt.Agent(model=model, embedding_provider=embedding_provider)
+        agent.chat("Hello, how are you?")
+    """
     def __init__(self, deployment_id: str, api_key: Optional[str] = None):
         # sanity check
         assert openai.api_type == "azure", "AzureOpenAIModel can only be used with Azure API"

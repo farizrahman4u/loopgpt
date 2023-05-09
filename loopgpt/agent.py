@@ -35,13 +35,13 @@ class Agent:
     :param goals: A list of goals for the agent. Defaults to None.
     :type goals: list, optional
     :param model: The model to use for the agent.
-        Strings are accepted only for OpenAI models. Specify a :class:`BaseModel` object for other models.
+        Strings are accepted only for OpenAI models. Specify a :class:`~loopgpt.models.base.BaseModel` object for other models.
         Defaults to "gpt-3.5-turbo".
-    :type model: str, :class:`BaseModel`, optional
+    :type model: str, :class:`~loopgpt.models.base.BaseModel`, optional
     :param embedding_provider: The embedding provider to use for the agent.
-        Defaults to :class:`OpenAIEmbeddingProvider`.
-        Specify a :class:`BaseEmbeddingProvider` object to use other embedding providers.
-    :type embedding_provider: :class:`BaseEmbeddingProvider`, optional
+        Defaults to :class:`~loopgpt.embeddings.OpenAIEmbeddingProvider`.
+        Specify a :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider` object to use other embedding providers.
+    :type embedding_provider: :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider`, optional
     :param temperature: The temperature to use for agent's chat completion. Defaults to 0.8.
     :type temperature: float, optional
     """
