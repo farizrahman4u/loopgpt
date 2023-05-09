@@ -5,6 +5,7 @@ from typing import Optional
 
 from loopgpt.utils.openai_key import get_openai_key
 
+
 class AzureOpenAIEmbeddingProvider(OpenAIEmbeddingProvider):
     """Creates an Azure OpenAI embedding provider from a deployment ID. Can be created only when ``openai.api_type`` is set to ``azure``.
 
@@ -17,19 +18,22 @@ class AzureOpenAIEmbeddingProvider(OpenAIEmbeddingProvider):
     .. note::
         See :class:`AzureOpenAIModel <loopgpt.models.azure_openai.AzureOpenAIModel>` also.
     """
+
     def __init__(self, deployment_id: str, api_key: Optional[str] = None):
         # sanity check
-        assert openai.api_type == "azure", "AzureOpenAIModel can only be used with Azure API"
+        assert (
+            openai.api_type == "azure"
+        ), "AzureOpenAIModel can only be used with Azure API"
 
         self.deployment_id = deployment_id
         self.api_key = api_key
-    
+
     def get(self, text: str):
         api_key = get_openai_key(self.api_key)
         return np.array(
-            openai.Embedding.create(input=[text], engine=self.deployment_id, api_key=api_key)[
-                "data"
-            ][0]["embedding"],
+            openai.Embedding.create(
+                input=[text], engine=self.deployment_id, api_key=api_key
+            )["data"][0]["embedding"],
             dtype=np.float32,
         )
 

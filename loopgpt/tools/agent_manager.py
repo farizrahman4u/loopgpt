@@ -25,11 +25,14 @@ class CreateAgent(_AgentManagerTool):
 
     def run(self, name="", task="", prompt=""):
         from loopgpt.agent import Agent
-        
+
         model = self.agent.model
         emb = self.agent.embedding_provider
         agent = Agent(
-            name=name, description=f"An agent for performing this specific task: {task}", model=model, embedding_provider=emb
+            name=name,
+            description=f"An agent for performing this specific task: {task}",
+            model=model,
+            embedding_provider=emb,
         )
         agent.tools.clear()
         id = uuid4().hex[:8]

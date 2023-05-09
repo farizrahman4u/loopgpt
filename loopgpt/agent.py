@@ -8,7 +8,11 @@ from loopgpt.constants import (
     AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
-from loopgpt.models import OpenAIModel, AzureOpenAIModel, from_config as model_from_config
+from loopgpt.models import (
+    OpenAIModel,
+    AzureOpenAIModel,
+    from_config as model_from_config,
+)
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
@@ -45,6 +49,7 @@ class Agent:
     :param temperature: The temperature to use for agent's chat completion. Defaults to 0.8.
     :type temperature: float, optional
     """
+
     def __init__(
         self,
         name=DEFAULT_AGENT_NAME,
@@ -56,10 +61,14 @@ class Agent:
     ):
         if openai.api_type == "azure":
             if model is None:
-                raise ValueError("You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API")
+                raise ValueError(
+                    "You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API"
+                )
             if embedding_provider is None:
-                raise ValueError("You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API")
-        
+                raise ValueError(
+                    "You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API"
+                )
+
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
 

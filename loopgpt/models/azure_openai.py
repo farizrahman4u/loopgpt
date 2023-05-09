@@ -8,12 +8,15 @@ from openai.error import RateLimitError
 import requests
 import openai
 
+
 def get_deployment_details(endpoint, deployment_id, api_version, api_key):
     api_key = get_openai_key(api_key)
     response = requests.get(
-        f"{endpoint}/openai/deployments/{deployment_id}?api-version={api_version}", headers={"api-key": api_key}
+        f"{endpoint}/openai/deployments/{deployment_id}?api-version={api_version}",
+        headers={"api-key": api_key},
     )
     return response.json()
+
 
 def get_deployment_model(endpoint, deployment_id, api_version, api_key):
     details = get_deployment_details(endpoint, deployment_id, api_version, api_key)
@@ -42,7 +45,7 @@ class AzureOpenAIModel(OpenAIModel):
     Example:
 
     .. code-block:: python
-        
+
         import os
         import openai
         import loopgpt
@@ -60,15 +63,20 @@ class AzureOpenAIModel(OpenAIModel):
         agent = loopgpt.Agent(model=model, embedding_provider=embedding_provider)
         agent.chat("Hello, how are you?")
     """
+
     def __init__(self, deployment_id: str, api_key: Optional[str] = None):
         # sanity check
-        assert openai.api_type == "azure", "AzureOpenAIModel can only be used with Azure API"
+        assert (
+            openai.api_type == "azure"
+        ), "AzureOpenAIModel can only be used with Azure API"
 
         self.deployment_id = deployment_id
         self.api_key = api_key
         self.endpoint = openai.api_base
         self.api_version = openai.api_version
-        self.model = get_deployment_model(self.endpoint, self.deployment_id, self.api_version, self.api_key)
+        self.model = get_deployment_model(
+            self.endpoint, self.deployment_id, self.api_version, self.api_key
+        )
 
     def chat(
         self,
@@ -76,7 +84,6 @@ class AzureOpenAIModel(OpenAIModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.8,
     ) -> str:
-
         api_key = get_openai_key(self.api_key)
         num_retries = 3
         for _ in range(num_retries):
@@ -94,14 +101,16 @@ class AzureOpenAIModel(OpenAIModel):
                 logger.warn("Rate limit exceeded. Retrying after 20 seconds.")
                 time.sleep(20)
                 continue
-    
+
     def config(self):
         cfg = super().config()
-        cfg.update({
-            "deployment_id": self.deployment_id,
-        })
+        cfg.update(
+            {
+                "deployment_id": self.deployment_id,
+            }
+        )
         return cfg
-    
+
     @classmethod
     def from_config(cls, config):
         return cls(config["deployment_id"], config.get("api_key"))
