@@ -2,6 +2,8 @@ from typing import Dict, List, Optional, Tuple, Any, Generic, TypeVar
 
 
 class BaseModel:
+    """Base class for all models.
+    """
     def chat(
         self,
         messages: List[Dict[str, str]],

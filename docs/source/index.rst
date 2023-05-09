@@ -10,7 +10,8 @@ Welcome to LoopGPT's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   Agent <concepts/Agent>
+   API Reference <api/index>
 
 Indices and tables
 ==================
