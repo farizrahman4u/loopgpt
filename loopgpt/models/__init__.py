@@ -1,6 +1,7 @@
 from loopgpt.models.stable_lm import StableLMModel
 from loopgpt.models.llama_cpp import LlamaCppModel
 from loopgpt.models.openai_ import OpenAIModel
+from loopgpt.models.azure_openai import AzureOpenAIModel
 from loopgpt.models.hf import HuggingFaceModel
 from loopgpt.models.base import *
 

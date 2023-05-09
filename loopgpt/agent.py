@@ -8,17 +8,22 @@ from loopgpt.constants import (
     AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
-from loopgpt.models import OpenAIModel, from_config as model_from_config
+from loopgpt.models import (
+    OpenAIModel,
+    AzureOpenAIModel,
+    from_config as model_from_config,
+)
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
-from loopgpt.embeddings import OpenAIEmbeddingProvider
+from loopgpt.embeddings import OpenAIEmbeddingProvider, AzureOpenAIEmbeddingProvider
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
 
 
 from typing import *
 
+import openai
 import json
 import time
 import ast
@@ -34,16 +39,17 @@ class Agent:
     :param goals: A list of goals for the agent. Defaults to None.
     :type goals: list, optional
     :param model: The model to use for the agent.
-        Strings are accepted only for OpenAI models. Specify a :class:`BaseModel` object for other models.
+        Strings are accepted only for OpenAI models. Specify a :class:`~loopgpt.models.base.BaseModel` object for other models.
         Defaults to "gpt-3.5-turbo".
-    :type model: str, :class:`BaseModel`, optional
+    :type model: str, :class:`~loopgpt.models.base.BaseModel`, optional
     :param embedding_provider: The embedding provider to use for the agent.
-        Defaults to :class:`OpenAIEmbeddingProvider`.
-        Specify a :class:`BaseEmbeddingProvider` object to use other embedding providers.
-    :type embedding_provider: :class:`BaseEmbeddingProvider`, optional
+        Defaults to :class:`~loopgpt.embeddings.OpenAIEmbeddingProvider`.
+        Specify a :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider` object to use other embedding providers.
+    :type embedding_provider: :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider`, optional
     :param temperature: The temperature to use for agent's chat completion. Defaults to 0.8.
     :type temperature: float, optional
     """
+
     def __init__(
         self,
         name=DEFAULT_AGENT_NAME,
@@ -53,10 +59,18 @@ class Agent:
         embedding_provider=None,
         temperature=0.8,
     ):
+        if openai.api_type == "azure":
+            if model is None:
+                raise ValueError(
+                    "You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API"
+                )
+            if embedding_provider is None:
+                raise ValueError(
+                    "You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API"
+                )
+
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
-        elif isinstance(model, str):
-            model = OpenAIModel(model)
 
         if embedding_provider is None:
             embedding_provider = OpenAIEmbeddingProvider()
@@ -65,6 +79,7 @@ class Agent:
         self.description = description
         self.goals = goals or []
         self.model = model
+        self.embedding_provider = embedding_provider
         self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)

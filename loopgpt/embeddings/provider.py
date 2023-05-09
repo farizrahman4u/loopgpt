@@ -2,8 +2,8 @@ import numpy as np
 
 
 class BaseEmbeddingProvider:
-    """Base class for all embedding providers.
-    """
+    """Base class for all embedding providers."""
+
     def get(self, text: str) -> np.ndarray:
         raise NotImplementedError()
 

@@ -11,8 +11,6 @@ import loopgpt.utils.spinner
 
 class Summarizer:
     def __init__(self, model: Optional[BaseModel] = None):
-        if isinstance(model, str):
-            model = OpenAIModel(model)
         self._model = model
 
     @property
@@ -20,11 +18,13 @@ class Summarizer:
         if self._model is None:
             if hasattr(self, "agent"):
                 model = self.agent.model
-                if isinstance(model, OpenAIModel):
+                if type(model) == OpenAIModel:
                     if model.model == "gpt-3.5-turbo":
                         self._model = model
                     else:
                         self._model = OpenAIModel("gpt-3.5-turbo")
+                else:
+                    self._model = model
             else:
                 self._model = OpenAIModel("gpt-3.5-turbo")
         return self._model
