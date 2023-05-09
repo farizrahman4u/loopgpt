@@ -34,28 +34,24 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
-    ):  
-        if model is None:
-            model = OpenAIModel("gpt-3.5-turbo")
-        elif isinstance(model, str):
-            if openai.api_type == "azure":
-                model = AzureOpenAIModel(model)
-            else:
-                model = OpenAIModel(model)
-
+    ):
         if openai.api_type == "azure":
+            if model is None:
+                raise ValueError("You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API")
             if embedding_provider is None:
                 raise ValueError("You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API")
-            elif isinstance(embedding_provider, str):
-                embedding_provider = AzureOpenAIEmbeddingProvider(embedding_provider)
-        else:
-            if embedding_provider is None:
-                embedding_provider = OpenAIEmbeddingProvider()
+        
+        if model is None:
+            model = OpenAIModel("gpt-3.5-turbo")
+
+        if embedding_provider is None:
+            embedding_provider = OpenAIEmbeddingProvider()
 
         self.name = name
         self.description = description
         self.goals = goals or []
         self.model = model
+        self.embedding_provider = embedding_provider
         self.temperature = temperature
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)
