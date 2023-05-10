@@ -9,7 +9,7 @@
 project = "LoopGPT"
 copyright = "2023, Fariz Rahman, Fayaz Rahman"
 author = "Fariz Rahman, Fayaz Rahman"
-release = "0.0.14"
+release = "0.0.15"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
