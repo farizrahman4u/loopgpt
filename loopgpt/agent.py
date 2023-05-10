@@ -71,6 +71,8 @@ class Agent:
 
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
+        elif isinstance(model, str):
+            model = OpenAIModel(model)
 
         if embedding_provider is None:
             embedding_provider = OpenAIEmbeddingProvider()
