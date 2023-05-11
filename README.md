@@ -56,7 +56,7 @@ pip install -e .
 
 ### Install from source (dev) using Docker
 ```bash
-git clone https://www.github.com/farizrahman4u/loopgpt.git@main
+git clone https://www.github.com/farizrahman4u/loopgpt.git
 cd  loopgpt
 docker build -t loopgpt:local-dev .
 ```
