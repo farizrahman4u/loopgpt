@@ -23,7 +23,7 @@ class OpenAIModel(BaseModel):
     ) -> str:
         api_key = get_openai_key(self.api_key)
         num_retries = 3
-        for _ in range(num_retries):
+        for i in range(num_retries):
             try:
                 resp = openai.ChatCompletion.create(
                     model=self.model,
@@ -37,7 +37,8 @@ class OpenAIModel(BaseModel):
             except RateLimitError:
                 logger.warn("Rate limit exceeded. Retrying after 20 seconds.")
                 time.sleep(20)
-                continue
+                if i == num_retries - 1:
+                    raise
 
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
         tokens_per_message, tokens_per_name = {
