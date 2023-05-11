@@ -49,7 +49,7 @@ pip install git+https://www.github.com/farizrahman4u/loopgpt.git@main
 ### Install from source (dev)
 
 ```bash
-git clone https://www.github.com/farizrahman4u/loopgpt.git@main
+git clone https://www.github.com/farizrahman4u/loopgpt.git
 cd  loopgpt
 pip install -e .
 ```
