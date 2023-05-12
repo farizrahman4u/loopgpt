@@ -1,7 +1,7 @@
 """LoopGPT is a modular Auto-GPT framework
 """
 
-__version__ = "0.0.15"
+__version__ = "0.0.16"
 
 
 from loopgpt.agent import Agent
