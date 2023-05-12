@@ -8,7 +8,7 @@ from loopgpt.tools.user_manager import AskUser
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.tools.browser import Browser
 from loopgpt.tools.code import ExecutePythonFile, ReviewCode, ImproveCode, WriteTests
-from loopgpt.tools.math import EvaluateMath
+from loopgpt.tools.math import EvaluateAlgebra, EvaluateArithmetic
 from loopgpt.tools.google_search import GoogleSearch
 from loopgpt.tools.filesystem import (
     ReadFromFile,
@@ -57,7 +57,8 @@ def builtin_tools():
         ImproveCode,
         WriteTests,
         ExecutePythonFile,
-        EvaluateMath,
+        EvaluateArithmetic,
+        EvaluateAlgebra,
         AskUser,
         Shell,
     ]
