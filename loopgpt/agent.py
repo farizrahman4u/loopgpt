@@ -226,6 +226,7 @@ class Agent:
             max_tokens=max_tokens,
             temperature=self.temperature,
         )
+        return resp
         try:
             resp = self._load_json(resp)
             plan = resp.get("plan")

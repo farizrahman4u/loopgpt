@@ -8,6 +8,7 @@ from loopgpt.agent import Agent
 from loopgpt.tools import *
 from loopgpt.memory import *
 from loopgpt.embeddings import *
+from loopgpt.aifunc import aifunc
 
 agent_from_config = Agent.from_config
 from loopgpt.tools import from_config as tool_from_config
