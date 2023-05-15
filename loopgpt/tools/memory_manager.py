@@ -16,6 +16,7 @@ class AddToMemory(_MemoryManagerTool):
 
     def run(self, text):
         self.agent.memory.add(text)
+        return {"success": "true"}
 
 
 MemoryManagerTools = [AddToMemory]

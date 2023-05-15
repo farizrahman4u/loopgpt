@@ -174,11 +174,54 @@ class Agent:
             return self.init_prompt + "\n\n" + (message or "")
         else:
             return self.next_prompt + "\n\n" + (message or "")
+    
+    def _default_response_callback(self, resp):
+        try:
+            resp = self._load_json(resp)
+            plan = resp.get("plan")
+            if plan and isinstance(plan, list):
+                if (
+                    len(plan) == 0
+                    or len(plan) == 1
+                    and len(plan[0].replace("-", "")) == 0
+                ):
+                    self.staging_tool = {"name": "task_complete", "args": {}}
+                    self.staging_response = resp
+                    self.state = AgentStates.STOP
+            else:
+                if isinstance(resp, dict):
+                    if "name" in resp:
+                        resp = {"command": resp}
+                    if "command" in resp:
+                        self.staging_tool = resp["command"]
+                        self.staging_response = resp
+                        self.state = AgentStates.TOOL_STAGED
+                    else:
+                        self.state = AgentStates.IDLE
+                else:
+                    self.state = AgentStates.IDLE
+
+            progress = resp.get("thoughts", {}).get("progress")
+            if progress:
+                if isinstance(plan, str):
+                    self.progress += [progress]
+                elif isinstance(progress, list):
+                    self.progress += progress
+            plan = resp.get("thoughts", {}).get("plan")
+            if plan:
+                if isinstance(plan, str):
+                    self.plan = [plan]
+                if isinstance(plan, list):
+                    self.plan = plan
+        except:
+            pass
 
     @spinner
     def chat(
-        self, message: Optional[str] = None, run_tool=False
+        self, message: Optional[str] = None, run_tool=False, response_callback=-1
     ) -> Optional[Union[str, Dict]]:
+        if response_callback == -1:
+            response_callback = self._default_response_callback
         if self.state == AgentStates.STOP:
             raise ValueError(
                 "This agent has completed its tasks. It will not accept any more messages."
@@ -226,46 +269,8 @@ class Agent:
             max_tokens=max_tokens,
             temperature=self.temperature,
         )
-        return resp
-        try:
-            resp = self._load_json(resp)
-            plan = resp.get("plan")
-            if plan and isinstance(plan, list):
-                if (
-                    len(plan) == 0
-                    or len(plan) == 1
-                    and len(plan[0].replace("-", "")) == 0
-                ):
-                    self.staging_tool = {"name": "task_complete", "args": {}}
-                    self.staging_response = resp
-                    self.state = AgentStates.STOP
-            else:
-                if isinstance(resp, dict):
-                    if "name" in resp:
-                        resp = {"command": resp}
-                    if "command" in resp:
-                        self.staging_tool = resp["command"]
-                        self.staging_response = resp
-                        self.state = AgentStates.TOOL_STAGED
-                    else:
-                        self.state = AgentStates.IDLE
-                else:
-                    self.state = AgentStates.IDLE
-
-            progress = resp.get("thoughts", {}).get("progress")
-            if progress:
-                if isinstance(plan, str):
-                    self.progress += [progress]
-                elif isinstance(progress, list):
-                    self.progress += progress
-            plan = resp.get("thoughts", {}).get("plan")
-            if plan:
-                if isinstance(plan, str):
-                    self.plan = [plan]
-                if isinstance(plan, list):
-                    self.plan = plan
-        except:
-            pass
+        if response_callback:
+            resp = response_callback(resp)
         self.history.append({"role": "user", "content": message})
         self.history.append(
             {
@@ -390,8 +395,8 @@ class Agent:
     def header_prompt(self):
         prompt = []
         prompt.append(self.persona_prompt())
-        if self.tools:
-            prompt.append(self.tools_prompt())
+        # if self.tools:
+        #     prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
         if self.constraints:
