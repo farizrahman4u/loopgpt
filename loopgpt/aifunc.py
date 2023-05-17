@@ -56,17 +56,7 @@ def collector_response_callback(resp):
         print("Command parsing failed.")
         return []
 
-
-def google_search(query: str, model: BaseModel) -> str:
-    """This is an atomic search function. It searches for the query on Google and returns the titles and links of the top results.
-    
-    Args:
-        query (str): Query to search for.
-    
-    Returns:
-        str: Result of the query.
-
-    """
+def _google_search(query: str) -> str:
     from googleapiclient.discovery import build
     import os
 
@@ -87,6 +77,36 @@ def google_search(query: str, model: BaseModel) -> str:
 
     links_and_titles = "\n".join(links_and_titles_)
     results = "\n".join(results_)
+    return results, links_and_titles
+
+def _duckduckgo_search(query: str) -> str:
+    results = ddg(query, max_results=2)
+    results_ = []
+
+    links_and_titles_ = []
+
+    for i, result in enumerate(results):
+        links_and_titles_.append(f"{i + 1}. {result['href']}: {result['title']}")
+        results_.append(f"{i + 1}. {result['href']}\n\n{result['title']}\n\n{result['body']}\n")
+
+    links_and_titles = "\n".join(links_and_titles_)
+    results = "\n".join(results_)
+    return results, links_and_titles
+
+def google_search(query: str, model: BaseModel) -> str:
+    """This is an atomic search function. It searches for the query on Google and returns the titles and links of the top results.
+    
+    Args:
+        query (str): Query to search for.
+    
+    Returns:
+        str: Result of the query.
+
+    """
+    try:
+        results, links_and_titles = _google_search(query)
+    except:
+        results, links_and_titles = _duckduckgo_search(query)
 
     summarizer = Summarizer()
     summarizer._model = model
@@ -154,7 +174,6 @@ def create_data_collector_agent(func_prompt, args_prompt, **agent_kwargs):
         + "Respond with a sequence of functions as a list of dictionaries containing the following keys:\n"
         + "1. `function` - Name of the function to use.\n"
         + "2. `args` - Dictionary of arguments to pass to the function.\n"
-        + "You may use placeholder arguments in the `args` dictionary to be replaced after a function is executed.\n"
         + "Return an empty list if the execution does not require any data collection.\n"
         + "\nYour response is to be directly parsed, so please do not include any other text in your response.\n"
     )

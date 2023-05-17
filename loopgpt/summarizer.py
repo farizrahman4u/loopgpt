@@ -66,10 +66,7 @@ class Summarizer:
         if query == "summary":
             query = ""
         summaries = []
-        i = 0
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
-            if i == 10:
-                break
             if not query:
                 summary = self.summarize_chunk(chunk, query)
                 summaries.append(summary)
@@ -77,7 +74,6 @@ class Summarizer:
                 ans = self.qa_chunk(chunk, query)
                 if ans:
                     summaries.append(ans)
-            i += 1
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
