@@ -120,15 +120,19 @@ class Agent:
 
         def _msgs():
             msgs = [header, dtime]
-            msgs += history[:-1]
+            msgs += history[:]
             if relevant_memory:
                 memstr = "\n".join(relevant_memory)
                 context = {
                     "role": "system",
-                    "content": f"You have the following items in your memory as a result of previously executed commands:\n{memstr}\n",
+                    "content": (
+                        f"Remember the following things in your memory:"
+                        + "\n=============================MEMORY=============================\n"
+                        + f"\n{memstr}\n"
+                        + "================================================================\n"
+                    )
                 }
                 msgs.append(context)
-            msgs += history[-1:]
             msgs += user_prompt
             return msgs
 
@@ -213,6 +217,7 @@ class Agent:
                     self.plan = [plan]
                 if isinstance(plan, list):
                     self.plan = plan
+            return resp
         except:
             pass
 
@@ -271,11 +276,13 @@ class Agent:
         )
         if response_callback:
             resp = response_callback(resp)
+        if self.state == AgentStates.START:
+            self.state = AgentStates.IDLE
         self.history.append({"role": "user", "content": message})
         self.history.append(
             {
                 "role": "assistant",
-                "content": json.dumps(resp) if isinstance(resp, dict) else resp,
+                "content": json.dumps(resp) if isinstance(resp, dict) else str(resp),
             }
         )
         return resp
@@ -395,8 +402,8 @@ class Agent:
     def header_prompt(self):
         prompt = []
         prompt.append(self.persona_prompt())
-        # if self.tools:
-        #     prompt.append(self.tools_prompt())
+        if self.tools:
+            prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
         if self.constraints:

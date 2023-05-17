@@ -63,6 +63,8 @@ class Summarizer:
         spinner = loopgpt.utils.spinner.ACTIVE_SPINNER
         if spinner:
             spinner.hide()
+        if query == "summary":
+            query = ""
         summaries = []
         i = 0
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
@@ -79,7 +81,8 @@ class Summarizer:
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        summary = self.summarize_chunk(summary, query)
+        if len(summaries) > 1 and query:
+            summary = self.summarize_chunk(summary, query)
         if spinner:
             spinner.show()
         return summary, summaries
