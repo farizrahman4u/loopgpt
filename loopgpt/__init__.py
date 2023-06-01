@@ -15,12 +15,12 @@ from loopgpt.memory import from_config as memory_from_config
 from loopgpt.embeddings import from_config as embedding_provider_from_config
 
 from loopgpt.utils.openai_key import check_openai_key
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 import sys
 
 
-load_dotenv()
+load_dotenv(find_dotenv(usecwd=True))
 
 
 def from_config(config):
