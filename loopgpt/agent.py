@@ -4,7 +4,7 @@ from loopgpt.constants import (
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
     NEXT_PROMPT,
-    NEXT_PROMPT_SMALL,
+    DEFAULT_PROMPT_TEMPLATE,
     AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
@@ -22,11 +22,13 @@ from loopgpt.loops import cli
 
 
 from typing import *
+from itertools import repeat
 
 import openai
 import json
 import time
 import ast
+import re
 
 
 class Agent:
@@ -58,6 +60,7 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
+        tools=None,
     ):
         if openai.api_type == "azure":
             if model is None:
@@ -86,17 +89,29 @@ class Agent:
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
-        tools = [tool_type() for tool_type in builtin_tools()]
+        if tools is None:
+            tools = [tool_type() for tool_type in builtin_tools()]
+        else:
+            tools = [tool_type() for tool_type in tools]
         self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
-        self.init_prompt = INIT_PROMPT
-        self.next_prompt = NEXT_PROMPT
+        self.prompts = [INIT_PROMPT, NEXT_PROMPT]
+        self.prompt_gen = self.next_prompt()
+        self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
         self.plan = []
         self.constraints = []
         self.state = AgentStates.START
+        self.memory_query = None
+    
+    def next_prompt(self):
+        if self.prompts:
+            yield from self.prompts
+            yield from repeat(self.prompts[-1])
+        else:
+            yield from repeat("")
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -105,36 +120,57 @@ class Agent:
             if msg["role"] != "user"
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
-        return msgs[-n - 1 : -1]
+        return msgs[-n - 1 :]
 
     def get_full_prompt(self, user_input: str = ""):
-        header = {"role": "system", "content": self.header_prompt()}
-        dtime = {
-            "role": "system",
-            "content": f"The current time and date is {time.strftime('%c')}",
-        }
-        msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 5)
-        user_prompt = [{"role": "user", "content": user_input}] if user_input else []
+        sections = re.findall(r"<(.*)>", self.prompt_template)
+        user_prompt = [{"role": "user", "content": user_input}]
+        # history = self.history[:]
         history = self._get_compressed_history()
-
-        def _msgs():
-            msgs = [header, dtime]
-            msgs += history[:]
-            if relevant_memory:
-                memstr = "\n".join(relevant_memory)
-                context = {
+        relevant_memory = []
+        for section in sections:
+            if section == "HEADER":
+                header = {"role": "system", "content": self.header_prompt()}
+                dtime = {
                     "role": "system",
-                    "content": (
-                        f"Remember the following things in your memory:"
-                        + "\n=============================MEMORY=============================\n"
-                        + f"\n{memstr}\n"
-                        + "================================================================\n"
-                    )
+                    "content": f"The current time and date is {time.strftime('%c')}",
                 }
-                msgs.append(context)
-            msgs += user_prompt
-            return msgs
+            elif section.startswith("MEMORY"):
+                if self.memory_query:
+                    memory_query = self.memory_query
+                else:
+                    n = None
+                    if ":" in section:
+                        section, n = section.split(":")
+                        n = int(n)
+                    mem_source = self._get_non_user_messages(n) + user_prompt
+                    memory_query = "\n".join([hist["content"] for hist in mem_source])
+                relevant_memory = self.memory.get(memory_query, 10)
+        
+        def _msgs():
+            updated_msgs = []
+            for section in sections:
+                if section == "HEADER":
+                    updated_msgs += [header, dtime]
+                if section.startswith("HISTORY"):
+                    print(len(history))
+                    updated_msgs += history[:]
+                elif section.startswith("MEMORY"):
+                    if relevant_memory:
+                        memstr = "\n".join(relevant_memory)
+                        context = {
+                            "role": "system",
+                            "content": (
+                                f"Remember the following things in your memory:"
+                                + "\n=============================MEMORY=============================\n"
+                                + f"\n{memstr}\n"
+                                + "================================================================\n"
+                            )
+                        }
+                        updated_msgs.append(context)
+                elif section == "USER_INPUT":
+                    updated_msgs += user_prompt
+            return updated_msgs
 
         maxtokens = self.model.get_token_limit() - 1000
         while True:
@@ -173,13 +209,40 @@ class Agent:
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
 
+    def _get_compressed_history(self):
+        history = self._get_non_user_messages(30)
+        maxtokens = self.model.get_token_limit()
+        while True:
+            ntokens = self.model.count_tokens(history)
+            if ntokens < maxtokens:
+                break
+            else:
+                history.pop(0)
+
+        if len(history) == 0:
+            return []
+        history_summary = self.model.chat(
+            [
+                {
+                    "role": "user",
+                    "content": f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
+                    + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands" 
+                    + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
+                    + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
+                    + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of" 
+                    + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
+                }
+            ]
+        )
+        return [{"role": "system", "content": history_summary}]
+
     def get_full_message(self, message: Optional[str]):
-        if self.state == AgentStates.START:
-            return self.init_prompt + "\n\n" + (message or "")
-        else:
-            return self.next_prompt + "\n\n" + (message or "")
+        return next(self.prompt_gen) + "\n\n" + (message or "")
     
     def _default_response_callback(self, resp):
+        print("===============RESPONSE CALLBACK======================")
+        print(resp)
+        print("=====================================")
         try:
             resp = self._load_json(resp)
             plan = resp.get("plan")
@@ -219,7 +282,7 @@ class Agent:
                     self.plan = plan
             return resp
         except:
-            pass
+            raise
 
     @spinner
     def chat(
@@ -266,7 +329,11 @@ class Agent:
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
+        print("===========================================")
+        [print(f"{prompt['role']}: {prompt['content']}") for prompt in full_prompt]
+        print("===========================================")
         token_limit = self.model.get_token_limit()
+        print(token_count, token_limit)
         max_tokens = min(1000, max(token_limit - token_count, 0))
         assert max_tokens
         resp = self.model.chat(
@@ -372,6 +439,7 @@ class Agent:
             try:
                 resp = tool.run(**kwargs)
             except Exception as e:
+                raise e
                 resp = f'Command "{tool_id}" failed with error: {e}'
                 self.history.append(
                     {
@@ -403,7 +471,7 @@ class Agent:
         prompt = []
         prompt.append(self.persona_prompt())
         if self.tools:
-            prompt.append(self.tools_prompt())
+            prompt.append(self.tools_prompt(extras=True))
         if self.goals:
             prompt.append(self.goals_prompt())
         if self.constraints:
@@ -442,27 +510,19 @@ class Agent:
             prompt.append(f"{i + 1}. {c}")
         return "\n".join(prompt) + "\n"
 
-    def tools_prompt(self):
+    def tools_prompt(self, extras=False):
         prompt = []
-        prompt.append("Commands:")
+        prompt.append("You have access to the following commands:")
         for i, tool in enumerate(self.tools.values()):
             tool.agent = self
-            prompt.append(f"{i + 1}. {tool.prompt()}")
-        task_complete_command = {
-            "name": "task_complete",
-            "description": "Execute when all tasks are completed. This will terminate the session.",
-            "args": {},
-            "response_format": {"success": "true"},
-        }
-        do_nothing_command = {
-            "name": "do_nothing",
-            "description": "Do nothing.",
-            "args": {},
-            "response_format": {"response": "Nothing Done."},
-        }
-        prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
-        prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
-        return "\n".join(prompt) + "\n"
+            prompt.append(tool.prompt())
+        
+        if extras:
+            task_complete_command = f'def task_complete():\n\t"""{task_complete.__doc__}\n\t"""'.expandtabs(4)
+            do_nothing_command = f'def do_nothing():\n\t"""{do_nothing.__doc__}\n\t"""'.expandtabs(4)
+            prompt.append(task_complete_command)
+            prompt.append(do_nothing_command)
+        return "\n\n".join(prompt) + "\n"
 
     def resources_prompt(self):
         prompt = []
@@ -550,3 +610,17 @@ class Agent:
 
     def cli(self, continuous=False):
         cli(self, continuous=continuous)
+
+def task_complete():
+    """Mark the current task as complete.
+
+    Returns:
+        None
+    """
+
+def do_nothing():
+    """No-op command.
+
+    Returns:
+        None
+    """

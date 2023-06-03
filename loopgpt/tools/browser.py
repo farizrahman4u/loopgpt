@@ -17,6 +17,17 @@ import atexit
 
 
 class Browser(BaseTool):
+    """This opens a browser. It opens the url and finds the answer for the query.
+    Provide an empty query if you want to summarize the page.
+    
+    Args:
+        url (str): URL to open.
+        query (str): Query to search for.
+    
+    Returns:
+        Dict: Relevant summary and a list of links extracted from the URL.
+
+    """
     def __init__(self, browser_type="chrome"):
         super(Browser, self).__init__()
         if browser_type not in ("chrome", "firefox"):
@@ -100,31 +111,13 @@ class Browser(BaseTool):
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         return "\n".join(chunk for chunk in chunks if chunk)
 
-    @property
-    def desc(self):
-        return "Open a single webpage"
-
-    @property
-    def args(self):
-        return {
-            "url: str": "URL of the web page",
-            "question: str": "Question to answer",
-        }
-
-    @property
-    def resp(self):
-        return {
-            "text": "Summary of relevant text scraped from the website",
-            "links": "list of links from the website, where each item is in the form [link_text, link_url]",
-        }
-
     def close(self):
         try:
             self.driver.quit()
         except Exception:
             pass
 
-    def run(self, url: str, question: str):
+    def run(self, url: str, query: str):
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         try:
@@ -133,15 +126,12 @@ class Browser(BaseTool):
             links = self._extract_links_from_soup(soup)[:5]
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
-            summary, chunks = self.summarizer.summarize(text, question)
+            summary, chunks = self.summarizer.summarize(text, query)
             if getattr(self, "agent", None):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")
 
-            return {
-                "text": summary,
-                "links": links[:5],
-            }
+            return summary + "\n\n" + "Links found on the page:\n" + "\n".join([f"{link[1]}: {link[0]}" for link in links])
         except Exception as e:
             return f"An error occurred while scraping the website: {e}. Make sure the URL is valid."
 

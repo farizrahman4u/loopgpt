@@ -1,3 +1,4 @@
+from typing import List
 from loopgpt.tools.base_tool import BaseTool
 from loopgpt.models import BaseModel, OpenAIModel
 import subprocess
@@ -28,21 +29,20 @@ class _BaseCodeTool(BaseTool):
 
 
 class ExecutePythonFile(_BaseCodeTool):
-    @property
-    def args(self):
-        return {"file": "Path to the Python file as a string."}
+    """Execute a Python file and return the output.
 
-    @property
-    def resp(self):
-        return {
-            "output": "Value of stdout if the execution was successful. Else error message."
-        }
+    Args:
+        file (str): Path to the Python file.
+    
+    Returns:
+        str: Value of stdout if the execution was successful. Else error message.
+    """
 
-    def run(self, file):
+    def run(self, file: str):
         if not os.path.isfile(file):
-            return {"output": f"File {file} does not exist."}
+            return f"File {file} does not exist."
         if not file.lower().endswith(".py"):
-            return {"output": f"Only files with '.py' extension allowed."}
+            return f"Only files with '.py' extension are allowed."
         res = subprocess.run(
             f"{sys.executable} {file}",
             capture_output=True,
@@ -50,73 +50,58 @@ class ExecutePythonFile(_BaseCodeTool):
             shell=True,
         )
         if res.returncode:
-            return {"output": f"Error: {res.stderr}"}
+            return f"Error: {res.stderr}"
         else:
-            return {"output": res.stdout}
+            return res.stdout
 
 
 class ReviewCode(_BaseCodeTool):
-    @property
-    def description(self):
-        return "Returns a list of suggestions to improve a given piece of code."
+    """Review a piece of code and return a list of suggestions to improve it.
 
-    @property
-    def args(self):
-        return {
-            "code": "Code to evaluate",
-        }
+    Args:
+        code (str): Code to evaluate.
 
-    @property
-    def resp(self):
-        return {"suggestions": "List of suggestions to improve the code."}
+    Returns:
+        List[str]: List of suggestions to improve the code.
+    """
 
-    def run(self, code):
+    def run(self, code: str):
         func = "def analyze_code(code: str) -> List[str]:"
         desc = (
             "Analyzes the given code and returns a list of suggestions"
             " for improvements."
         )
-        return {"suggestions": ai_function(func, desc, [code], model=self.model)}
+        return ai_function(func, desc, [code], model=self.model)
 
 
 class ImproveCode(_BaseCodeTool):
-    @property
-    def description(self):
-        return "Improve a piece of code given a list of suggestions."
+    """Improve a piece of code given a list of suggestions.
 
-    @property
-    def args(self):
-        return {
-            "code": "The code to improve.",
-            "suggestions": "List of suggestions",
-        }
+    Args:
+        code (str): The code to improve.
+        suggestions (List[str]): List of suggestions
+    
+    Returns:
+        str: Improved code.
+    """
 
-    @property
-    def resp(self):
-        return {"improved_code": "Improved code."}
-
-    def run(self, code, suggestions):
+    def run(self, code: str, suggestions: List[str]):
         func = "def generate_improved_code(suggestions: str, code: str) -> str:"
         desc = "Improves the provided code based on the suggestions provided, making no other changes."
-        return {
-            "improved_code": ai_function(
-                func, desc, [code, str(suggestions)], model=self.model
-            )
-        }
+        return ai_function(func, desc, [code, str(suggestions)], model=self.model)
 
 
 class WriteTests(_BaseCodeTool):
-    @property
-    def args(self):
-        return {
-            "code": "Code to write tests for.",
-        }
+    """Write tests for a piece of code.
 
-    @property
-    def resp(self):
-        return {"tests": "Tests."}
+    Args:
+        code (str): Code to write tests for.
+    
+    Returns:
+        str: Tests.
+    """
 
-    def run(self, code):
+    def run(self, code: str):
         func = "def create_test_cases(code: str, focus: Optional[str] = None) -> str:"
         desc = "Generates test cases for the existing code, focusing on specific areas if required."
-        return {"tests": ai_function(func, desc, [code], model=self.model)}
+        return ai_function(func, desc, [code], model=self.model)

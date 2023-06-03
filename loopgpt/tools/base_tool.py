@@ -1,5 +1,5 @@
 from typing import *
-import json
+import inspect
 import re
 
 
@@ -12,30 +12,12 @@ class BaseTool:
     def id(self) -> str:
         return "_".join(camel_case_split(self.__class__.__name__)).lower()
 
-    @property
-    def desc(self) -> str:
-        return " ".join(camel_case_split(self.__class__.__name__))
-
-    @property
-    def args(self) -> Dict[str, str]:
-        raise NotImplementedError()
-
     def run(**kwrags) -> str:
         raise NotImplementedError()
 
-    @property
-    def resp(self) -> Dict[str, str]:
-        raise NotImplementedError()
-
     def prompt(self):
-        return json.dumps(
-            {
-                "name": self.id,
-                "description": self.desc,
-                "args": self.args,
-                "response_format": self.resp,
-            }
-        )
+        sig = inspect.signature(self.run)
+        return f'def {self.id}{sig}:\n\t"""{self.__doc__}\n\t"""'.expandtabs(4)
 
     def config(self):
         return {

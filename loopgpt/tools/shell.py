@@ -3,22 +3,16 @@ import subprocess
 
 
 class Shell(BaseTool):
-    @property
-    def desc(self):
-        return "Use this command to execute any terminal commands. (Non interactive commands only)"
+    """Execute terminal commands.
 
-    @property
-    def args(self):
-        return {"command": "the command to execute"}
+    Args:
+        command (str): The command to execute.
+    
+    Returns:
+        Dict[str, str]: A dict containing the STDOUT and STDERR of the command.
+    """
 
-    @property
-    def resp(self):
-        return {
-            "stdout": "The STDOUT",
-            "stderr": "The STDERR",
-        }
-
-    def run(self, command):
+    def run(self, command: str):
         result = subprocess.run(command, capture_output=True, shell=True)
         return {
             "stdout": result.stdout.decode("utf-8"),

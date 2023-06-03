@@ -6,17 +6,18 @@ class _MemoryManagerTool(BaseTool):
 
 
 class AddToMemory(_MemoryManagerTool):
-    @property
-    def args(self):
-        return {"text": "Text to be added to memory."}
+    """Add text to memory for later use.
 
-    @property
-    def resp(self):
-        return {"success": "true or false"}
+    Args:
+        text (str): Text to be added to memory.
+    
+    Returns:
+        bool: True if the text was successfully added to memory. Else False.
+    """
 
-    def run(self, text):
+    def run(self, text: str):
         self.agent.memory.add(text)
-        return {"success": "true"}
+        return True
 
 
 MemoryManagerTools = [AddToMemory]

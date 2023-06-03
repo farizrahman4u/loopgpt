@@ -1,6 +1,20 @@
 import loopgpt
+from loopgpt.tools import GoogleSearch, Browser, WriteToFile, AppendToFile
+from loopgpt.models import AzureOpenAIModel
+from loopgpt.embeddings import AzureOpenAIEmbeddingProvider
 
-agent = loopgpt.Agent()
+import openai
+import os
+
+openai.api_type = "azure"
+openai.api_base = "https://loopgpt-azure-openai.openai.azure.com/"
+openai.api_version = "2023-03-15-preview"
+openai.api_key = os.getenv("AZURE_OPENAI_KEY")
+
+model = AzureOpenAIModel("loop-gpt-35-turbo")
+emb = AzureOpenAIEmbeddingProvider("loop-text-embedding-ada-002")
+
+agent = loopgpt.Agent(tools=[GoogleSearch, Browser, WriteToFile, AppendToFile], model=model, embedding_provider=emb, temperature=0.2)
 
 agent.name = "Jamie"
 

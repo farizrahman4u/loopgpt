@@ -69,15 +69,15 @@ class Summarizer:
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
             if not query:
                 summary = self.summarize_chunk(chunk, query)
-                summaries.append(summary)
             else:
-                ans = self.qa_chunk(chunk, query)
-                if ans:
-                    summaries.append(ans)
+                summary = self.qa_chunk(chunk, query)
+            if summary:
+                summaries.append(summary)
+                self.agent.memory.add(summary)
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        if len(summaries) > 1 and query:
+        if len(summaries) > 1:
             summary = self.summarize_chunk(summary, query)
         if spinner:
             spinner.show()

@@ -88,9 +88,6 @@ class AzureOpenAIModel(OpenAIModel):
         num_retries = 3
         for _ in range(num_retries):
             try:
-                print("=====================================")
-                for message in messages:
-                    print(f"{message['role']}: {message['content']}")
                 resp = openai.ChatCompletion.create(
                     engine=self.deployment_id,
                     messages=messages,

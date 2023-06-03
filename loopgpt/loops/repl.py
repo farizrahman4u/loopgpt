@@ -143,12 +143,11 @@ def cli(agent, continuous=False):
                 if (
                     isinstance(command, dict)
                     and "name" in command
-                    and "args" in command
                 ):
                     if command["name"]:
                         print_line(
                             "command",
-                            f"{command['name']}, Args: {command['args']}",
+                            f"{command['name']}, Args: {command.get('args') or {}}",
                             end="\n\n",
                         )
                     while True:
