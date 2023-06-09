@@ -7,7 +7,7 @@ class ReadFromFile(BaseTool):
 
     Args:
         file (str): Path to the file to read.
-    
+
     Returns:
         str: Contents of the file.
     """
@@ -26,7 +26,7 @@ class WriteToFile(BaseTool):
     Args:
         file (str): Path of the file to write to.
         content (str): Content to be written to the file.
-    
+
     Returns:
         bool: True if the file was successfully written to. Else False.
     """
@@ -46,7 +46,7 @@ class AppendToFile(BaseTool):
     Args:
         file (str): Path of the file to append to.
         content (str): Content to be appended to the file.
-    
+
     Returns:
         bool: True if the file was successfully appended to. Else False.
     """
@@ -62,7 +62,7 @@ class DeleteFile(BaseTool):
 
     Args:
         file (str): Path to the file to be deleted.
-    
+
     Returns:
         bool: True if the file was successfully deleted. Else False.
     """
@@ -80,7 +80,7 @@ class CheckIfFileExists(BaseTool):
 
     Args:
         file (str): Path to the file to check.
-    
+
     Returns:
         bool: True if the file exists. Else False.
     """
@@ -97,12 +97,18 @@ class ListFiles(BaseTool):
         recursive (bool): If true, list files and directories recursively. Else, list only the files and directories in the given path.
         show_hidden (bool): If true, show hidden files and directories. Defaults to False.
         exclude_dirs (bool): If true, exclude directories from the result. Defaults to False.
-    
+
     Returns:
         List[str]: List of files and directories.
     """
 
-    def run(self, path: str, recursive: bool, show_hidden: bool = False, exclude_dirs: bool = False):
+    def run(
+        self,
+        path: str,
+        recursive: bool,
+        show_hidden: bool = False,
+        exclude_dirs: bool = False,
+    ):
         entries_list = []
         with os.scandir(path) as entries:
             for entry in entries:
@@ -146,7 +152,7 @@ class MakeDirectory(BaseTool):
 
     Args:
         path (str): Path of the directory to be made.
-    
+
     Returns:
         bool: True if the directory was created, False otherwise.
     """

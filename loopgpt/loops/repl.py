@@ -140,10 +140,7 @@ def cli(agent, continuous=False):
                     print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
-                if (
-                    isinstance(command, dict)
-                    and "name" in command
-                ):
+                if isinstance(command, dict) and "name" in command:
                     if command["name"]:
                         print_line(
                             "command",

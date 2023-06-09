@@ -37,6 +37,8 @@ class ChunkedFileStream:
 
 
 streams = {}
+
+
 def read_chunk_from_file(path):
     if path not in streams:
         streams[path] = ChunkedFileStream(path)

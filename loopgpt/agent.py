@@ -105,7 +105,7 @@ class Agent:
         self.constraints = []
         self.state = AgentStates.START
         self.memory_query = None
-    
+
     def next_prompt(self):
         if self.prompts:
             yield from self.prompts
@@ -146,14 +146,13 @@ class Agent:
                     mem_source = self._get_non_user_messages(n) + user_prompt
                     memory_query = "\n".join([hist["content"] for hist in mem_source])
                 relevant_memory = self.memory.get(memory_query, 10)
-        
+
         def _msgs():
             updated_msgs = []
             for section in sections:
                 if section == "HEADER":
                     updated_msgs += [header, dtime]
                 if section.startswith("HISTORY"):
-                    print(len(history))
                     updated_msgs += history[:]
                 elif section.startswith("MEMORY"):
                     if relevant_memory:
@@ -165,7 +164,7 @@ class Agent:
                                 + "\n=============================MEMORY=============================\n"
                                 + f"\n{memstr}\n"
                                 + "================================================================\n"
-                            )
+                            ),
                         }
                         updated_msgs.append(context)
                 elif section == "USER_INPUT":
@@ -213,7 +212,20 @@ class Agent:
         history = self._get_non_user_messages(30)
         maxtokens = self.model.get_token_limit()
         while True:
-            ntokens = self.model.count_tokens(history)
+            message = [
+                {
+                    "role": "user",
+                    "content": (
+                        f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
+                        + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
+                        + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
+                        + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
+                        + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
+                        + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
+                    ),
+                }
+            ]
+            ntokens = self.model.count_tokens(message)
             if ntokens < maxtokens:
                 break
             else:
@@ -221,28 +233,17 @@ class Agent:
 
         if len(history) == 0:
             return []
-        history_summary = self.model.chat(
-            [
-                {
-                    "role": "user",
-                    "content": f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
-                    + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands" 
-                    + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
-                    + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
-                    + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of" 
-                    + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
-                }
-            ]
-        )
+
+        history_summary = self.model.chat(message)
         return [{"role": "system", "content": history_summary}]
 
     def get_full_message(self, message: Optional[str]):
         return next(self.prompt_gen) + "\n\n" + (message or "")
-    
+
     def _default_response_callback(self, resp):
-        print("===============RESPONSE CALLBACK======================")
-        print(resp)
-        print("=====================================")
+        # print("===============RESPONSE CALLBACK======================")
+        # print(resp)
+        # print("=====================================")
         try:
             resp = self._load_json(resp)
             plan = resp.get("plan")
@@ -333,7 +334,7 @@ class Agent:
         [print(f"{prompt['role']}: {prompt['content']}") for prompt in full_prompt]
         print("===========================================")
         token_limit = self.model.get_token_limit()
-        print(token_count, token_limit)
+        # print(token_count, token_limit)
         max_tokens = min(1000, max(token_limit - token_count, 0))
         assert max_tokens
         resp = self.model.chat(
@@ -471,7 +472,7 @@ class Agent:
         prompt = []
         prompt.append(self.persona_prompt())
         if self.tools:
-            prompt.append(self.tools_prompt(extras=True))
+            prompt.append(self.tools_prompt())
         if self.goals:
             prompt.append(self.goals_prompt())
         if self.constraints:
@@ -512,14 +513,20 @@ class Agent:
 
     def tools_prompt(self, extras=False):
         prompt = []
-        prompt.append("You have access to the following commands:")
+        prompt.append("The following commands are already defined for you:")
         for i, tool in enumerate(self.tools.values()):
             tool.agent = self
             prompt.append(tool.prompt())
-        
+
         if extras:
-            task_complete_command = f'def task_complete():\n\t"""{task_complete.__doc__}\n\t"""'.expandtabs(4)
-            do_nothing_command = f'def do_nothing():\n\t"""{do_nothing.__doc__}\n\t"""'.expandtabs(4)
+            task_complete_command = (
+                f'def task_complete():\n\t"""{task_complete.__doc__}\n\t"""'.expandtabs(
+                    4
+                )
+            )
+            do_nothing_command = (
+                f'def do_nothing():\n\t"""{do_nothing.__doc__}\n\t"""'.expandtabs(4)
+            )
             prompt.append(task_complete_command)
             prompt.append(do_nothing_command)
         return "\n\n".join(prompt) + "\n"
@@ -611,12 +618,14 @@ class Agent:
     def cli(self, continuous=False):
         cli(self, continuous=continuous)
 
+
 def task_complete():
     """Mark the current task as complete.
 
     Returns:
         None
     """
+
 
 def do_nothing():
     """No-op command.

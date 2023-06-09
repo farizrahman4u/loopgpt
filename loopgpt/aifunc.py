@@ -1,10 +1,11 @@
 from typing import Any, Dict, List, Optional
+from functools import partial
 import loopgpt
 import inspect
 import ast
 import re
-from loopgpt.agent import Agent
 
+from loopgpt.agent import Agent
 from loopgpt.constants import AgentStates
 from loopgpt.tools import Browser
 from loopgpt.models import BaseModel
@@ -13,11 +14,12 @@ from duckduckgo_search import ddg
 
 from loopgpt.tools.base_tool import BaseTool
 
+
 def create_empty_agent(**agent_kwargs):
     agent = loopgpt.Agent(**agent_kwargs)
     agent.prompts = []
     agent.state = AgentStates.IDLE
-    agent.tools = {}
+    agent.tools = agent.tools if agent_kwargs.get("tools") else {}
     agent.goals = []
     agent.constraints = []
     agent.plan = []
@@ -25,26 +27,43 @@ def create_empty_agent(**agent_kwargs):
     agent.temperature = 0
     return agent
 
+
 def get_func_prompt(func, sig):
     sig_and_doc = f'def {func.__name__}{sig}:\n\t"""{func.__doc__}\n\t"""'.expandtabs(4)
-    return f"a python function with the following signature:\n```\n{sig_and_doc}\n```\n\n"
+    return (
+        f"a python function with the following signature:\n```\n{sig_and_doc}\n```\n\n"
+    )
+
 
 def get_args_prompt(sig, args, kwargs):
     params = sig.parameters
-    positional_args = [arg for arg, p in params.items() if p.kind == p.POSITIONAL_OR_KEYWORD or p.kind == p.POSITIONAL_ONLY]
-    
+    positional_args = [
+        arg
+        for arg, p in params.items()
+        if p.kind == p.POSITIONAL_OR_KEYWORD or p.kind == p.POSITIONAL_ONLY
+    ]
+
     str_fmt = '"""\n{}\n"""'
-    args_str = "\n\n".join([f"{positional_args[i]}:\n\n{str_fmt.format(arg) if isinstance(arg, str) else arg}" for i, arg in enumerate(args)])
+    args_str = "\n\n".join(
+        [
+            f"{positional_args[i]}:\n\n{str_fmt.format(arg) if isinstance(arg, str) else arg}"
+            for i, arg in enumerate(args)
+        ]
+    )
     kwargs_str = "\n\n".join([f"{key}:\n\n{value}" for key, value in kwargs.items()])
 
     return f"Arguments:\n\n{args_str}\n\n{kwargs_str}"
+
 
 def main_response_callback(resp, return_annotation):
     if return_annotation == str:
         resp = resp.strip('"""').strip('"')
         return resp
     if str(return_annotation) == "typing.List[str]":
-        resp = [re.findall(r"'(.+)'", part)[0] for part in resp.split(',')]
+        try:
+            resp = ast.literal_eval(resp)
+        except:
+            resp = [re.findall(r"'(.+)'", part)[0] for part in resp.split(",")]
         return resp
     try:
         resp = ast.literal_eval(resp)
@@ -55,8 +74,10 @@ def main_response_callback(resp, return_annotation):
             print("Command parsing failed.")
     return resp
 
+
 def collector_response_callback(resp):
     try:
+        resp = resp[resp.find("[") : resp.rfind("]") + 1]
         return ast.literal_eval(resp)
     except ValueError:
         print("Command parsing failed.")
@@ -79,6 +100,7 @@ def create_analyzer_agent(func_prompt, tools, args_prompt, **agent_kwargs):
     ]
     return agent
 
+
 def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs):
     agent = create_empty_agent(**agent_kwargs)
     set_agent_tools(agent, tools)
@@ -98,23 +120,10 @@ def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs)
     agent.prompts = [
         init_prompt,
         "You now have data in your memory. Return an empty list to terminate data collection. Continue data collection only if neccessary.\n"
-        + init_prompt
+        + init_prompt,
     ]
     return agent
 
-
-def expand_placeholders(function_sequence: List[Dict[str, Any]], execution_history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """This is an atomic replace function. It replaces placeholders in angle brackets by analyzing the execution history. Return as is if no placeholders are present.
-
-    Args:
-        function_sequence (List[Dict[str, Any]]): List of dictionary of function sequence.
-        execution_history (List[Dict[str, Any]]): List of execution history.
-    
-    Returns:
-        List[Dict[str, Any]]: Updated function sequence.
-
-    """
-    
 
 def set_agent_tools(agent: Agent, tools: List[BaseTool]):
     for tool_cls in tools:
@@ -122,12 +131,14 @@ def set_agent_tools(agent: Agent, tools: List[BaseTool]):
         agent.tools[tool.id] = tool
 
 
-def aifunc(agent: Optional[Agent] = None, tools: List = [], **agent_kwargs):
+def aifunc(tools: List = []):
     def decorator(func):
         def inner(*args, **kwargs):
             sig = inspect.signature(func)
-            
-            nonlocal agent
+
+            agent_kwargs = kwargs.pop("agent_kwargs", {})
+            agent = kwargs.pop("agent", None)
+
             if agent is None:
                 agent = create_empty_agent(**agent_kwargs)
 
@@ -139,23 +150,38 @@ def aifunc(agent: Optional[Agent] = None, tools: List = [], **agent_kwargs):
                 args_str = "Arguments:\n\nThis function does not take any arguments."
             else:
                 args_str = get_args_prompt(sig, args, kwargs)
-            
+
             if tools:
-                analyzer = create_analyzer_agent(func_prompt, tools, args_str, **agent_kwargs)
-                collector = create_data_collector_agent(func_prompt, tools, args_str, **agent_kwargs)
-                update_seq = aifunc(**agent_kwargs)(expand_placeholders)
+                analyzer = create_analyzer_agent(
+                    func_prompt, tools, args_str, **agent_kwargs
+                )
+                collector = create_data_collector_agent(
+                    func_prompt, tools, args_str, **agent_kwargs
+                )
+                update_seq = partial(expand_placeholders, agent_kwargs=agent_kwargs)
 
                 analyzer.memory = agent.memory
                 collector.memory = agent.memory
 
                 commands = collector.chat(response_callback=collector_response_callback)
                 req_data = True
-                print(commands)
+                # print(commands)
                 while commands and req_data:
                     command = commands[0]
+                    if command["function"] == func.__name__:
+                        commands.pop(0)
+                        continue
                     tool = collector.tools[command["function"]]
                     resp = str(tool.run(**command["args"]))
-                    last_command = str([{"function": command["function"], "args": command["args"], "response": resp}])
+                    last_command = str(
+                        [
+                            {
+                                "function": command["function"],
+                                "args": command["args"],
+                                "response": resp,
+                            }
+                        ]
+                    )
 
                     msg = {
                         "role": "system",
@@ -164,19 +190,44 @@ def aifunc(agent: Optional[Agent] = None, tools: List = [], **agent_kwargs):
                     collector.history.append(msg)
                     analyzer.history.append(msg)
 
-                    if len(commands) > 1:
+                    if len(commands) > 1 and "<" in str(commands[1]["args"]):
                         new_commands = update_seq(commands, last_command)
                         if new_commands:
                             commands = new_commands
                     commands.pop(0)
-                    req_data = analyzer.chat(response_callback=None)
-                    if req_data == "yes" and not commands:
-                        commands = collector.chat(response_callback=collector_response_callback)
-                        print(commands)
+                    if len(commands) == 0:
+                        req_data = analyzer.chat(response_callback=None)
+                        if req_data == "yes":
+                            commands = collector.chat(
+                                response_callback=collector_response_callback
+                            )
+                            # print(commands)
 
-
-            resp = agent.chat(args_str + "Respond only with your return value.\n\nYour response is to be directly parsed, strictly do not include any other text in your response.", response_callback=None)
-            print(resp)
+            resp = agent.chat(
+                args_str
+                + "Respond only with your return value.\n\nYour response is to be directly parsed, strictly do not include any other text in your response.",
+                response_callback=None,
+            )
+            # print(resp)
             return main_response_callback(resp, sig.return_annotation)
+
         return inner
+
     return decorator
+
+
+@aifunc()
+def expand_placeholders(
+    function_sequence: List[Dict[str, Any]], execution_history: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """This is an atomic replace function. It replaces placeholders in angle brackets by analyzing the execution history. Return as is if no placeholders are present.
+    Ensure URLs are full.
+
+    Args:
+        function_sequence (List[Dict[str, Any]]): List of dictionary of function sequence.
+        execution_history (List[Dict[str, Any]]): List of execution history.
+
+    Returns:
+        List[Dict[str, Any]]: Updated function sequence.
+
+    """

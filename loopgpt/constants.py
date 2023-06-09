@@ -77,14 +77,12 @@ INIT_PROMPT = (
     + "\n"
 )
 
-DEFAULT_PROMPT_TEMPLATE = (
-    """
+DEFAULT_PROMPT_TEMPLATE = """
     <HEADER>
     <HISTORY>
     <MEMORY: 10>
     <USER_INPUT>
     """
-)
 
 
 DEFAULT_AGENT_NAME = "LoopGPT"

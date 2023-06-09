@@ -10,7 +10,7 @@ class AddToMemory(_MemoryManagerTool):
 
     Args:
         text (str): Text to be added to memory.
-    
+
     Returns:
         bool: True if the text was successfully added to memory. Else False.
     """

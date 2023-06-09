@@ -33,7 +33,7 @@ class ExecutePythonFile(_BaseCodeTool):
 
     Args:
         file (str): Path to the Python file.
-    
+
     Returns:
         str: Value of stdout if the execution was successful. Else error message.
     """
@@ -80,7 +80,7 @@ class ImproveCode(_BaseCodeTool):
     Args:
         code (str): The code to improve.
         suggestions (List[str]): List of suggestions
-    
+
     Returns:
         str: Improved code.
     """
@@ -96,7 +96,7 @@ class WriteTests(_BaseCodeTool):
 
     Args:
         code (str): Code to write tests for.
-    
+
     Returns:
         str: Tests.
     """

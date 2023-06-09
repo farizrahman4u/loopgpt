@@ -2,6 +2,7 @@
 Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
+import time
 from typing import *
 from tqdm import tqdm
 from loopgpt.models import BaseModel, OpenAIModel
@@ -71,6 +72,7 @@ class Summarizer:
                 summary = self.summarize_chunk(chunk, query)
             else:
                 summary = self.qa_chunk(chunk, query)
+            time.sleep(2)
             if summary:
                 summaries.append(summary)
                 self.agent.memory.add(summary)

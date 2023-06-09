@@ -7,7 +7,7 @@ class Shell(BaseTool):
 
     Args:
         command (str): The command to execute.
-    
+
     Returns:
         Dict[str, str]: A dict containing the STDOUT and STDERR of the command.
     """

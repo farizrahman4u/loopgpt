@@ -10,10 +10,11 @@ class GetWeather(BaseTool):
 
     Args:
         city (str): Name of the city
-    
+
     Returns:
         dict: The weather report for the city
     """
+
     def __init__(self):
         super(GetWeather, self).__init__()
 

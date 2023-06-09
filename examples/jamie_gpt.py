@@ -1,7 +1,9 @@
 import loopgpt
 from loopgpt.tools import GoogleSearch, Browser, WriteToFile, AppendToFile
 
-agent = loopgpt.Agent(tools=[GoogleSearch, Browser, WriteToFile, AppendToFile], temperature=0.2)
+agent = loopgpt.Agent(
+    tools=[GoogleSearch, Browser, WriteToFile, AppendToFile], temperature=0.2
+)
 
 agent.name = "Jamie"
 

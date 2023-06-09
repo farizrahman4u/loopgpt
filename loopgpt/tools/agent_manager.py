@@ -14,7 +14,7 @@ class CreateAgent(_AgentManagerTool):
         name (str): Agent name.
         task (str): Specific task for agent.
         prompt (str): The prompt.
-    
+
     Returns:
         dict: A dict containing the id and response from the agent.
     """
@@ -43,7 +43,7 @@ class MessageAgent(_AgentManagerTool):
     Args:
         id (str): Agent id.
         message (str): The message to send to the agent.
-    
+
     Returns:
         str: The response from the agent.
     """
@@ -60,7 +60,7 @@ class DeleteAgent(_AgentManagerTool):
 
     Args:
         id (str): Agent id.
-    
+
     Returns:
         bool: True if the agent was deleted, False otherwise.
     """

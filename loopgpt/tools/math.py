@@ -8,7 +8,7 @@ class EvaluateMath(BaseTool):
 
     Args:
         expression (str): The expression to evaluate.
-    
+
     Returns:
         str: The result of the expression.
     """

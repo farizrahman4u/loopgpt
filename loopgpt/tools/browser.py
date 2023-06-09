@@ -19,15 +19,16 @@ import atexit
 class Browser(BaseTool):
     """This opens a browser. It opens the url and finds the answer for the query.
     Provide an empty query if you want to summarize the page.
-    
+
     Args:
         url (str): URL to open.
         query (str): Query to search for.
-    
+
     Returns:
         Dict: Relevant summary and a list of links extracted from the URL.
 
     """
+
     def __init__(self, browser_type="chrome"):
         super(Browser, self).__init__()
         if browser_type not in ("chrome", "firefox"):
@@ -36,6 +37,7 @@ class Browser(BaseTool):
         self.driver = None
         self.summarizer = Summarizer()
         self.cache = {}
+        self.browsed = {}
         atexit.register(self.close)
 
     def _set_browser_options(self, browser_type):
@@ -120,6 +122,8 @@ class Browser(BaseTool):
     def run(self, url: str, query: str):
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
+        if self.browsed.get(f"{url}_{query}"):
+            return self.browsed[f"{url}_{query}"]
         try:
             soup = BeautifulSoup(self._get(url), "html.parser")
             [script.extract() for script in soup(["script", "style"])]
@@ -127,11 +131,18 @@ class Browser(BaseTool):
             text = self._extract_text_from_soup(soup)
             self.summarizer.agent = getattr(self, "agent", None)
             summary, chunks = self.summarizer.summarize(text, query)
-            if getattr(self, "agent", None):
+            if hasattr(self, "agent"):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")
 
-            return summary + "\n\n" + "Links found on the page:\n" + "\n".join([f"{link[1]}: {link[0]}" for link in links])
+            result = (
+                summary
+                + "\n\n"
+                + "Links found on the page:\n"
+                + "\n".join([f"{link[1]}: {link[0]}" for link in links])
+            )
+            self.browsed[f"{url}_{query}"] = result
+            return result
         except Exception as e:
             return f"An error occurred while scraping the website: {e}. Make sure the URL is valid."
 

@@ -11,7 +11,7 @@ class AskUser(_UserManagerTool):
 
     Args:
         message (str): The question for the user.
-    
+
     Returns:
         str: The response from the user.
     """
