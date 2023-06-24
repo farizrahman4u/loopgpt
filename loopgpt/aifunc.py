@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from functools import partial
+from functools import partial, wraps
 import loopgpt
 import inspect
 import ast
@@ -11,8 +11,9 @@ from loopgpt.tools import Browser
 from loopgpt.models import BaseModel
 from loopgpt.summarizer import Summarizer
 from duckduckgo_search import ddg
-
 from loopgpt.tools.base_tool import BaseTool
+
+import loopgpt.agent
 
 
 def create_empty_agent(**agent_kwargs):
@@ -63,7 +64,11 @@ def main_response_callback(resp, return_annotation):
         try:
             resp = ast.literal_eval(resp)
         except:
-            resp = [re.findall(r"'(.+)'", part)[0] for part in resp.split(",")]
+            try:
+                resp = [re.findall(r"'(.+)'", part)[0] for part in resp.split(",")]
+            except:
+                # at least return the string, smh
+                return resp
         return resp
     try:
         resp = ast.literal_eval(resp)
@@ -131,13 +136,25 @@ def set_agent_tools(agent: Agent, tools: List[BaseTool]):
         agent.tools[tool.id] = tool
 
 
-def aifunc(tools: List = []):
-    def decorator(func):
-        def inner(*args, **kwargs):
+class aifunc:
+    model = None
+    embedding_provider = None
+
+    def __init__(self, tools: List = []):
+        self.tools = tools
+
+    def __call__(self, func):
+        @wraps(func)
+        def inner(*args, model=None, embedding_provider=None, **kwargs):
             sig = inspect.signature(func)
 
-            agent_kwargs = kwargs.pop("agent_kwargs", {})
-            agent = kwargs.pop("agent", None)
+            agent_kwargs = {
+                "model": model or aifunc.model,
+                "embedding_provider": embedding_provider or aifunc.embedding_provider,
+            }
+            print(agent_kwargs)
+            agent = kwargs.pop("agent", loopgpt.agent.ACTIVE_AGENT)
+            print(agent)
 
             if agent is None:
                 agent = create_empty_agent(**agent_kwargs)
@@ -151,14 +168,13 @@ def aifunc(tools: List = []):
             else:
                 args_str = get_args_prompt(sig, args, kwargs)
 
-            if tools:
+            if self.tools:
                 analyzer = create_analyzer_agent(
-                    func_prompt, tools, args_str, **agent_kwargs
+                    func_prompt, self.tools, args_str, **agent_kwargs
                 )
                 collector = create_data_collector_agent(
-                    func_prompt, tools, args_str, **agent_kwargs
+                    func_prompt, self.tools, args_str, **agent_kwargs
                 )
-                update_seq = partial(expand_placeholders, agent_kwargs=agent_kwargs)
 
                 analyzer.memory = agent.memory
                 collector.memory = agent.memory
@@ -191,7 +207,7 @@ def aifunc(tools: List = []):
                     analyzer.history.append(msg)
 
                     if len(commands) > 1 and "<" in str(commands[1]["args"]):
-                        new_commands = update_seq(commands, last_command)
+                        new_commands = expand_placeholders(commands, last_command)
                         if new_commands:
                             commands = new_commands
                     commands.pop(0)
@@ -205,15 +221,14 @@ def aifunc(tools: List = []):
 
             resp = agent.chat(
                 args_str
-                + "Respond only with your return value.\n\nYour response is to be directly parsed, strictly do not include any other text in your response.",
+                + "Respond only with your return value. Your response is to be directly parsed, strictly do not include any other text in your response.",
                 response_callback=None,
             )
             # print(resp)
-            return main_response_callback(resp, sig.return_annotation)
+            resp = main_response_callback(resp, sig.return_annotation)
+            return resp
 
         return inner
-
-    return decorator
 
 
 @aifunc()

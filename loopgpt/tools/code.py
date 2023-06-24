@@ -23,7 +23,7 @@ def ai_function(func, desc, args, model: BaseModel):
 class _BaseCodeTool(BaseTool):
     @property
     def model(self):
-        if hasattr(self, "agent"):
+        if getattr(self, "agent"):
             return self.agent.model
         return OpenAIModel("gpt-3.5-turbo")
 

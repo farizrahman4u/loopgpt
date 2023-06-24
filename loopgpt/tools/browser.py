@@ -129,9 +129,9 @@ class Browser(BaseTool):
             [script.extract() for script in soup(["script", "style"])]
             links = self._extract_links_from_soup(soup)[:5]
             text = self._extract_text_from_soup(soup)
-            self.summarizer.agent = getattr(self, "agent", None)
+            self.summarizer.agent = getattr(self, "agent")
             summary, chunks = self.summarizer.summarize(text, query)
-            if hasattr(self, "agent"):
+            if getattr(self, "agent"):
                 for chunk in chunks:
                     self.agent.memory.add(f"Snippet from {url}: {chunk}")
 

@@ -1,4 +1,5 @@
 from typing import *
+import loopgpt.agent
 import inspect
 import re
 
@@ -8,11 +9,22 @@ def camel_case_split(str):
 
 
 class BaseTool:
+    def __init__(self, *args, **kwargs):
+        self._agent = None
+
+    @property
+    def agent(self):
+        return loopgpt.agent.ACTIVE_AGENT or self._agent
+
+    @agent.setter
+    def agent(self, agent):
+        self._agent = agent
+
     @property
     def id(self) -> str:
         return "_".join(camel_case_split(self.__class__.__name__)).lower()
 
-    def run(**kwrags) -> str:
+    def run(**kwargs) -> str:
         raise NotImplementedError()
 
     def prompt(self):

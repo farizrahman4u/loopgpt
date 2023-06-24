@@ -17,7 +17,7 @@ class Summarizer:
     @property
     def model(self):
         if self._model is None:
-            if hasattr(self, "agent"):
+            if getattr(self, "agent"):
                 model = self.agent.model
                 if type(model) == OpenAIModel:
                     if model.model == "gpt-3.5-turbo":

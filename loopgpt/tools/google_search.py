@@ -75,7 +75,7 @@ class GoogleSearch(BaseTool):
         return results, links
 
     def _add_to_memory(self, results):
-        if hasattr(self, "agent"):
+        if getattr(self, "agent"):
             self.agent.memory.add(results)
 
     def manual_run(self, query: str):

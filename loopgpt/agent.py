@@ -23,12 +23,15 @@ from loopgpt.loops import cli
 
 from typing import *
 from itertools import repeat
+from contextlib import contextmanager
 
 import openai
 import json
 import time
 import ast
 import re
+
+ACTIVE_AGENT = None
 
 
 class Agent:
@@ -105,6 +108,7 @@ class Agent:
         self.constraints = []
         self.state = AgentStates.START
         self.memory_query = None
+        self.additional_history = None
 
     def next_prompt(self):
         if self.prompts:
@@ -232,10 +236,13 @@ class Agent:
                 history.pop(0)
 
         if len(history) == 0:
-            return []
-
-        history_summary = self.model.chat(message)
-        return [{"role": "system", "content": history_summary}]
+            history = []
+        else:
+            history_summary = self.model.chat(message)
+            history = [{"role": "system", "content": history_summary}]
+        if self.additional_history:
+            history += [{"role": role, "content": content} for role, content in self.additional_history.items()]
+        return history
 
     def get_full_message(self, message: Optional[str]):
         return next(self.prompt_gen) + "\n\n" + (message or "")
@@ -617,6 +624,33 @@ class Agent:
 
     def cli(self, continuous=False):
         cli(self, continuous=continuous)
+
+    def __enter__(self):
+        global ACTIVE_AGENT
+        ACTIVE_AGENT = self
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        global ACTIVE_AGENT
+        ACTIVE_AGENT = None
+
+    @contextmanager
+    def query(self, query):
+        try:
+            print("QUERY SET")
+            self.memory_query = query
+            yield
+        finally:
+            self.memory_query = None
+    
+    @contextmanager
+    def complete(self, history):
+        try:
+            print("HISTORY SET")
+            self.additional_history = history
+            yield
+        finally:
+            self.additional_history = None
 
 
 def task_complete():
