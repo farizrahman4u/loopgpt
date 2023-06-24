@@ -241,16 +241,16 @@ class Agent:
             history_summary = self.model.chat(message)
             history = [{"role": "system", "content": history_summary}]
         if self.additional_history:
-            history += [{"role": role, "content": content} for role, content in self.additional_history.items()]
+            history += [
+                {"role": role, "content": content}
+                for role, content in self.additional_history.items()
+            ]
         return history
 
     def get_full_message(self, message: Optional[str]):
         return next(self.prompt_gen) + "\n\n" + (message or "")
 
     def _default_response_callback(self, resp):
-        # print("===============RESPONSE CALLBACK======================")
-        # print(resp)
-        # print("=====================================")
         try:
             resp = self._load_json(resp)
             plan = resp.get("plan")
@@ -337,11 +337,7 @@ class Agent:
             self.staging_tool = None
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
-        print("===========================================")
-        [print(f"{prompt['role']}: {prompt['content']}") for prompt in full_prompt]
-        print("===========================================")
         token_limit = self.model.get_token_limit()
-        # print(token_count, token_limit)
         max_tokens = min(1000, max(token_limit - token_count, 0))
         assert max_tokens
         resp = self.model.chat(
@@ -637,16 +633,14 @@ class Agent:
     @contextmanager
     def query(self, query):
         try:
-            print("QUERY SET")
             self.memory_query = query
             yield
         finally:
             self.memory_query = None
-    
+
     @contextmanager
     def complete(self, history):
         try:
-            print("HISTORY SET")
             self.additional_history = history
             yield
         finally:

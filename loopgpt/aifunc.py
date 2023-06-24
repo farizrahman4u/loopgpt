@@ -152,9 +152,7 @@ class aifunc:
                 "model": model or aifunc.model,
                 "embedding_provider": embedding_provider or aifunc.embedding_provider,
             }
-            print(agent_kwargs)
             agent = kwargs.pop("agent", loopgpt.agent.ACTIVE_AGENT)
-            print(agent)
 
             if agent is None:
                 agent = create_empty_agent(**agent_kwargs)
@@ -181,7 +179,6 @@ class aifunc:
 
                 commands = collector.chat(response_callback=collector_response_callback)
                 req_data = True
-                # print(commands)
                 while commands and req_data:
                     command = commands[0]
                     if command["function"] == func.__name__:
@@ -217,14 +214,12 @@ class aifunc:
                             commands = collector.chat(
                                 response_callback=collector_response_callback
                             )
-                            # print(commands)
 
             resp = agent.chat(
                 args_str
                 + "Respond only with your return value. Your response is to be directly parsed, strictly do not include any other text in your response.",
                 response_callback=None,
             )
-            # print(resp)
             resp = main_response_callback(resp, sig.return_annotation)
             return resp
 
