@@ -48,6 +48,8 @@ class Agent:
     :type embedding_provider: :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider`, optional
     :param temperature: The temperature to use for agent's chat completion. Defaults to 0.8.
     :type temperature: float, optional
+    :param context: contextual data about the AI, optional
+    :type context: str, optional
     """
 
     def __init__(
@@ -58,6 +60,7 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
+        context=None
     ):
         if openai.api_type == "azure":
             if model is None:
@@ -79,6 +82,7 @@ class Agent:
 
         self.name = name
         self.description = description
+        self.context = context
         self.goals = goals or []
         self.model = model
         self.embedding_provider = embedding_provider
@@ -389,6 +393,8 @@ class Agent:
     def header_prompt(self):
         prompt = []
         prompt.append(self.persona_prompt())
+        if self.context:
+            prompt.append(self.context_prompt())
         if self.tools:
             prompt.append(self.tools_prompt())
         if self.goals:
@@ -403,6 +409,9 @@ class Agent:
 
     def persona_prompt(self):
         return f"You are {self.name}, {self.description}."
+    
+    def context_prompt(self):
+        return str(self.context)
 
     def progress_prompt(self):
         prompt = []
