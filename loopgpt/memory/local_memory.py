@@ -11,6 +11,9 @@ class LocalMemory(BaseMemory):
         self.embs: Optional[np.ndarray] = None
         self.embedding_provider = embedding_provider
 
+    def __len__(self):
+        return len(self.docs)
+
     def add(self, doc: str, key: Optional[str] = None):
         if not key:
             key = doc

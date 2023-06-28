@@ -30,6 +30,7 @@ import json
 import time
 import ast
 import re
+import os
 
 ACTIVE_AGENT = None
 
@@ -602,6 +603,7 @@ class Agent:
         if hasattr(file, "write"):
             json.dump(cfg, file)
         elif isinstance(file, str):
+            os.makedirs(os.path.dirname(file), exist_ok=True)
             with open(file, "w") as f:
                 json.dump(cfg, f)
         else:
