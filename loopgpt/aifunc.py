@@ -109,7 +109,6 @@ def create_analyzer_agent(func_prompt, tools, args_prompt, **agent_kwargs):
 def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs):
     agent = create_empty_agent(**agent_kwargs)
     set_agent_tools(agent, tools)
-    # agent.memory_query = "How to make a pizza?"
     agent.name = "Execution Data Collector"
     agent.description = f"and you have to make a plan to collect relevant data for the successful execution of {func_prompt}"
     if args_prompt:
