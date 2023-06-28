@@ -47,8 +47,7 @@ agent.name = "WeatherGPT"
 agent.description = "an AI assistant that tells you the weather"
 agent.goals = [
     "Get the weather for Chicago and Beijing",
-    "Give the user tips on how to dress for the weather in NewYork and Beijing",
-    "Write the tips to a file called 'dressing_tips.txt'",
+    "Give the user tips on how to dress for the weather in Chicago and Beijing and write them to a file called 'dressing_tips.txt'",
     "Terminate the session when the file is written",
 ]
 
