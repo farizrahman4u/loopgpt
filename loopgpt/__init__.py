@@ -28,9 +28,10 @@ def from_config(config):
     return globals()[config["type"] + "_from_config"](config)
 
 
-def set_aifunc_args(model, embedding_provider):
+def set_aifunc_args(model, embedding_provider, memory=None):
     aifunc.model = model
     aifunc.embedding_provider = embedding_provider
+    aifunc.memory = memory
 
 
 if "pytest" not in sys.modules:

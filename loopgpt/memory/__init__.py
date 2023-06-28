@@ -1,5 +1,6 @@
 from loopgpt.memory.base_memory import BaseMemory
 from loopgpt.memory.local_memory import LocalMemory
+from loopgpt.memory.deeplake_memory import DeepLakeMemory
 
 
 user_providers = {}

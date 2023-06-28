@@ -62,6 +62,7 @@ class Agent:
         goals=None,
         model=None,
         embedding_provider=None,
+        memory=None,
         temperature=0.8,
         tools=None,
     ):
@@ -90,7 +91,11 @@ class Agent:
         self.embedding_provider = embedding_provider
         self.temperature = temperature
         self.sub_agents = {}
-        self.memory = LocalMemory(embedding_provider=embedding_provider)
+        self.memory = (
+            memory
+            if memory is not None
+            else LocalMemory(embedding_provider=embedding_provider)
+        )
         self.history = []
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]

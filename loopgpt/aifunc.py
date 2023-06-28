@@ -139,18 +139,20 @@ def set_agent_tools(agent: Agent, tools: List[BaseTool]):
 class aifunc:
     model = None
     embedding_provider = None
+    memory = None
 
     def __init__(self, tools: List = []):
         self.tools = tools
 
     def __call__(self, func):
         @wraps(func)
-        def inner(*args, model=None, embedding_provider=None, **kwargs):
+        def inner(*args, model=None, embedding_provider=None, memory=None, **kwargs):
             sig = inspect.signature(func)
 
             agent_kwargs = {
                 "model": model or aifunc.model,
                 "embedding_provider": embedding_provider or aifunc.embedding_provider,
+                "memory": memory or aifunc.memory,
             }
             agent = kwargs.pop("agent", loopgpt.agent.ACTIVE_AGENT)
 
