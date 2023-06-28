@@ -173,7 +173,7 @@ In addition to these builtin tools, you can also add your own tools to the agent
 
 Let's create WeatherGPT, an AI assistant for all things weather.
 
-A tool inherits from `BaseTool` and you only need to override 3 methods to get your tool up and running!
+A tool inherits from `BaseTool` and you only need to write a docstring to get your tool up and running!
 
 - `args`: A dictionary describing the tool's arguments and their descriptions.
 - `resp`: A dictionary describing the tool's response and their descriptions.
@@ -183,32 +183,35 @@ A tool inherits from `BaseTool` and you only need to override 3 methods to get y
 from loopgpt.tools import BaseTool
 
 class GetWeather(BaseTool):
-    @property
-    def args(self):
-        return {"city": "name of the city"}
+    """Quickly get the weather for a given city
+
+    Args:
+        city (str): name of the city
     
-    @property
-    def resp(self):
-        return {"report": "The weather report for the city"}
+    Returns:
+        dict: The weather report for the city
+    """
     
     def run(self, city):
         ...
 ```
 
-L♾️pGPT gives a default ID and description to your tool but you can override them if you'd like:
+L♾️pGPT gives a default ID to your tool but you can override them if you'd like:
 
 ```python
 class GetWeather(BaseTool):
-    ...
+    """Quickly get the weather for a given city
+
+    Args:
+        city (str): name of the city
+    
+    Returns:
+        dict: The weather report for the city
+    """
 
     @property
     def id(self):
         return "get_weather_command"
-    
-    @property
-    def desc(self):
-        """A description is recommended so that the agent knows more about what the tool does"""
-        return "Quickly get the weather for a given city"
 ```
 
 Now let's define what our tool will do in its `run` method:
@@ -218,26 +221,38 @@ import requests
 
 # Define your custom tool
 class GetWeather(BaseTool):
-    ...
+    """Quickly get the weather for a given city
+
+    Args:
+        city (str): name of the city
+    
+    Returns:
+        dict: The weather report for the city
+    """
     
     def run(self, city):
         try:
             url = "https://wttr.in/{}?format=%l+%C+%h+%t+%w+%p+%P".format(city)
             data = requests.get(url).text.split(" ")
             keys = ("location", "condition", "humidity", "temperature", "wind", "precipitation", "pressure")
-            data = {"report": dict(zip(keys, data))}
+            data = dict(zip(keys, data))
             return data
         except Exception as e:
-            return {"report": f"An error occurred while getting the weather: {e}."}
+            return f"An error occurred while getting the weather: {e}."
 ```
 
 That's it! You've built your first custom tool. Let's register it with a new agent and run it:
 
 ```python
+from loopgpt.tools import WriteToFile
 import loopgpt
 
+# Register custom tool type
+# This is actually not required here, but is required when you load a saved agent with custom tools.
+loopgpt.tools.register_tool_type(GetWeather)
+
 # Create Agent
-agent = loopgpt.Agent()
+agent = loopgpt.Agent(tools=[GetWeather, WriteToFile])
 agent.name = "WeatherGPT"
 agent.description = "an AI assistant that tells you the weather"
 agent.goals = [
@@ -245,15 +260,6 @@ agent.goals = [
     "Give the user tips on how to dress for the weather in NewYork and Beijing",
     "Write the tips to a file called 'dressing_tips.txt'"
 ]
-
-
-# Register custom tool type
-# This is actually not required here, but is required when you load a saved agent with custom tools.
-loopgpt.tools.register_tool_type(GetWeather)
-
-# Register Tool
-weather_tool = GetWeather()
-agent.tools[weather_tool.id] = weather_tool
 
 # Run the agent's CLI
 agent.cli()
