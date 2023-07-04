@@ -2,7 +2,7 @@ from typing import List, Dict, Optional
 from loopgpt.models.openai_ import OpenAIModel
 from loopgpt.utils.openai_key import get_openai_key
 from loopgpt.logger import logger
-from time import time
+import time
 
 from openai.error import RateLimitError
 import requests

@@ -3,115 +3,112 @@ import os
 
 
 class ReadFromFile(BaseTool):
-    @property
-    def args(self):
-        return {"file": "Path to the file to read as a string."}
+    """Reads the contents of a file.
 
-    @property
-    def resp(self):
-        return {
-            "content": "Contents of the file. If the file doesn't exist, this field will be empty."
-        }
+    Args:
+        file (str): Path to the file to read.
 
-    def run(self, file):
+    Returns:
+        str: Contents of the file.
+    """
+
+    def run(self, file: str):
         try:
-            with open(file, "r") as f:
-                return {"content": f.read()}
+            with open(file, "r", encoding="utf-8") as f:
+                return f.read()
         except Exception:
-            return {"content": ""}
+            return f"Error: Could not read file {file}."
 
 
 class WriteToFile(BaseTool):
-    @property
-    def args(self):
-        return {
-            "file": "Path of the file to write to as a string.",
-            "content": "Content to be written to the file as a string.",
-        }
+    """Write content to a file. This will overwrite the file if it already exists.
 
-    @property
-    def resp(self):
-        return {"success": "true or false"}
+    Args:
+        file (str): Path of the file to write to.
+        content (str): Content to be written to the file.
 
-    def run(self, file, content):
-        with open(file, "w") as f:
-            f.write(content)
-        return {"success": True}
+    Returns:
+        bool: True if the file was successfully written to. Else False.
+    """
+
+    def run(self, file: str, content: str):
+        try:
+            with open(file, "w") as f:
+                f.write(content)
+            return True
+        except:
+            return False
 
 
 class AppendToFile(BaseTool):
-    @property
-    def desc(self):
-        return "Appends content to the end of a file."
+    """Appends content to the end of a file. Creates the file if it does not exist.
 
-    @property
-    def args(self):
-        return {
-            "file": "Path of the file to append to as a string.",
-            "content": "The content to be appended to the file as a string.",
-        }
+    Args:
+        file (str): Path of the file to append to.
+        content (str): Content to be appended to the file.
 
-    @property
-    def resp(self):
-        return {"success": "true or false"}
+    Returns:
+        bool: True if the file was successfully appended to. Else False.
+    """
 
-    def run(self, file, content):
+    def run(self, file: str, content: str):
         with open(file, "a") as f:
             f.write(content)
-        return {"success": True}
+        return True
 
 
 class DeleteFile(BaseTool):
-    @property
-    def args(self):
-        return {"file": "Path to the file to be deleted as a string."}
+    """Deletes a file.
 
-    @property
-    def resp(self):
-        return {"success": "true if the file was successfully deleted. Else false."}
+    Args:
+        file (str): Path to the file to be deleted.
 
-    def run(self, file):
+    Returns:
+        bool: True if the file was successfully deleted. Else False.
+    """
+
+    def run(self, file: str):
         try:
             os.remove(file)
-            return {"success": True}
+            return True
         except Exception:
-            return {"success": False}
+            return False
 
 
 class CheckIfFileExists(BaseTool):
-    @property
-    def args(self):
-        return {"file": "Path to the check if file exists as a string."}
+    """Checks if a file exists.
 
-    @property
-    def resp(self):
-        return {"exists": "true if the file exists, else false."}
+    Args:
+        file (str): Path to the file to check.
 
-    def run(self, file):
-        return {"exists": os.path.isfile(file)}
+    Returns:
+        bool: True if the file exists. Else False.
+    """
+
+    def run(self, file: str):
+        return os.path.isfile(file)
 
 
 class ListFiles(BaseTool):
-    @property
-    def args(self):
-        return {
-            "path": "Path to the directory to list files and directories in as a string. This is a required argument.",
-            "recursive": "If true, list files and directories recursively. Else, list only the files and directories in the given path. This is a required argument.",
-            "show_hidden": "If true, show hidden files and directories. Defaults to False.",
-            "exclude_dirs": "If true, exclude directories from the result. Defaults to False.",
-        }
+    """List files and directories in a given path. Directories end with a trailing slash.
 
-    @property
-    def resp(self):
-        return {
-            "result": "list of files and directories",
-        }
+    Args:
+        path (str): Path to the directory to list files and directories in.
+        recursive (bool): If true, list files and directories recursively. Else, list only the files and directories in the given path.
+        show_hidden (bool): If true, show hidden files and directories. Defaults to False.
+        exclude_dirs (bool): If true, exclude directories from the result. Defaults to False.
 
-    @property
-    def desc(self):
-        return "List files and directories in a given path. Directories end with a trailing slash."
+    Returns:
+        List[str]: List of files and directories.
+    """
 
-    def run(self, path, recursive, show_hidden=False, exclude_dirs=False):
+    def run(
+        self,
+        path: str,
+        recursive: bool,
+        show_hidden: bool = False,
+        exclude_dirs: bool = False,
+    ):
         entries_list = []
         with os.scandir(path) as entries:
             for entry in entries:
@@ -130,21 +127,15 @@ class ListFiles(BaseTool):
                             )
                     else:
                         entries_list.append(entry.name)
-        return {"result": entries_list}
+        return entries_list
 
 
 class GetCWD(BaseTool):
-    @property
-    def args(self):
-        return {}
+    """Get the current working directory.
 
-    @property
-    def resp(self):
-        return {"path": "Path to the current working directory"}
-
-    @property
-    def desc(self):
-        return "Find the current working directory using this command"
+    Returns:
+        str: Path to the current working directory.
+    """
 
     def run(self):
         try:
@@ -157,19 +148,16 @@ class GetCWD(BaseTool):
 
 
 class MakeDirectory(BaseTool):
-    @property
-    def args(self):
-        return {"path": "Path of the directory to be made"}
+    """Create a new directory at the given path.
 
-    @property
-    def resp(self):
-        return {"success": "True if the directory was created, False otherwise."}
+    Args:
+        path (str): Path of the directory to be made.
 
-    @property
-    def desc(self):
-        return "Make a new directory at the given path"
+    Returns:
+        bool: True if the directory was created, False otherwise.
+    """
 
-    def run(self, path):
+    def run(self, path: str):
         try:
             os.makedirs(path)
             return {"success": True}

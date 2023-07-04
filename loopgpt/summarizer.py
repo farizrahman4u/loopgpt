@@ -2,6 +2,7 @@
 Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
+import time
 from typing import *
 from tqdm import tqdm
 from loopgpt.models import BaseModel, OpenAIModel
@@ -16,7 +17,7 @@ class Summarizer:
     @property
     def model(self):
         if self._model is None:
-            if hasattr(self, "agent"):
+            if getattr(self, "agent"):
                 model = self.agent.model
                 if type(model) == OpenAIModel:
                     if model.model == "gpt-3.5-turbo":
@@ -63,19 +64,23 @@ class Summarizer:
         spinner = loopgpt.utils.spinner.ACTIVE_SPINNER
         if spinner:
             spinner.hide()
+        if query == "summary":
+            query = ""
         summaries = []
         for chunk in tqdm(list(self._chunk_text(text)), desc="Summarizing text..."):
             if not query:
                 summary = self.summarize_chunk(chunk, query)
-                summaries.append(summary)
             else:
-                ans = self.qa_chunk(chunk, query)
-                if ans:
-                    summaries.append(ans)
+                summary = self.qa_chunk(chunk, query)
+            time.sleep(2)
+            if summary:
+                summaries.append(summary)
+                self.agent.memory.add(summary)
         if not summaries:
             return "NOTHING FOUND", []
         summary = "\n".join(summaries)
-        summary = self.summarize_chunk(summary, query)
+        if len(summaries) > 1:
+            summary = self.summarize_chunk(summary, query)
         if spinner:
             spinner.show()
         return summary, summaries

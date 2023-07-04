@@ -4,7 +4,7 @@ from loopgpt.constants import (
     DEFAULT_AGENT_NAME,
     DEFAULT_AGENT_DESCRIPTION,
     NEXT_PROMPT,
-    NEXT_PROMPT_SMALL,
+    DEFAULT_PROMPT_TEMPLATE,
     AgentStates,
 )
 from loopgpt.memory import from_config as memory_from_config
@@ -22,11 +22,17 @@ from loopgpt.loops import cli
 
 
 from typing import *
+from itertools import repeat
+from contextlib import contextmanager
 
 import openai
 import json
 import time
 import ast
+import re
+import os
+
+ACTIVE_AGENT = None
 
 
 class Agent:
@@ -58,6 +64,7 @@ class Agent:
         model=None,
         embedding_provider=None,
         temperature=0.8,
+        tools=None,
     ):
         if openai.api_type == "azure":
             if model is None:
@@ -86,17 +93,30 @@ class Agent:
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
-        tools = [tool_type() for tool_type in builtin_tools()]
+        if tools is None:
+            tools = [tool_type() for tool_type in builtin_tools()]
+        else:
+            tools = [tool_type() for tool_type in tools]
         self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
-        self.init_prompt = INIT_PROMPT
-        self.next_prompt = NEXT_PROMPT
+        self.prompts = [INIT_PROMPT, NEXT_PROMPT]
+        self.prompt_gen = self.next_prompt()
+        self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
         self.plan = []
         self.constraints = []
         self.state = AgentStates.START
+        self.memory_query = None
+        self.additional_history = None
+
+    def next_prompt(self):
+        if self.prompts:
+            yield from self.prompts
+            yield from repeat(self.prompts[-1])
+        else:
+            yield from repeat("")
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -105,32 +125,56 @@ class Agent:
             if msg["role"] != "user"
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
-        return msgs[-n - 1 : -1]
+        return msgs[-n - 1 :]
 
     def get_full_prompt(self, user_input: str = ""):
-        header = {"role": "system", "content": self.header_prompt()}
-        dtime = {
-            "role": "system",
-            "content": f"The current time and date is {time.strftime('%c')}",
-        }
-        msgs = self._get_non_user_messages(10)
-        relevant_memory = self.memory.get(str(msgs), 5)
-        user_prompt = [{"role": "user", "content": user_input}] if user_input else []
+        sections = re.findall(r"<(.*)>", self.prompt_template)
+        user_prompt = [{"role": "user", "content": user_input}]
+        # history = self.history[:]
         history = self._get_compressed_history()
+        relevant_memory = []
+        for section in sections:
+            if section == "HEADER":
+                header = {"role": "system", "content": self.header_prompt()}
+                dtime = {
+                    "role": "system",
+                    "content": f"The current time and date is {time.strftime('%c')}",
+                }
+            elif section.startswith("MEMORY"):
+                if self.memory_query:
+                    memory_query = self.memory_query
+                else:
+                    n = None
+                    if ":" in section:
+                        section, n = section.split(":")
+                        n = int(n)
+                    mem_source = self._get_non_user_messages(n) + user_prompt
+                    memory_query = "\n".join([hist["content"] for hist in mem_source])
+                relevant_memory = self.memory.get(memory_query, 10)
 
         def _msgs():
-            msgs = [header, dtime]
-            msgs += history[:-1]
-            if relevant_memory:
-                memstr = "\n".join(relevant_memory)
-                context = {
-                    "role": "system",
-                    "content": f"You have the following items in your memory as a result of previously executed commands:\n{memstr}\n",
-                }
-                msgs.append(context)
-            msgs += history[-1:]
-            msgs += user_prompt
-            return msgs
+            updated_msgs = []
+            for section in sections:
+                if section == "HEADER":
+                    updated_msgs += [header, dtime]
+                if section.startswith("HISTORY"):
+                    updated_msgs += history[:]
+                elif section.startswith("MEMORY"):
+                    if relevant_memory:
+                        memstr = "\n".join(relevant_memory)
+                        context = {
+                            "role": "system",
+                            "content": (
+                                f"Remember the following things in your memory:"
+                                + "\n=============================MEMORY=============================\n"
+                                + f"\n{memstr}\n"
+                                + "================================================================\n"
+                            ),
+                        }
+                        updated_msgs.append(context)
+                elif section == "USER_INPUT":
+                    updated_msgs += user_prompt
+            return updated_msgs
 
         maxtokens = self.model.get_token_limit() - 1000
         while True:
@@ -169,16 +213,92 @@ class Agent:
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
 
-    def get_full_message(self, message: Optional[str]):
-        if self.state == AgentStates.START:
-            return self.init_prompt + "\n\n" + (message or "")
+    def _get_compressed_history(self):
+        history = self._get_non_user_messages(30)
+        maxtokens = self.model.get_token_limit()
+        while True:
+            message = [
+                {
+                    "role": "user",
+                    "content": (
+                        f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
+                        + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
+                        + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
+                        + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
+                        + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
+                        + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
+                    ),
+                }
+            ]
+            ntokens = self.model.count_tokens(message)
+            if ntokens < maxtokens:
+                break
+            else:
+                history.pop(0)
+
+        if len(history) == 0:
+            history = []
         else:
-            return self.next_prompt + "\n\n" + (message or "")
+            history_summary = self.model.chat(message)
+            history = [{"role": "system", "content": history_summary}]
+        if self.additional_history:
+            history += [
+                {"role": role, "content": content}
+                for role, content in self.additional_history.items()
+            ]
+        return history
+
+    def get_full_message(self, message: Optional[str]):
+        return next(self.prompt_gen) + "\n\n" + (message or "")
+
+    def _default_response_callback(self, resp):
+        try:
+            resp = self._load_json(resp)
+            plan = resp.get("plan")
+            if plan and isinstance(plan, list):
+                if (
+                    len(plan) == 0
+                    or len(plan) == 1
+                    and len(plan[0].replace("-", "")) == 0
+                ):
+                    self.staging_tool = {"name": "task_complete", "args": {}}
+                    self.staging_response = resp
+                    self.state = AgentStates.STOP
+            else:
+                if isinstance(resp, dict):
+                    if "name" in resp:
+                        resp = {"command": resp}
+                    if "command" in resp:
+                        self.staging_tool = resp["command"]
+                        self.staging_response = resp
+                        self.state = AgentStates.TOOL_STAGED
+                    else:
+                        self.state = AgentStates.IDLE
+                else:
+                    self.state = AgentStates.IDLE
+
+            progress = resp.get("thoughts", {}).get("progress")
+            if progress:
+                if isinstance(plan, str):
+                    self.progress += [progress]
+                elif isinstance(progress, list):
+                    self.progress += progress
+            plan = resp.get("thoughts", {}).get("plan")
+            if plan:
+                if isinstance(plan, str):
+                    self.plan = [plan]
+                if isinstance(plan, list):
+                    self.plan = plan
+            return resp
+        except:
+            raise
 
     @spinner
     def chat(
-        self, message: Optional[str] = None, run_tool=False
+        self, message: Optional[str] = None, run_tool=False, response_callback=-1
     ) -> Optional[Union[str, Dict]]:
+        if response_callback == -1:
+            response_callback = self._default_response_callback
         if self.state == AgentStates.STOP:
             raise ValueError(
                 "This agent has completed its tasks. It will not accept any more messages."
@@ -226,50 +346,15 @@ class Agent:
             max_tokens=max_tokens,
             temperature=self.temperature,
         )
-        try:
-            resp = self._load_json(resp)
-            plan = resp.get("plan")
-            if plan and isinstance(plan, list):
-                if (
-                    len(plan) == 0
-                    or len(plan) == 1
-                    and len(plan[0].replace("-", "")) == 0
-                ):
-                    self.staging_tool = {"name": "task_complete", "args": {}}
-                    self.staging_response = resp
-                    self.state = AgentStates.STOP
-            else:
-                if isinstance(resp, dict):
-                    if "name" in resp:
-                        resp = {"command": resp}
-                    if "command" in resp:
-                        self.staging_tool = resp["command"]
-                        self.staging_response = resp
-                        self.state = AgentStates.TOOL_STAGED
-                    else:
-                        self.state = AgentStates.IDLE
-                else:
-                    self.state = AgentStates.IDLE
-
-            progress = resp.get("thoughts", {}).get("progress")
-            if progress:
-                if isinstance(plan, str):
-                    self.progress += [progress]
-                elif isinstance(progress, list):
-                    self.progress += progress
-            plan = resp.get("thoughts", {}).get("plan")
-            if plan:
-                if isinstance(plan, str):
-                    self.plan = [plan]
-                if isinstance(plan, list):
-                    self.plan = plan
-        except:
-            pass
+        if response_callback:
+            resp = response_callback(resp)
+        if self.state == AgentStates.START:
+            self.state = AgentStates.IDLE
         self.history.append({"role": "user", "content": message})
         self.history.append(
             {
                 "role": "assistant",
-                "content": json.dumps(resp) if isinstance(resp, dict) else resp,
+                "content": json.dumps(resp) if isinstance(resp, dict) else str(resp),
             }
         )
         return resp
@@ -359,6 +444,7 @@ class Agent:
             try:
                 resp = tool.run(**kwargs)
             except Exception as e:
+                raise e
                 resp = f'Command "{tool_id}" failed with error: {e}'
                 self.history.append(
                     {
@@ -429,27 +515,25 @@ class Agent:
             prompt.append(f"{i + 1}. {c}")
         return "\n".join(prompt) + "\n"
 
-    def tools_prompt(self):
+    def tools_prompt(self, extras=False):
         prompt = []
-        prompt.append("Commands:")
+        prompt.append("The following commands are already defined for you:")
         for i, tool in enumerate(self.tools.values()):
             tool.agent = self
-            prompt.append(f"{i + 1}. {tool.prompt()}")
-        task_complete_command = {
-            "name": "task_complete",
-            "description": "Execute when all tasks are completed. This will terminate the session.",
-            "args": {},
-            "response_format": {"success": "true"},
-        }
-        do_nothing_command = {
-            "name": "do_nothing",
-            "description": "Do nothing.",
-            "args": {},
-            "response_format": {"response": "Nothing Done."},
-        }
-        prompt.append(f"{i + 2}. {json.dumps(task_complete_command)}")
-        prompt.append(f"{i + 3}. {json.dumps(do_nothing_command)}")
-        return "\n".join(prompt) + "\n"
+            prompt.append(tool.prompt())
+
+        if extras:
+            task_complete_command = (
+                f'def task_complete():\n\t"""{task_complete.__doc__}\n\t"""'.expandtabs(
+                    4
+                )
+            )
+            do_nothing_command = (
+                f'def do_nothing():\n\t"""{do_nothing.__doc__}\n\t"""'.expandtabs(4)
+            )
+            prompt.append(task_complete_command)
+            prompt.append(do_nothing_command)
+        return "\n\n".join(prompt) + "\n"
 
     def resources_prompt(self):
         prompt = []
@@ -519,6 +603,7 @@ class Agent:
         if hasattr(file, "write"):
             json.dump(cfg, file)
         elif isinstance(file, str):
+            os.makedirs(os.path.dirname(file), exist_ok=True)
             with open(file, "w") as f:
                 json.dump(cfg, f)
         else:
@@ -537,3 +622,44 @@ class Agent:
 
     def cli(self, continuous=False):
         cli(self, continuous=continuous)
+
+    def __enter__(self):
+        global ACTIVE_AGENT
+        ACTIVE_AGENT = self
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        global ACTIVE_AGENT
+        ACTIVE_AGENT = None
+
+    @contextmanager
+    def query(self, query):
+        try:
+            self.memory_query = query
+            yield
+        finally:
+            self.memory_query = None
+
+    @contextmanager
+    def complete(self, history):
+        try:
+            self.additional_history = history
+            yield
+        finally:
+            self.additional_history = None
+
+
+def task_complete():
+    """Mark the current task as complete.
+
+    Returns:
+        None
+    """
+
+
+def do_nothing():
+    """No-op command.
+
+    Returns:
+        None
+    """

@@ -1,6 +1,9 @@
 import loopgpt
+from loopgpt.tools import GoogleSearch, Browser, WriteToFile, AppendToFile
 
-agent = loopgpt.Agent()
+agent = loopgpt.Agent(
+    tools=[GoogleSearch, Browser, WriteToFile, AppendToFile], temperature=0.2
+)
 
 agent.name = "Jamie"
 
@@ -12,8 +15,8 @@ agent.description = (
 )
 
 agent.goals = [
-    "Research events of the past week on the internet",
-    "Write a podcast outline for 3 guests on 5 topics with descriptions, references and targeted questions for the host (Joe Rogan)",
+    "Research relevant events of the past week for all the guests on the internet.",
+    "Write a file for each guest with 5 topics to discuss with long descriptions, website links and targeted questions for the host (Joe Rogan)."
     "Terminate the session once all 3 files are completed.",
 ]
 

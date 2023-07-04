@@ -140,15 +140,11 @@ def cli(agent, continuous=False):
                     print_line(kind, msg, end="\n\n")
             if "command" in resp:
                 command = resp["command"]
-                if (
-                    isinstance(command, dict)
-                    and "name" in command
-                    and "args" in command
-                ):
+                if isinstance(command, dict) and "name" in command:
                     if command["name"]:
                         print_line(
                             "command",
-                            f"{command['name']}, Args: {command['args']}",
+                            f"{command['name']}, Args: {command.get('args') or {}}",
                             end="\n\n",
                         )
                     while True:

@@ -17,6 +17,7 @@ def test_serde_browser():
     browser = Browser.from_config(cfg)
     assert browser.browser_type == "firefox"
 
+
 def test_serde_agent_basic():
     loopgpt.models.user_providers["DummyModel"] = DummyModel
     loopgpt.embeddings.user_providers["DummyEmbeddingProvider"] = DummyEmbeddingProvider
@@ -50,4 +51,3 @@ def test_serde_agent_basic():
     assert agent2.state == empty_agent.state
     assert agent2.plan == empty_agent.plan
     assert agent2.progress == empty_agent.progress
-

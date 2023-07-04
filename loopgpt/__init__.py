@@ -8,6 +8,7 @@ from loopgpt.agent import Agent
 from loopgpt.tools import *
 from loopgpt.memory import *
 from loopgpt.embeddings import *
+from loopgpt.aifunc import aifunc
 
 agent_from_config = Agent.from_config
 from loopgpt.tools import from_config as tool_from_config
@@ -25,6 +26,11 @@ load_dotenv()
 
 def from_config(config):
     return globals()[config["type"] + "_from_config"](config)
+
+
+def set_aifunc_args(model, embedding_provider):
+    aifunc.model = model
+    aifunc.embedding_provider = embedding_provider
 
 
 if "pytest" not in sys.modules:

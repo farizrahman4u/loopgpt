@@ -7,18 +7,15 @@ class _UserManagerTool(BaseTool):
 
 
 class AskUser(_UserManagerTool):
-    @property
-    def args(self):
-        return {"message": "The question for the user."}
+    """Ask the user a question.
 
-    @property
-    def resp(self):
-        return {"response": "The response from the user."}
+    Args:
+        message (str): The question for the user.
 
-    @property
-    def desc(self):
-        return "Use this command to get input from the user."
+    Returns:
+        str: The response from the user.
+    """
 
     @hide_spinner
-    def run(self, message):
-        return {"response": input(f"{message}: ")}
+    def run(self, message: str):
+        return input(f"{message}: ")

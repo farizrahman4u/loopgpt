@@ -8,22 +8,18 @@ class _AgentManagerTool(BaseTool):
 
 
 class CreateAgent(_AgentManagerTool):
-    @property
-    def args(self):
-        return {
-            "name": "Agent name",
-            "task": "Specific task for agent",
-            "prompt": "The prompt",
-        }
+    """Create a new agent.
 
-    @property
-    def resp(self):
-        return {
-            "id": "Unique ID of new agent.",
-            "resp": "Response from new agent.",
-        }
+    Args:
+        name (str): Agent name.
+        task (str): Specific task for agent.
+        prompt (str): The prompt.
 
-    def run(self, name="", task="", prompt=""):
+    Returns:
+        dict: A dict containing the id and response from the agent.
+    """
+
+    def run(self, name: str = "", task: str = "", prompt: str = ""):
         from loopgpt.agent import Agent
 
         model = self.agent.model
@@ -42,51 +38,47 @@ class CreateAgent(_AgentManagerTool):
 
 
 class MessageAgent(_AgentManagerTool):
-    @property
-    def args(self):
-        return {
-            "id": "Agent id.",
-            "message": "The message",
-        }
+    """Send a message to an agent.
 
-    @property
-    def resp(self):
-        return {"resp": "Response from the agent."}
+    Args:
+        id (str): Agent id.
+        message (str): The message to send to the agent.
 
-    def run(self, id, message):
+    Returns:
+        str: The response from the agent.
+    """
+
+    def run(self, id: str, message: str):
         if id not in self.agent.sub_agents:
             return {"resp": "AGENT NOT FOUND!"}
         resp = self.agent.sub_agents[id][0].chat(message)
-        return {"resp": resp}
+        return resp
 
 
 class DeleteAgent(_AgentManagerTool):
-    @property
-    def args(self):
-        return {"id": "Agent id"}
+    """Delete an agent.
 
-    @property
-    def resp(self):
-        return {"success": "true or false"}
+    Args:
+        id (str): Agent id.
 
-    def run(self, id):
+    Returns:
+        bool: True if the agent was deleted, False otherwise.
+    """
+
+    def run(self, id: str):
         try:
             self.agent.sub_agents.pop(id)
-            return {"resp": "Deleted."}
+            return True
         except KeyError:
-            return {f"resp": "Specified agent (id={id} not found.)"}
+            return f"Error: Specified agent {id} not found."
 
 
 class ListAgents(_AgentManagerTool):
-    @property
-    def args(self):
-        return {}
+    """List all available agents.
 
-    @property
-    def resp(self):
-        return {
-            "agents": "List of available agents, where each item is of the form [agent id, task]"
-        }
+    Returns:
+        List: List of available agents, where each item is of the form [agent_id, task]
+    """
 
     def run(self):
         return [[k, v[1]] for k, v in self.agent.sub_agents.items()]
