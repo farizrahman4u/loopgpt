@@ -72,7 +72,6 @@ class Summarizer:
                 summary = self.summarize_chunk(chunk, query)
             else:
                 summary = self.qa_chunk(chunk, query)
-            time.sleep(2)
             if summary:
                 summaries.append(summary)
                 self.agent.memory.add(summary)
