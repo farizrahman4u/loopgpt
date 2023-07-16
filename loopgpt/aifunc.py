@@ -141,6 +141,9 @@ class aifunc:
               passed to that function will be used globally.
             - If neither of the above conditions are met, the default model (GPT-3.5-Turbo) and embedding provider (OpenAIEmbeddingProvider) will be used.
 
+    .. note::
+        Always create agents using :func:`loopgpt.empty_agent <loopgpt.agent.empty_agent>` when using them in conjunction with AI functions.
+
     Examples:
 
         >>> @loopgpt.aifunc()

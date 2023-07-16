@@ -629,6 +629,9 @@ class Agent:
 
         Example:
 
+            >>> import loopgpt
+            >>> from loopgpt.tools import GoogleSearch
+            >>> agent = loopgpt.empty_agent()
             >>> search = GoogleSearch()
             >>> with agent:
             ...     # the following line will add the search results to the agent's memory
@@ -656,6 +659,11 @@ class Agent:
 
     @contextmanager
     def query(self, query):
+        """Set a query for the agent's memory. This gives more control over what the agent remembers while generating responses.
+
+        :param query: A query to filter the agent's memory by.
+        :type query: str
+        """
         try:
             self.memory_query = query
             yield
@@ -664,6 +672,11 @@ class Agent:
 
     @contextmanager
     def complete(self, history):
+        """Add additional history to the agent. This is useful for creating custom scenarios for the agent to respond to.
+
+        :param history: A list of dictionaries with a key ``"system"``,  ``"assistant"`` or ``"user"`` and a value of the text to add to the agent's history.
+        :type history: list
+        """
         try:
             self.additional_history = history
             yield
@@ -672,6 +685,11 @@ class Agent:
 
 
 def empty_agent(**agent_kwargs):
+    """Create an empty agent. Always use this function to create a new agent for use in conjunction with AI functions.
+    Creating agents with the :class:`Agent` class directly is reserved for CLI applications.
+
+    All parameters accepted by :class:`Agent` are accepted by this function.
+    """
     agent = Agent(**agent_kwargs)
     agent.prompts = []
     agent.state = AgentStates.IDLE
