@@ -1,9 +1,6 @@
 Model
 =====
 
-.. automodule:: loopgpt.models
-    :members:
-
 .. automodule:: loopgpt.models.base
     :members:
 

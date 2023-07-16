@@ -1,4 +1,4 @@
-from loopgpt.embeddings.provider import BaseEmbeddingProvider
+from loopgpt.embeddings.base import BaseEmbeddingProvider
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
 from loopgpt.embeddings.azure_openai import AzureOpenAIEmbeddingProvider
 from loopgpt.embeddings.hf import HuggingFaceEmbeddingProvider

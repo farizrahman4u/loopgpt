@@ -123,6 +123,94 @@ def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs)
 
 
 class aifunc:
+    """This class implements a decorator used to create AI functions. Functions decorated by ``@loopgpt.aifunc()`` need only have a valid
+    function signature and docstring. The function can then be called normally, and the AI agent will emulate the function's execution and return a valid
+    python object.
+
+    :param tools: List of tools to be used by the agent to collect data. Defaults to ``None``.
+    :type tools: List[BaseTool], optional
+
+    An AI function is executed by an agent.
+        - If an ``agent`` argument is passed to the decorated function, that agent will be used for execution.
+        - If such an argument is not passed and the AI function is called in the ``with`` context of an agent, that agent will be used for execution.
+        - If neither of the above conditions are met, a new agent will be created and used for execution.
+            - The model and embedding provider to be used by this new agent can be passed as arguments to the decorated function:
+                - ``model``: A :class:`~loopgpt.models.base.BaseModel` object.
+                - ``embedding_provider``: A :class:`~loopgpt.embeddings.base.BaseEmbeddingProvider` object.
+            - If these arguments are not passed and :func:`loopgpt.set_aifunc_args` has been called, the model and embedding provider
+              passed to that function will be used globally.
+            - If neither of the above conditions are met, the default model (GPT-3.5-Turbo) and embedding provider (OpenAIEmbeddingProvider) will be used.
+
+    Examples:
+
+        >>> @loopgpt.aifunc()
+        ... def shakespearify(text: str) -> str:
+        ...     '''Applies a shakespearian style to the given text and returns it.
+        ...
+        ...     Args:
+        ...         text (str): Text to apply shakespearian style to.
+        ...
+        ...     Returns:
+        ...         str: Text with shakespearian style.
+        ...
+        ...     '''
+        ...
+        >>> shakespearify("Hey man, how you doin? I was just heading to the store ya know")
+        'Hark, good sir! How art thou faring? I was but making my way to the market, dost thou know.'
+
+        >>> @loopgpt.aifunc(tools=[GoogleSearch])
+        ... def find_age(celeb: str) -> int:
+        ...     '''Searches Google for the celebrity's age and returns it.
+        ...
+        ...     Args:
+        ...         celeb (str): Name of the celebrity.
+        ...
+        ...     Returns:
+        ...         int: Age of the celebrity.
+        ...
+        ...     '''
+        ...
+        >>> find_age("Robert De Niro") + find_age("Al Pacino")
+        162
+
+        Using AI functions in the ``with`` context of an agent:
+
+        >>> import loopgpt
+        >>> from loopgpt.tools import GoogleSearch, Browser
+        >>> @loopgpt.aifunc()
+        ... def outline_maker(topic: str) -> str:
+        ...     '''Writes an outline of the given topic.
+        ...
+        ...     Args:
+        ...         topic (str): Topic to write an outline about.
+        ...
+        ...     Returns:
+        ...         str: Outline of the topic.
+        ...
+        ...     '''
+        ...
+        >>> search = GoogleSearch()
+        >>> browser = Browser()
+        >>> agent = loopgpt.empty_agent()
+        >>>
+        >>> with agent:    # the agent will "watch" the searching and the browsing in the with block
+        >>>     results, links = search("SVB Banking Crisis")
+        >>>     for i in range(2):
+        >>>         browser(links[i])
+        >>>
+        >>>     outline = outline_maker("SVB Banking Crisis")    # this AI function can access the memory of 'agent'
+        >>> print(outline)
+        1. The collapse of Silicon Valley Bank (SVB) and its impact on the crypto market.
+        2. The closure of SVB leading to a bank run at Signature Bank.
+        3. Regulators intervening to prevent a larger financial meltdown.
+        4. The FDIC attempting to make all depositors whole, regardless of insurance.
+        5. Government investigation into SVB's failure and stock sales by financial officers.
+        6. Moody's downgrading the outlook on the U.S. banking system.
+        7. Other banks being placed under review for a downgrade.
+        8. Proposed legislation by Sen. Elizabeth Warren and Rep. Katie Porter to strengthen bank regulations.
+        9. Banking crisis reaching Europe with Credit Suisse losing share value.
+    """
+
     model = None
     embedding_provider = None
 

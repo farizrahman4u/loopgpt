@@ -50,8 +50,8 @@ class Agent:
     :type model: str, :class:`~loopgpt.models.base.BaseModel`, optional
     :param embedding_provider: The embedding provider to use for the agent.
         Defaults to :class:`~loopgpt.embeddings.OpenAIEmbeddingProvider`.
-        Specify a :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider` object to use other embedding providers.
-    :type embedding_provider: :class:`~loopgpt.embeddings.provider.BaseEmbeddingProvider`, optional
+        Specify a :class:`~loopgpt.embeddings.base.BaseEmbeddingProvider` object to use other embedding providers.
+    :type embedding_provider: :class:`~loopgpt.embeddings.base.BaseEmbeddingProvider`, optional
     :param temperature: The temperature to use for agent's chat completion. Defaults to 0.8.
     :type temperature: float, optional
     """
@@ -365,14 +365,12 @@ class Agent:
     def _extract_json_with_gpt(self, s):
         func = "def convert_to_json(response: str) -> str:"
         desc = f"""Convert the given string to a JSON string of the form \n{json.dumps(DEFAULT_RESPONSE_FORMAT_, indent=4)}\nEnsure the result can be parsed by Python json.loads."""
-        res = ai_function(func, desc, [s])
+        res = ai_function(func, desc, [s], self.model)
         return res
 
     def _load_json(self, s, try_gpt=True):
         if "Result: {" in s:
             s = s.split("Result: ", 1)[0]
-        if "{" not in s or "}" not in s:
-            raise Exception()
         try:
             return json.loads(s)
         except Exception:
@@ -626,11 +624,33 @@ class Agent:
         cli(self, continuous=continuous)
 
     def __enter__(self):
+        """Sets this agent as the active agent globally. This allows any tools to add data to this agent's memory
+        via a ``self.agent.memory.add`` call. In effect, the agent "watches" execution of tools in its with block.
+
+        Example:
+
+            >>> search = GoogleSearch()
+            >>> with agent:
+            ...     # the following line will add the search results to the agent's memory
+            ...     results, links = search("How to make a cake?")
+            ...
+            >>> print(agent.chat("Cake websites"))
+            Sure! Here are eight websites that offer cake recipes and inspiration:
+            1. Better Homes & Gardens - How to Make a Cake from Scratch That Looks Like It's From a Bakery: [Link](https://www.bhg.com/recipes/how-to/bake/how-to-make-a-cake/)
+            2. Food Network - Basic Vanilla Cake Recipe: [Link](https://www.foodnetwork.com/recipes/food-network-kitchen/basic-vanilla-cake-recipe-2043654)
+            3. ABCya! - Make a Cake: [Link](https://www.abcya.com/games/make-a-cake)
+            4. Allrecipes - Simple White Cake Recipe: [Link](https://www.allrecipes.com/recipe/17481/simple-white-cake/)
+            5. The Kitchn - How To Make a Cake from Scratch: [Link](https://www.thekitchn.com/how-to-make-a-cake-from-scratch-224370)
+            6. House & Garden - Vanilla Cake Recipe: [Link](https://www.houseandgarden.co.uk/recipe/simple-vanilla-cake-recipe)
+            7. RecipeTin Eats - My very best Vanilla Cake - stays moist 4 days!: [Link](https://www.recipetineats.com/my-very-best-vanilla-cake/)
+            8. Times of India - How to Make Cake at Home: Homemade Cake Recipe: [Link](https://recipes.timesofindia.com/us/recipes/homemade-cake/rs54404412.cms)
+        """
         global ACTIVE_AGENT
         ACTIVE_AGENT = self
         return self
 
     def __exit__(self, *args, **kwargs):
+        """Resets the active agent to ``None``."""
         global ACTIVE_AGENT
         ACTIVE_AGENT = None
 
@@ -661,6 +681,7 @@ def empty_agent(**agent_kwargs):
     agent.plan = []
     agent.progress = []
     agent.temperature = 0
+    agent._default_response_callback = lambda x: x
     return agent
 
 
