@@ -4,7 +4,7 @@
 __version__ = "0.0.16"
 
 
-from loopgpt.agent import Agent
+from loopgpt.agent import Agent, empty_agent
 from loopgpt.tools import *
 from loopgpt.memory import *
 from loopgpt.embeddings import *
@@ -29,6 +29,13 @@ def from_config(config):
 
 
 def set_aifunc_args(model, embedding_provider):
+    """Set the model and embedding provider that will be used by :class:`~loopgpt.aifunc.aifunc` to create agents when needed.
+
+    :param model: The model to use.
+    :type model: ~loopgpt.models.base.BaseModel
+    :param embedding_provider: The embedding provider to use.
+    :type embedding_provider: ~loopgpt.embeddings.base.BaseEmbeddingProvider
+    """
     aifunc.model = model
     aifunc.embedding_provider = embedding_provider
 

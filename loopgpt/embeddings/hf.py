@@ -1,4 +1,4 @@
-from loopgpt.embeddings.provider import BaseEmbeddingProvider
+from loopgpt.embeddings.base import BaseEmbeddingProvider
 
 
 class HuggingFaceEmbeddingProvider(BaseEmbeddingProvider):

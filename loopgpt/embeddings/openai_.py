@@ -1,5 +1,5 @@
 from typing import Optional
-from loopgpt.embeddings.provider import BaseEmbeddingProvider
+from loopgpt.embeddings.base import BaseEmbeddingProvider
 from loopgpt.utils.openai_key import get_openai_key
 import numpy as np
 import openai

@@ -4,7 +4,7 @@ Embedding Providers
 .. automodule:: loopgpt.embeddings
     :members:
 
-.. automodule:: loopgpt.embeddings.provider
+.. automodule:: loopgpt.embeddings.base
     :members:
 
 .. automodule:: loopgpt.embeddings.openai_

@@ -1,9 +1,6 @@
 The LoopGPT API Reference
 =========================
 
-.. automodule:: loopgpt
-   :members:
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -11,3 +8,4 @@ The LoopGPT API Reference
    Agents <agent>
    Models <models>
    Embedding Providers <embeddings>
+   AI Functions <ai-functions>
