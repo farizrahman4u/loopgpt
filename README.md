@@ -175,10 +175,6 @@ Let's create WeatherGPT, an AI assistant for all things weather.
 
 A tool inherits from `BaseTool` and you only need to write a docstring to get your tool up and running!
 
-- `args`: A dictionary describing the tool's arguments and their descriptions.
-- `resp`: A dictionary describing the tool's response and their descriptions.
-- `run`: The tool's main logic. It takes the tool's arguments as input and returns the tool's response.
-
 ```python
 from loopgpt.tools import BaseTool
 

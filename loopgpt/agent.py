@@ -341,6 +341,9 @@ class Agent:
         token_limit = self.model.get_token_limit()
         max_tokens = min(1000, max(token_limit - token_count, 0))
         assert max_tokens
+        # print("================================")
+        # print(full_prompt)
+        # print("================================")
         resp = self.model.chat(
             full_prompt,
             max_tokens=max_tokens,
@@ -444,7 +447,6 @@ class Agent:
             try:
                 resp = tool.run(**kwargs)
             except Exception as e:
-                raise e
                 resp = f'Command "{tool_id}" failed with error: {e}'
                 self.history.append(
                     {
@@ -647,6 +649,19 @@ class Agent:
             yield
         finally:
             self.additional_history = None
+
+
+def empty_agent(**agent_kwargs):
+    agent = Agent(**agent_kwargs)
+    agent.prompts = []
+    agent.state = AgentStates.IDLE
+    agent.tools = agent.tools if agent_kwargs.get("tools") else {}
+    agent.goals = []
+    agent.constraints = []
+    agent.plan = []
+    agent.progress = []
+    agent.temperature = 0
+    return agent
 
 
 def task_complete():

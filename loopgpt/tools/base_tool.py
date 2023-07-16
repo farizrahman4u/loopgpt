@@ -37,6 +37,9 @@ class BaseTool:
             "type": "tool",
         }
 
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)
+
     @classmethod
     def from_config(cls, config):
         return cls()

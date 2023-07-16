@@ -119,7 +119,7 @@ class Browser(BaseTool):
         except Exception:
             pass
 
-    def run(self, url: str, query: str):
+    def run(self, url: str, query: str = ""):
         if not isinstance(url, str):
             return "Scraping website failed. The URL must be a string."
         if self.browsed.get(f"{url}_{query}"):

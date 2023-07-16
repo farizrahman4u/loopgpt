@@ -5,7 +5,7 @@ import inspect
 import ast
 import re
 
-from loopgpt.agent import Agent
+from loopgpt.agent import Agent, empty_agent
 from loopgpt.constants import AgentStates
 from loopgpt.tools import Browser
 from loopgpt.models import BaseModel
@@ -14,19 +14,6 @@ from duckduckgo_search import ddg
 from loopgpt.tools.base_tool import BaseTool
 
 import loopgpt.agent
-
-
-def create_empty_agent(**agent_kwargs):
-    agent = loopgpt.Agent(**agent_kwargs)
-    agent.prompts = []
-    agent.state = AgentStates.IDLE
-    agent.tools = agent.tools if agent_kwargs.get("tools") else {}
-    agent.goals = []
-    agent.constraints = []
-    agent.plan = []
-    agent.progress = []
-    agent.temperature = 0
-    return agent
 
 
 def get_func_prompt(func, sig):
@@ -89,8 +76,14 @@ def collector_response_callback(resp):
         return []
 
 
+def set_agent_tools(agent: Agent, tools: List[BaseTool]):
+    for tool_cls in tools:
+        tool = tool_cls()
+        agent.tools[tool.id] = tool
+
+
 def create_analyzer_agent(func_prompt, tools, args_prompt, **agent_kwargs):
-    agent = create_empty_agent(**agent_kwargs)
+    agent = empty_agent(**agent_kwargs)
     set_agent_tools(agent, tools)
     agent.memory_query = func_prompt + "\n" + args_prompt
     agent.name = "Function Analyzer"
@@ -107,7 +100,7 @@ def create_analyzer_agent(func_prompt, tools, args_prompt, **agent_kwargs):
 
 
 def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs):
-    agent = create_empty_agent(**agent_kwargs)
+    agent = empty_agent(**agent_kwargs)
     set_agent_tools(agent, tools)
     agent.name = "Execution Data Collector"
     agent.description = f"and you have to make a plan to collect relevant data for the successful execution of {func_prompt}"
@@ -129,12 +122,6 @@ def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs)
     return agent
 
 
-def set_agent_tools(agent: Agent, tools: List[BaseTool]):
-    for tool_cls in tools:
-        tool = tool_cls()
-        agent.tools[tool.id] = tool
-
-
 class aifunc:
     model = None
     embedding_provider = None
@@ -154,7 +141,7 @@ class aifunc:
             agent = kwargs.pop("agent", loopgpt.agent.ACTIVE_AGENT)
 
             if agent is None:
-                agent = create_empty_agent(**agent_kwargs)
+                agent = empty_agent(**agent_kwargs)
 
             agent.name = func.__name__
             func_prompt = get_func_prompt(func, sig)

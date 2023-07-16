@@ -11,3 +11,4 @@ The LoopGPT API Reference
    Agents <agent>
    Models <models>
    Embedding Providers <embeddings>
+   AI Functions <ai-functions>

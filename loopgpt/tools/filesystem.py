@@ -15,7 +15,10 @@ class ReadFromFile(BaseTool):
     def run(self, file: str):
         try:
             with open(file, "r", encoding="utf-8") as f:
-                return f.read()
+                content = f.read()
+                if self.agent:
+                    self.agent.memory.add(f"Contents of {file}: {content}")
+                return content
         except Exception:
             return f"Error: Could not read file {file}."
 

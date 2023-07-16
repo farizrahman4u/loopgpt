@@ -78,7 +78,7 @@ class GoogleSearch(BaseTool):
         if getattr(self, "agent"):
             self.agent.memory.add(results)
 
-    def manual_run(self, query: str):
+    def run(self, query: str):
         try:
             results, links = self._google_search(query, 8)
         except:
@@ -90,16 +90,3 @@ class GoogleSearch(BaseTool):
         else:
             results = "No results found."
         return results, links
-
-    def run(self, query: str):
-        try:
-            results, _ = self._google_search(query, 8)
-        except:
-            results, _ = self._duckduckgo_search(query, 8)
-
-        assert len(results) > 0, "No results found."
-        if len(results) > 0:
-            self._add_to_memory(results)
-        else:
-            results = "No results found."
-        return results
