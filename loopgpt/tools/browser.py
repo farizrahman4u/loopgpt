@@ -4,6 +4,7 @@ Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
@@ -60,7 +61,8 @@ class Browser(BaseTool):
     def _init_chrome_driver(self):
         try:
             self.driver = webdriver.Chrome(
-                executable_path=ChromeDriverManager().install(), options=self.options
+                service=Service(ChromeDriverManager().install()),
+                options=self.options
             )
         except:
             logger.log(
