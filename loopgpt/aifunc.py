@@ -1,17 +1,13 @@
-from typing import Any, Dict, List, Optional
-from functools import partial, wraps
+from typing import Any, Dict, List
+from functools import wraps
 import loopgpt
 import inspect
 import ast
 import re
 
 from loopgpt.agent import Agent, empty_agent
-from loopgpt.constants import AgentStates
-from loopgpt.tools import Browser
-from loopgpt.models import BaseModel
-from loopgpt.summarizer import Summarizer
-from duckduckgo_search import ddg
 from loopgpt.tools.base_tool import BaseTool
+from loopgpt.constants import AgentStates
 
 import loopgpt.agent
 
@@ -308,7 +304,7 @@ def expand_placeholders(
     function_sequence: List[Dict[str, Any]], execution_history: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
     """This is an atomic replace function. It replaces placeholders in angle brackets by analyzing the execution history. Return as is if no placeholders are present.
-    Ensure URLs are full.
+    Returns the updated function sequence.
 
     Args:
         function_sequence (List[Dict[str, Any]]): List of dictionary of function sequence.

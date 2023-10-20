@@ -649,13 +649,18 @@ class Agent:
             8. Times of India - How to Make Cake at Home: Homemade Cake Recipe: [Link](https://recipes.timesofindia.com/us/recipes/homemade-cake/rs54404412.cms)
         """
         global ACTIVE_AGENT
+        if ACTIVE_AGENT:
+            self._initial_active_agent = ACTIVE_AGENT
         ACTIVE_AGENT = self
         return self
 
     def __exit__(self, *args, **kwargs):
         """Resets the active agent to ``None``."""
         global ACTIVE_AGENT
-        ACTIVE_AGENT = None
+        if hasattr(self, "_initial_active_agent"):
+            ACTIVE_AGENT = self._initial_active_agent
+        else:
+            ACTIVE_AGENT = None
 
     @contextmanager
     def query(self, query):

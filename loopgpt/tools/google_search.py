@@ -14,12 +14,14 @@ class GoogleSearch(BaseTool):
         str: Search results.
     """
 
-    def __init__(self):
+    def __init__(self, num_results=8, start_page=1):
         super(GoogleSearch, self).__init__()
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         self.google_cx_id = os.getenv("GOOGLE_CX_ID")
+        self.num = num_results
+        self.start = num_results * (start_page - 1) + 1
 
-    def _duckduckgo_search(self, query, num_results=8):
+    def _duckduckgo_search(self, query):
         from duckduckgo_search import DDGS
 
         results_ = []
@@ -27,7 +29,9 @@ class GoogleSearch(BaseTool):
         links = []
 
         with DDGS() as ddgs:
-            results = islice(ddgs.text(query), num_results)
+            results = islice(
+                ddgs.text(query), self.start - 1, self.start + self.num - 1
+            )
             for i, result in enumerate(results):
                 links_and_titles_.append(
                     f"{i + 1}. {result['href']}: {result['title']}"
@@ -42,13 +46,13 @@ class GoogleSearch(BaseTool):
 
         return results, links
 
-    def _google_search(self, query, num_results=8):
+    def _google_search(self, query):
         from googleapiclient.discovery import build
 
         service = build("customsearch", "v1", developerKey=self.google_api_key)
         results = (
             service.cse()
-            .list(q=query, cx=self.google_cx_id, num=num_results)
+            .list(q=query, cx=self.google_cx_id, num=self.num, start=self.start)
             .execute()
             .get("items", [])
         )
@@ -80,9 +84,11 @@ class GoogleSearch(BaseTool):
 
     def run(self, query: str):
         try:
-            results, links = self._google_search(query, 8)
-        except:
-            results, links = self._duckduckgo_search(query, 8)
+            results, links = self._google_search(query)
+        except Exception as e:
+            print(f"Google search failed with error: {e}")
+            print("Trying DuckDuckGo search instead...")
+            results, links = self._duckduckgo_search(query)
 
         assert len(results) > 0, "No results found."
         if len(results) > 0:

@@ -59,12 +59,11 @@ class Browser(BaseTool):
 
     def _init_chrome_driver(self):
         try:
-            self.driver = webdriver.Chrome(
-                executable_path=ChromeDriverManager().install(), options=self.options
-            )
-        except:
+            self.driver = webdriver.Chrome(options=self.options)
+        except Exception as e:
             logger.log(
-                logging.INFO, "Failed to initialize Chrome driver. Trying Firefox..."
+                logging.INFO,
+                f"Failed to initialize Chrome driver due to {e}. Trying Firefox...",
             )
             self._set_browser_options("firefox")
             self._init_driver()
