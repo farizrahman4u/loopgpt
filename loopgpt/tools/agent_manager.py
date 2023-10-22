@@ -30,7 +30,7 @@ class CreateAgent(_AgentManagerTool):
             model=model,
             embedding_provider=emb,
         )
-        agent.tools.clear()
+        agent.tools.extend(self.agent.tools)
         id = uuid4().hex[:8]
         self.agent.sub_agents[id] = (agent, task)
         resp = agent.chat(prompt)

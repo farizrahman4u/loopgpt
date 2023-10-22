@@ -1,4 +1,4 @@
-from loopgpt.agent import Agent
+from loopgpt.agents import DefaultAgent as Agent
 
 import argparse
 import json

@@ -73,7 +73,7 @@ class Agent:
                 raise ValueError(
                     "You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API"
                 )
-            if embedding_provider is None:
+            if embedding_provider is None and memory is None:
                 raise ValueError(
                     "You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API"
                 )
@@ -93,7 +93,7 @@ class Agent:
         self.embedding_provider = embedding_provider
         self.temperature = temperature
         self.sub_agents = {}
-        self.memory = memory or LocalMemory(embedding_provider=embedding_provider)
+        self.memory = memory if memory is not None else LocalMemory(embedding_provider=embedding_provider)
         self.history = []
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]
@@ -105,10 +105,7 @@ class Agent:
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
-        if prompts is None:
-            self.prompts = [INIT_PROMPT, NEXT_PROMPT]
-        else:
-            self.prompts = prompts
+        self.prompts = prompts
         self.prompt_gen = self.next_prompt()
         self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
@@ -178,7 +175,16 @@ class Agent:
                                 + "================================================================\n"
                             ),
                         }
-                        updated_msgs.append(context)
+                    else:
+                        context = {
+                            "role": "system",
+                            "content": (
+                                "\n=============================MEMORY=============================\n"
+                                + f"\nYour memory is empty.\n"
+                                + "================================================================\n"
+                            )
+                        }
+                    updated_msgs.append(context)
                 elif section == "USER_INPUT":
                     updated_msgs += user_prompt
             return updated_msgs
@@ -202,20 +208,6 @@ class Agent:
         hist = self.history[:]
         system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
         assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs:
-            entry = hist[i].copy()
-            try:
-                respd = json.loads(entry["content"])
-                thoughts = respd.get("thoughts")
-                if thoughts:
-                    thoughts.pop("reasoning", None)
-                    thoughts.pop("speak", None)
-                    thoughts.pop("text", None)
-                    thoughts.pop("plan", None)
-                entry["content"] = json.dumps(respd, indent=2)
-                hist[i] = entry
-            except:
-                pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
         return hist
@@ -259,46 +251,7 @@ class Agent:
         return next(self.prompt_gen) + "\n\n" + (message or "")
 
     def _default_response_callback(self, resp):
-        try:
-            resp = self._load_json(resp)
-            plan = resp.get("plan")
-            if plan and isinstance(plan, list):
-                if (
-                    len(plan) == 0
-                    or len(plan) == 1
-                    and len(plan[0].replace("-", "")) == 0
-                ):
-                    self.staging_tool = {"name": "task_complete", "args": {}}
-                    self.staging_response = resp
-                    self.state = AgentStates.STOP
-            else:
-                if isinstance(resp, dict):
-                    if "name" in resp:
-                        resp = {"command": resp}
-                    if "command" in resp:
-                        self.staging_tool = resp["command"]
-                        self.staging_response = resp
-                        self.state = AgentStates.TOOL_STAGED
-                    else:
-                        self.state = AgentStates.IDLE
-                else:
-                    self.state = AgentStates.IDLE
-
-            progress = resp.get("thoughts", {}).get("progress")
-            if progress:
-                if isinstance(plan, str):
-                    self.progress += [progress]
-                elif isinstance(progress, list):
-                    self.progress += progress
-            plan = resp.get("thoughts", {}).get("plan")
-            if plan:
-                if isinstance(plan, str):
-                    self.plan = [plan]
-                if isinstance(plan, list):
-                    self.plan = plan
-            return resp
-        except:
-            raise
+        return resp
 
     @spinner
     def chat(
