@@ -52,6 +52,7 @@ class ExecutePythonFile(_BaseCodeTool):
         if res.returncode:
             return f"Error: {res.stderr}"
         else:
+            print(res.stdout)
             return res.stdout
 
 

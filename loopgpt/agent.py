@@ -63,8 +63,10 @@ class Agent:
         goals=None,
         model=None,
         embedding_provider=None,
+        memory=None,
         temperature=0.8,
         tools=None,
+        prompts=None,
     ):
         if openai.api_type == "azure":
             if model is None:
@@ -91,17 +93,22 @@ class Agent:
         self.embedding_provider = embedding_provider
         self.temperature = temperature
         self.sub_agents = {}
-        self.memory = LocalMemory(embedding_provider=embedding_provider)
+        self.memory = memory or LocalMemory(embedding_provider=embedding_provider)
         self.history = []
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]
         else:
             tools = [tool_type() for tool_type in tools]
+        for tool in tools:
+            tool.agent = self
         self.tools = {tool.id: tool for tool in tools}
         self.staging_tool = None
         self.staging_response = None
         self.tool_response = None
-        self.prompts = [INIT_PROMPT, NEXT_PROMPT]
+        if prompts is None:
+            self.prompts = [INIT_PROMPT, NEXT_PROMPT]
+        else:
+            self.prompts = prompts
         self.prompt_gen = self.next_prompt()
         self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
@@ -519,7 +526,6 @@ class Agent:
         prompt = []
         prompt.append("The following commands are already defined for you:")
         for i, tool in enumerate(self.tools.values()):
-            tool.agent = self
             prompt.append(tool.prompt())
 
         if extras:
