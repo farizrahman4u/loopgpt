@@ -91,27 +91,6 @@ class AgentNode(Agent):
             except ValueError:
                 continue
 
-        ncommands = 0
-        while True:
-            commands = self.chat(port_id="compiler")
-            print(commands)
-            commands = ast.literal_eval(commands)
-            if ncommands == 0:
-                ncommands = len(commands)
-            command = commands[0]
-            ncommands -= 1
-            if ncommands == 0:
-                break
-            tool = self.tools[command["tool"]]
-            args = command["args"]
-            resp = str(tool.run(**args))
-            print(resp)
-            msg = {
-                    "role": "system",
-                    "content": f"You executed {command['tool']} with {command['args']} and got the response: {resp}.",
-                }
-            self.ports["compiler"].history.append(msg)
-
         for config in configs:
             name, goal = config["name"], config["goal"]
             print(f"{self.name}: Creating agent {name} with goal {goal}")
