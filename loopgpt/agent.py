@@ -23,6 +23,7 @@ from loopgpt.loops import cli
 
 from typing import *
 from itertools import repeat
+from functools import wraps
 from contextlib import contextmanager
 
 import openai
@@ -176,7 +177,8 @@ class Agent:
                     updated_msgs += user_prompt
             return updated_msgs
 
-        maxtokens = self.model.get_token_limit() - 1000
+        maxtokens = self.model.get_token_limit()
+        maxtokens = int(maxtokens - 1 / 4 * maxtokens)
         while True:
             msgs = _msgs()
             ntokens = self.model.count_tokens(msgs)
@@ -185,8 +187,12 @@ class Agent:
             else:
                 if len(history) > 1:
                     history = history[1:]
+                elif len(history) == 1:
+                    history.pop(0)
                 elif relevant_memory:
                     relevant_memory = relevant_memory[1:]
+                elif len(relevant_memory) == 1:
+                    relevant_memory.pop(0)
                 else:
                     break
         return msgs, ntokens
@@ -295,7 +301,11 @@ class Agent:
 
     @spinner
     def chat(
-        self, message: Optional[str] = None, run_tool=False, response_callback=-1
+        self,
+        message: Optional[str] = None,
+        run_tool=False,
+        response_callback=-1,
+        max_tokens=None,
     ) -> Optional[Union[str, Dict]]:
         if response_callback == -1:
             response_callback = self._default_response_callback
@@ -339,7 +349,7 @@ class Agent:
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = self.model.get_token_limit()
-        max_tokens = min(1000, max(token_limit - token_count, 0))
+        max_tokens = max_tokens or min(1000, max(token_limit - token_count, 0))
         assert max_tokens
         # print("================================")
         # print(full_prompt)
@@ -689,6 +699,7 @@ class Agent:
             self.additional_history = None
 
 
+@wraps(Agent.__init__)
 def empty_agent(**agent_kwargs):
     """Create an empty agent. Always use this function to create a new agent for use in conjunction with AI functions.
     Creating agents with the :class:`Agent` class directly is reserved for CLI applications.
@@ -703,7 +714,7 @@ def empty_agent(**agent_kwargs):
     agent.constraints = []
     agent.plan = []
     agent.progress = []
-    agent.temperature = 0
+    agent.temperature = 0.3
     agent._default_response_callback = lambda x: x
     return agent
 

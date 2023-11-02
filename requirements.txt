@@ -12,6 +12,7 @@ simpleeval
 transformers[hf]
 sentence_transformers[hf]
 accelerate[hf]
-bitsandbytes[hf]
+bitsandbytes[hf]; sys_platform != "win32"
+bitsandbytes-windows[hf]; sys_platform == "win32"
 torch[hf]
 python-dotenv

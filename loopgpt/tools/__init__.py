@@ -21,6 +21,7 @@ from loopgpt.tools.filesystem import (
     MakeDirectory,
     FileSystemTools,
 )
+from loopgpt.tools.pdf import ReadFromPDF
 from loopgpt.tools.shell import Shell
 from loopgpt.tools.memory_manager import AddToMemory
 
