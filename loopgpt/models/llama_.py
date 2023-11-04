@@ -55,6 +55,9 @@ class LLamaModel(BaseModel):
             ]
         else:
             system_message = []
+        
+        if dialog and dialog[0]["role"] != "user":
+            dialog.insert(0, {"role": "user", "content": ""})
 
         dialogs: List[Dialog] = [system_message + dialog]
         return dialogs

@@ -131,8 +131,8 @@ class Agent:
     def get_full_prompt(self, user_input: str = ""):
         sections = re.findall(r"<(.*)>", self.prompt_template)
         user_prompt = [{"role": "user", "content": user_input}]
-        # history = self.history[:]
-        history = self._get_compressed_history()
+        history = self.history[:]
+        # history = self._get_compressed_history() TODO: Set up different history compression strategies
         relevant_memory = []
         for section in sections:
             if section == "HEADER":

@@ -59,6 +59,7 @@ class HuggingFaceModel(BaseModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
     ) -> str:
+        # print(messages)
         prompt = self.encode_messages(messages)
         encoding = self.tokenizer(
             prompt, return_tensors="pt", return_token_type_ids=False
@@ -89,6 +90,9 @@ class HuggingFaceModel(BaseModel):
     def encode_messages(self, messages: List[Dict[str, str]]) -> str:
         if self.model_name.startswith("meta-llama"):
             messages = LLamaModel._convert_to_llama_dialogs(messages)[0]
+        print("LLAMA FORMATTED:")
+        for msg in messages:
+            print(msg)
         return self.tokenizer.apply_chat_template(messages, tokenize=False)
 
     def count_tokens(self, messages: Union[List[Dict[str, str]], str]) -> int:
