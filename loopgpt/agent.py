@@ -188,7 +188,7 @@ class Agent:
                 if len(relevant_memory) > 1:
                     relevant_memory = relevant_memory[1:]
                 elif len(history) > 1:
-                    history == history[1:]
+                    history = history[1:]
                 elif len(relevant_memory) == 1:
                     relevant_memory.pop(0)
                 elif len(history) == 1:

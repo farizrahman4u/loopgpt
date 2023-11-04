@@ -28,7 +28,7 @@ class ReadFromPDF(BaseTool):
             reader = PdfReader(file)
             for page in tqdm(reader.pages):
                 page_text = page.extract_text()
-                chunks = list(summarizer._chunk_text(page_text, chunk_size=100))
+                chunks = list(summarizer._chunk_text(page_text, chunk_size=60))
                 for chunk in chunks:
                     self._add_to_memory(chunk)
         except:
