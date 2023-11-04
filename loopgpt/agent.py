@@ -185,14 +185,14 @@ class Agent:
             if ntokens < maxtokens:
                 break
             else:
-                if len(history) > 1:
-                    history = history[1:]
-                elif len(history) == 1:
-                    history.pop(0)
-                elif relevant_memory:
+                if len(relevant_memory) > 1:
                     relevant_memory = relevant_memory[1:]
+                elif len(history) > 1:
+                    history == history[1:]
                 elif len(relevant_memory) == 1:
                     relevant_memory.pop(0)
+                elif len(history) == 1:
+                    history.pop(0)
                 else:
                     break
         return msgs, ntokens
@@ -305,7 +305,7 @@ class Agent:
         message: Optional[str] = None,
         run_tool=False,
         response_callback=-1,
-        max_tokens=None,
+        max_tokens=1000,
     ) -> Optional[Union[str, Dict]]:
         if response_callback == -1:
             response_callback = self._default_response_callback
@@ -349,7 +349,7 @@ class Agent:
             self.staging_response = None
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = self.model.get_token_limit()
-        max_tokens = max_tokens or min(1000, max(token_limit - token_count, 0))
+        max_tokens = min(max_tokens, max(token_limit - token_count, 0))
         assert max_tokens
         # print("================================")
         # print(full_prompt)

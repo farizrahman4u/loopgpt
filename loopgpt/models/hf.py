@@ -40,6 +40,7 @@ class HuggingFaceModel(BaseModel):
         super(HuggingFaceModel, self).__init__()
         self.model_name = model
         self.load_in_8bit = load_in_8bit
+        self.model_max_length = model_max_length
         self.tokenizer = AutoTokenizer.from_pretrained(
             model, model_max_length=model_max_length
         )
@@ -59,7 +60,8 @@ class HuggingFaceModel(BaseModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
     ) -> str:
-        # print(messages)
+        for msg in messages:
+            print(msg)
         prompt = self.encode_messages(messages)
         encoding = self.tokenizer(
             prompt, return_tensors="pt", return_token_type_ids=False
@@ -90,9 +92,6 @@ class HuggingFaceModel(BaseModel):
     def encode_messages(self, messages: List[Dict[str, str]]) -> str:
         if self.model_name.startswith("meta-llama"):
             messages = LLamaModel._convert_to_llama_dialogs(messages)[0]
-        print("LLAMA FORMATTED:")
-        for msg in messages:
-            print(msg)
         return self.tokenizer.apply_chat_template(messages, tokenize=False)
 
     def count_tokens(self, messages: Union[List[Dict[str, str]], str]) -> int:
@@ -106,12 +105,13 @@ class HuggingFaceModel(BaseModel):
         cfg = super().config()
         cfg.update(
             {
-                "model": self.model,
+                "model": self.model_name,
                 "load_in_8bit": self.load_in_8bit,
+                "model_max_length": self.model_max_length,
             }
         )
         return cfg
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config["load_in_8_bit"])
+        return cls(**config)
