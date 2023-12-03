@@ -1,7 +1,7 @@
+from loopgpt.tools import GoogleSearch, Browser
 from loopgpt.memory import LocalMemory
 from loopgpt.agent import Agent
 from itertools import repeat
-from typing import Optional
 
 import ast
 
@@ -16,19 +16,12 @@ class Port:
         yield from repeat(self.prompts[-1])
 
 class AgentNode(Agent):
-    def __init__(self, name, goal, tools, model, memory):
+    def __init__(self, name, goal, tools, prompts, model, memory):
         super().__init__(
             name,
             "a smart AI problem solver and you have to create a plan to achieve a given goal using the tools available to you.",
             tools=tools,
-            prompts=[
-                "How would you call the tools available to you to achieve this goal: ",
-                "Imagine now that you have subordinate agents, who only have access to the same tools as you do, to help you. How would you ask them to use their tools?",
-                "Assume you have another tool called create_agent. Strictly respond with a list of dictionaries, where each dictionary "
-                + "has the following keys: name, goal. The name is the name of the agent, and the goal is the goal of the agent. "
-                + "This will act as arguments to the create_agent tool. Your response is to be directly parsed, so do not include any other text in your response."
-                + "Respond with a list of dictionaries ONLY.",
-            ],
+            prompts=prompts,
             model=model,
             memory=memory
         )
@@ -78,7 +71,10 @@ class AgentNode(Agent):
             resp = super().chat(message)
         return resp
     
-    def create_agents(self):
+    def stopping_condition(self):
+        return
+    
+    def get_configs(self):
         print(self.chat(self.goal))
         print(self.chat())
 
@@ -90,21 +86,93 @@ class AgentNode(Agent):
                 break
             except ValueError:
                 continue
+        
+        return configs
+    
+    def create_agents(self):
+        if self.parent is not None and self.stopping_condition():
+            print(self.name)
+            return True
+        
+        configs = self.get_configs()
 
         for config in configs:
             name, goal = config["name"], config["goal"]
             print(f"{self.name}: Creating agent {name} with goal {goal}")
-            agent = AgentNode(name, goal, tools=self.tool_types, model=self.model, memory=self.memory)
+            agent = self.__class__(name, goal, tools=self.tool_types, model=self.model, memory=self.memory)
             agent.parent = self
             self.sub_agents[name] = agent
 
+class SourceNode(AgentNode):
+    def __init__(self, name, goal, tools, model, memory):
+        super().__init__(
+            name,
+            goal,
+            tools,
+            [
+                "How would you call the tools available to you to achieve this goal: ",
+                "Imagine now that you have subordinate agents, who only have access to the same tools as you do, to help you. How would you ask them to use their tools?",
+                "Assume you have another tool called create_agent. Strictly respond with a list of dictionaries, where each dictionary "
+                + "has the following keys: name, goal. The name is the name of the agent, and the goal is the goal of the agent. "
+                + "This will act as arguments to the create_agent tool. Your response is to be directly parsed, so do not include any other text in your response."
+                + "Respond with a list of dictionaries ONLY.",
+            ],
+            model,
+            memory
+        )
+        self.register_port(
+            "analyze",
+            [
+                f"Does the topic '{self.goal}' have important subtopics worth deep research or do you think researching this topic alone would be sufficient?",
+                "Should we explore its subtopics or no? Strictly respond with 'yes' or 'no' only. "
+                + "Your response is to be directly parsed, so do not include any other text in your response."
+            ]
+        )
+    
+    def stopping_condition(self):
+        print(self.chat(port_id="analyze"))
+        resp = self.chat(port_id="analyze")
+        if resp.lower() == "no":
+            return True
+        return False
+
+
+class ExecutorNode(AgentNode):
+    def __init__(self, name, goal, tools, model, memory):
+        super().__init__(
+            name,
+            goal,
+            tools,
+            [
+                "How would you collect data and execute the tools available to you to achieve this goal: ",
+                "If you were to assign each step to a sequence of subordinate agents, who only have access to the same tools as you do, what would you ask them to do?",
+                "Assume you have another tool called create_agent. Strictly respond with a list of dictionaries, where each dictionary "
+                + "has the following keys: name, goal. The name is the name of the agent, and the goal is the goal of the agent. "
+                + "This will act as arguments to the create_agent tool. Your response is to be directly parsed, so do not include any other text in your response."
+                + "Respond with a list of dictionaries ONLY."
+            ],
+            model,
+            memory
+        )
+    
+    def create_agents(self):
+        configs = self.get_configs()
+
+        for config in configs:
+            name, goal = config["name"], config["goal"]
+            print(f"{self.name}: Creating agent {name} with goal {goal}")
+            agent = ExecutorNode(name, goal, tools=self.tool_types, model=self.model, memory=self.memory)
+            agent.parent = self
+            self.sub_agents[name] = agent
+        
+        return True
 
 class AgentGraph:
-    def __init__(self, goal, tools, model, embedding_provider):
+    def __init__(self, root_class, goal, tools, model, embedding_provider):
         self.tools = tools
         self.model = model
         self.memory = LocalMemory(embedding_provider)
-        self.root = AgentNode("MainAgent", goal, tools, model, self.memory)
+        self.root = root_class("MainAgent", goal, tools, model, self.memory)
     
     def _run(self, node):
         if node.create_agents():
