@@ -93,6 +93,8 @@ class Agent:
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
+        self.exec_history = []
+        self.suggestion = ""
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]
         else:
@@ -102,7 +104,8 @@ class Agent:
         self.staging_response = None
         self.tool_response = None
         self.prompts = [INIT_PROMPT, NEXT_PROMPT]
-        self.prompt_gen = self.next_prompt()
+        self.init_prompt = INIT_PROMPT
+        self.next_prompt = NEXT_PROMPT
         self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
         self.plan = []
@@ -110,13 +113,6 @@ class Agent:
         self.state = AgentStates.START
         self.memory_query = None
         self.additional_history = None
-
-    def next_prompt(self):
-        if self.prompts:
-            yield from self.prompts
-            yield from repeat(self.prompts[-1])
-        else:
-            yield from repeat("")
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -126,6 +122,14 @@ class Agent:
             and not (msg["role"] == "system" and "do_nothing" in msg["content"])
         ]
         return msgs[-n - 1 :]
+
+    def _get_relevant_memory(self, user_input, n):
+        if self.memory_query:
+            memory_query = self.memory_query
+        else:
+            mem_source = self._get_non_user_messages(n)
+            memory_query = "\n".join([hist["content"] for hist in mem_source] + ([user_input] if user_input else []))
+        return self.memory.get(memory_query, 10)
 
     def get_full_prompt(self, user_input: str = ""):
         sections = re.findall(r"<(.*)>", self.prompt_template)
@@ -141,16 +145,12 @@ class Agent:
                     "content": f"The current time and date is {time.strftime('%c')}",
                 }
             elif section.startswith("MEMORY"):
-                if self.memory_query:
-                    memory_query = self.memory_query
+                if ":" in section:
+                    section, n = section.split(":")
+                    n = int(n)
                 else:
                     n = None
-                    if ":" in section:
-                        section, n = section.split(":")
-                        n = int(n)
-                    mem_source = self._get_non_user_messages(n) + user_prompt
-                    memory_query = "\n".join([hist["content"] for hist in mem_source])
-                relevant_memory = self.memory.get(memory_query, 10)
+                relevant_memory = self._get_relevant_memory(user_input, n)
 
         def _msgs():
             updated_msgs = []
@@ -211,71 +211,70 @@ class Agent:
                 pass
         user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
         hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
+
+        if self.additional_history:
+            hist += [
+                {"role": next(iter(message.keys())), "content": next(iter(message.values()))}
+                for message in self.additional_history
+            ]
         return hist
 
-    def _get_compressed_history(self):
-        history = self._get_non_user_messages(30)
-        maxtokens = self.model.get_token_limit()
-        while True:
-            message = [
-                {
-                    "role": "user",
-                    "content": (
-                        f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
-                        + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
-                        + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
-                        + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
-                        + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
-                        + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
-                    ),
-                }
-            ]
-            ntokens = self.model.count_tokens(message)
-            if ntokens < maxtokens:
-                break
-            else:
-                history.pop(0)
+    # def _get_compressed_history(self):
+    #     history = self._get_non_user_messages(30)
+    #     maxtokens = self.model.get_token_limit()
+    #     while True:
+    #         message = [
+    #             {
+    #                 "role": "user",
+    #                 "content": (
+    #                     f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
+    #                     + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
+    #                     + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
+    #                     + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
+    #                     + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
+    #                     + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
+    #                 ),
+    #             }
+    #         ]
+    #         ntokens = self.model.count_tokens(message)
+    #         if ntokens < maxtokens:
+    #             break
+    #         else:
+    #             history.pop(0)
 
-        if len(history) == 0:
-            history = []
-        else:
-            history_summary = self.model.chat(message)
-            history = [{"role": "system", "content": history_summary}]
-        if self.additional_history:
-            history += [
-                {"role": role, "content": content}
-                for role, content in self.additional_history.items()
-            ]
-        return history
+    #     if len(history) == 0:
+    #         history = []
+    #     else:
+    #         history_summary = self.model.chat(message)
+    #         history = [{"role": "system", "content": history_summary}]
+    #     if self.additional_history:
+    #         history += [
+    #             {"role": next(iter(message.keys())), "content": next(iter(message.values()))}
+    #             for message in self.additional_history
+    #         ]
+    #     return history
 
     def get_full_message(self, message: Optional[str]):
-        return next(self.prompt_gen) + "\n\n" + (message or "")
+        if not self.history:
+            return self.init_prompt + "\n\n" + (message or "")
+        return self.next_prompt + "\n\n" + (message or "")
 
     def _default_response_callback(self, resp):
         try:
-            resp = self._load_json(resp)
+            resp = self.evaluate(resp)
             plan = resp.get("plan")
-            if plan and isinstance(plan, list):
-                if (
-                    len(plan) == 0
-                    or len(plan) == 1
-                    and len(plan[0].replace("-", "")) == 0
-                ):
-                    self.staging_tool = {"name": "task_complete", "args": {}}
+            if isinstance(resp, dict):
+                if "name" in resp:
+                    resp = {"command": resp}
+                if "command" in resp:
+                    self.staging_tool = resp["command"]
+                    self.exec_history.append(resp["command"])
                     self.staging_response = resp
-                    self.state = AgentStates.STOP
-            else:
-                if isinstance(resp, dict):
-                    if "name" in resp:
-                        resp = {"command": resp}
-                    if "command" in resp:
-                        self.staging_tool = resp["command"]
-                        self.staging_response = resp
-                        self.state = AgentStates.TOOL_STAGED
-                    else:
-                        self.state = AgentStates.IDLE
+                    self.state = AgentStates.TOOL_STAGED
                 else:
                     self.state = AgentStates.IDLE
+            else:
+                self.state = AgentStates.IDLE
 
             progress = resp.get("thoughts", {}).get("progress")
             if progress:
@@ -292,6 +291,21 @@ class Agent:
             return resp
         except:
             raise
+    
+    def _chat(self, message: Optional[str] = None):
+        message = self.get_full_message(message)
+        full_prompt, token_count = self.get_full_prompt(message)
+        token_limit = self.model.get_token_limit()
+        max_tokens = min(1000, max(token_limit - token_count, 0))
+        assert max_tokens
+        # print("================================")
+        # [print(msg["role"], "::", msg["content"]) for msg in full_prompt]
+        # print("================================")
+        return self.model.chat(
+            full_prompt,
+            max_tokens=max_tokens,
+            temperature=self.temperature,
+        )
 
     @spinner
     def chat(
@@ -304,7 +318,6 @@ class Agent:
                 "This agent has completed its tasks. It will not accept any more messages."
                 " You can do `agent.clear_state()` to start over with the same goals."
             )
-        message = self.get_full_message(message)
         if self.staging_tool:
             tool = self.staging_tool
             if run_tool:
@@ -337,30 +350,81 @@ class Agent:
                 # )
             self.staging_tool = None
             self.staging_response = None
-        full_prompt, token_count = self.get_full_prompt(message)
-        token_limit = self.model.get_token_limit()
-        max_tokens = min(1000, max(token_limit - token_count, 0))
-        assert max_tokens
-        # print("================================")
-        # print(full_prompt)
-        # print("================================")
-        resp = self.model.chat(
-            full_prompt,
-            max_tokens=max_tokens,
-            temperature=self.temperature,
-        )
+        
+        resp = self._chat(message)
+
+        # user message
+        self.history.append({"role": "user", "content": message})
+        # assistant message
+        self.history.append({"role": "assistant", "content": resp})
+
+        # process response
         if response_callback:
             resp = response_callback(resp)
+
         if self.state == AgentStates.START:
             self.state = AgentStates.IDLE
-        self.history.append({"role": "user", "content": message})
-        self.history.append(
-            {
-                "role": "assistant",
-                "content": json.dumps(resp) if isinstance(resp, dict) else str(resp),
-            }
-        )
         return resp
+    
+    def evaluate(self, resp):
+        from loopgpt.metrics.all import command_to_statements, check_statement_correctness, command_usefulness, context_precision
+
+        resp = self._load_json(resp)
+        print(resp)
+
+        runtime = {"model": self.model, "embedding_provider": self.embedding_provider}
+
+        def _evaluate(resp):
+            command = resp["command"]
+            goal = resp["thoughts"]["text"]
+            context = "\n\n".join(self._get_relevant_memory(None, 10))
+
+            inexistent = command["name"] not in self.tools
+            repeated = command in self.exec_history
+            print(self.exec_history)
+            usefulness = command_usefulness(command, goal, **runtime)
+            statements = command_to_statements(command, **runtime)
+            statement_correctness = [check_statement_correctness(statement, context, **runtime) for statement in statements]
+
+            return {
+                "inexistent": inexistent,
+                "repeated": repeated,
+                "usefulness": usefulness,
+                "statement_correctness": statement_correctness,
+            }
+
+        def _redo():
+            resp = self._chat()
+            self.history.append({"role": "assistant", "content": resp})
+            resp = self._load_json(resp)
+            return resp
+
+        def _suggest(evaluation):
+            suggestion = ""
+            if evaluation["inexistent"]:
+                suggestion = f"Command {resp['command']['name']} does not exist."
+            elif evaluation["repeated"]:
+                suggestion = "You already executed this command with the exact arguments. Try something else."
+            else:
+                usefulness = evaluation["usefulness"]
+                if usefulness["verdict"].lower() != "yes":
+                    suggestion += usefulness["reason"] + "\n"
+                for correctness in evaluation["statement_correctness"]:
+                    if correctness["verdict"].lower() != "yes":
+                        suggestion += correctness["reason"] + "\n"
+            if suggestion:
+                self.history.append({"role": "system", "content": suggestion})
+            return suggestion
+        
+        evaluation = _evaluate(resp)
+        print(evaluation)
+        while _suggest(evaluation):
+            resp = _redo()
+            evaluation = _evaluate(resp)
+            print(evaluation)
+            
+        return resp
+
 
     def _extract_json_with_gpt(self, s):
         func = "def convert_to_json(response: str) -> str:"
@@ -683,10 +747,15 @@ class Agent:
         :type history: list
         """
         try:
-            self.additional_history = history
+            if self.additional_history:
+                cached = self.additional_history.copy()
+                self.additional_history += history
+            else:
+                cached = None
+                self.additional_history = history
             yield
         finally:
-            self.additional_history = None
+            self.additional_history = cached
 
 
 def empty_agent(**agent_kwargs):
@@ -697,6 +766,8 @@ def empty_agent(**agent_kwargs):
     """
     agent = Agent(**agent_kwargs)
     agent.prompts = []
+    agent.init_prompt = ""
+    agent.next_prompt = ""
     agent.state = AgentStates.IDLE
     agent.tools = agent.tools if agent_kwargs.get("tools") else {}
     agent.goals = []

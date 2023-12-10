@@ -28,6 +28,7 @@ class Browser(BaseTool):
         Dict: Relevant summary and a list of links extracted from the URL.
 
     """
+    is_source = True
 
     def __init__(self, browser_type="chrome"):
         super(Browser, self).__init__()
@@ -54,7 +55,7 @@ class Browser(BaseTool):
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
         elif self.browser_type == "firefox":
             options.add_argument("TRACE")
-        options.add_argument("--headless")
+        options.headless = True
         self.options = options
 
     def _init_chrome_driver(self):
