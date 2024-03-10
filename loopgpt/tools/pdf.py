@@ -1,5 +1,5 @@
 from loopgpt.tools import BaseTool
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from loopgpt.summarizer import Summarizer
 from tqdm import tqdm
 
