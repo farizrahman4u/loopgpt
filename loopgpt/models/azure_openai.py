@@ -19,7 +19,7 @@ def get_deployment_details(endpoint, model_id, api_version, api_key):
 
 
 def get_deployment_model(endpoint, model_id, api_version, api_key):
-    details = get_deployment_details(endpoint,  model_id, api_version, api_key)
+    details = get_deployment_details(endpoint, model_id, api_version, api_key)
     model = details["model"]
 
     return {
@@ -64,7 +64,13 @@ class AzureOpenAIModel(OpenAIModel):
         agent.chat("Hello, how are you?")
     """
 
-    def __init__(self, model: str, api_key: Optional[str] = None, api_version: Optional[str] = None, azure_endpoint: Optional[str] = None):
+    def __init__(
+        self,
+        model: str,
+        api_key: Optional[str] = None,
+        api_version: Optional[str] = None,
+        azure_endpoint: Optional[str] = None,
+    ):
         # sanity check
         self.model_id = model
         self.api_key = get_openai_key(api_key)
@@ -75,7 +81,9 @@ class AzureOpenAIModel(OpenAIModel):
             azure_endpoint, self.model_id, api_version, api_key
         )
 
-        self.client = AzureOpenAI(api_key=self.api_key, api_version=api_version, azure_endpoint=azure_endpoint)
+        self.client = AzureOpenAI(
+            api_key=self.api_key, api_version=api_version, azure_endpoint=azure_endpoint
+        )
 
     def chat(
         self,
@@ -86,12 +94,16 @@ class AzureOpenAIModel(OpenAIModel):
         num_retries = 3
         for _ in range(num_retries):
             try:
-                resp = self.client.chat.completions.create(
-                    model=self.model_id,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                ).choices[0].message.content
+                resp = (
+                    self.client.chat.completions.create(
+                        model=self.model_id,
+                        messages=messages,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                    )
+                    .choices[0]
+                    .message.content
+                )
                 return resp
 
             except RateLimitError:
@@ -113,4 +125,9 @@ class AzureOpenAIModel(OpenAIModel):
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config.get("api_key"), config.get("api_version"), config.get("azure_endpoint"))
+        return cls(
+            config["model"],
+            config.get("api_key"),
+            config.get("api_version"),
+            config.get("azure_endpoint"),
+        )

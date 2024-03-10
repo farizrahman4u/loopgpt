@@ -13,6 +13,7 @@ class GoogleSearch(BaseTool):
     Returns:
         str: Search results.
     """
+
     is_source = True
 
     def __init__(self, num_results=8, start_page=1):

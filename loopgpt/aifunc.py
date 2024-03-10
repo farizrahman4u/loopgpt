@@ -78,20 +78,20 @@ def set_agent_tools(agent: Agent, tools: List[BaseTool]):
         agent.tools[tool.id] = tool
 
 
-def create_analyzer_agent(func_prompt, args_prompt, **agent_kwargs):
+def create_analyzer_agent(func_prompt, tools, args_prompt, **agent_kwargs):
     agent = empty_agent(**agent_kwargs)
+    set_agent_tools(agent, tools)
     agent.memory_query = func_prompt + "\n" + args_prompt
     agent.name = "Function Analyzer"
     agent.description = f"and you have to imagine you are {func_prompt}"
     if args_prompt:
         agent.description += f"with {args_prompt}"
     agent.state = AgentStates.IDLE
-    agent.init_prompt = (
+    agent.prompts = [
         "Do you need more information than what is available in your memory to execute the function?"
         + "Strictly respond with `yes` or `no` only.\n\n"
         + "Your response is to be directly parsed, so please do not include any other text in your response.\n"
-    )
-    agent.next_prompt = agent.init_prompt
+    ]
     return agent
 
 
@@ -110,24 +110,12 @@ def create_data_collector_agent(func_prompt, tools, args_prompt, **agent_kwargs)
         + "Return an empty list if the execution does not require any data collection.\n"
         + "\nYour response is to be directly parsed, so please do not include any other text in your response.\n"
     )
-    agent.init_prompt = init_prompt
-    agent.next_prompt = (
+    agent.prompts = [
+        init_prompt,
         "You now have data in your memory. Return an empty list to terminate data collection. Continue data collection only if neccessary.\n"
-        + init_prompt
-    )
+        + init_prompt,
+    ]
     return agent
-
-def analyze(agent, func_prompt, args_prompt):
-    from loopgpt.metrics.all import context_precision
-
-    context = "\n\n".join(agent._get_relevant_memory(None, 10))
-    goal = f"Successful execution of {func_prompt}" + f"with {args_prompt}."
-
-    print(goal, context)
-
-    precision = context_precision(goal, context)
-
-    return precision
 
 
 class aifunc:
@@ -252,10 +240,14 @@ class aifunc:
                 args_str = get_args_prompt(sig, args, kwargs)
 
             if self.tools:
+                analyzer = create_analyzer_agent(
+                    func_prompt, self.tools, args_str, **agent_kwargs
+                )
                 collector = create_data_collector_agent(
                     func_prompt, self.tools, args_str, **agent_kwargs
                 )
 
+                analyzer.memory = agent.memory
                 collector.memory = agent.memory
 
                 commands = collector.chat(response_callback=collector_response_callback)
@@ -282,6 +274,7 @@ class aifunc:
                         "content": f"You executed {command['function']} with {command['args']} and got the response: {resp}.",
                     }
                     collector.history.append(msg)
+                    analyzer.history.append(msg)
 
                     if len(commands) > 1 and "<" in str(commands[1]["args"]):
                         new_commands = expand_placeholders(commands, last_command)
@@ -289,17 +282,12 @@ class aifunc:
                             commands = new_commands
                     commands.pop(0)
                     if len(commands) == 0:
-                        precision = analyze(collector, func_prompt, args_str)
-                        print(precision)
-                        req_data = precision["verdict"] != "Yes"
-                        if req_data:
-                            collector.next_prompt = precision["reason"] + " Continue data collection."
-                            print("Chatting with collector again")
+                        req_data = analyzer.chat(response_callback=None)
+                        if req_data == "yes":
                             commands = collector.chat(
                                 response_callback=collector_response_callback
                             )
 
-            print(agent.memory.docs)
             resp = agent.chat(
                 args_str
                 + "Respond only with your return value. Your response is to be directly parsed, strictly do not include any other text in your response.",

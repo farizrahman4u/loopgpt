@@ -16,8 +16,11 @@ class OpenAIEmbeddingProvider(BaseEmbeddingProvider):
     def get(self, text: str):
         return np.array(
             self.client.embeddings.create(
-                input=[text], model=self.model,
-            ).data[0].embedding,
+                input=[text],
+                model=self.model,
+            )
+            .data[0]
+            .embedding,
             dtype=np.float32,
         )
 

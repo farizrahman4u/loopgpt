@@ -25,12 +25,16 @@ class OpenAIModel(BaseModel):
         num_retries = 3
         for i in range(num_retries):
             try:
-                resp = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                ).choices[0].message.content
+                resp = (
+                    self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                    )
+                    .choices[0]
+                    .message.content
+                )
                 return resp
 
             except RateLimitError:

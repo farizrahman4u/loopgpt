@@ -28,6 +28,7 @@ class Browser(BaseTool):
         Dict: Relevant summary and a list of links extracted from the URL.
 
     """
+
     is_source = True
 
     def __init__(self, browser_type="chrome"):

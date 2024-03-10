@@ -117,7 +117,10 @@ class Agent:
             memory_query = self.memory_query
         else:
             mem_source = self._get_non_user_messages(n)
-            memory_query = "\n".join([hist["content"] for hist in mem_source] + ([user_input] if user_input else []))
+            memory_query = "\n".join(
+                [hist["content"] for hist in mem_source]
+                + ([user_input] if user_input else [])
+            )
         # print(memory_query)
         # print(self.memory.docs)
         return self.memory.get(memory_query, 10)
@@ -205,7 +208,10 @@ class Agent:
 
         if self.additional_history:
             hist += [
-                {"role": next(iter(message.keys())), "content": next(iter(message.values()))}
+                {
+                    "role": next(iter(message.keys())),
+                    "content": next(iter(message.values())),
+                }
                 for message in self.additional_history
             ]
         return hist
@@ -282,7 +288,7 @@ class Agent:
             return resp
         except:
             raise
-    
+
     def _chat(self, message: Optional[str] = None):
         message = self.get_full_message(message)
         full_prompt, token_count = self.get_full_prompt(message)
@@ -344,7 +350,7 @@ class Agent:
                 # )
             self.staging_tool = None
             self.staging_response = None
-        
+
         resp = self._chat(message)
 
         # user message
@@ -359,64 +365,10 @@ class Agent:
         if self.state == AgentStates.START:
             self.state = AgentStates.IDLE
         return resp
-    
+
     def evaluate(self, resp):
-        from loopgpt.metrics.all import command_to_statements, check_statement_correctness, command_usefulness, context_precision
-
         resp = self._load_json(resp)
-
-        runtime = {"model": self.model, "embedding_provider": self.embedding_provider}
-
-        def _evaluate(resp):
-            command = resp["command"]
-            goal = resp["thoughts"]["text"]
-            context = "\n\n".join(self._get_relevant_memory(None, 10))
-
-            inexistent = command["name"] not in self.tools
-            repeated = command in self.exec_history
-            usefulness = command_usefulness(command, goal, **runtime)
-            statements = command_to_statements(command, **runtime)
-            statement_correctness = [check_statement_correctness(statement, context, **runtime) for statement in statements]
-
-            return {
-                "inexistent": inexistent,
-                "repeated": repeated,
-                "usefulness": usefulness,
-                "statement_correctness": statement_correctness,
-            }
-
-        def _redo():
-            resp = self._chat()
-            self.history.append({"role": "assistant", "content": resp})
-            resp = self._load_json(resp)
-            return resp
-
-        def _suggest(evaluation):
-            suggestion = ""
-            if evaluation["inexistent"]:
-                suggestion = f"Command {resp['command']['name']} does not exist."
-            elif evaluation["repeated"]:
-                suggestion = "You already executed this command with the exact arguments. Try something else."
-            else:
-                usefulness = evaluation["usefulness"]
-                if usefulness["verdict"].lower() != "yes":
-                    suggestion += usefulness["reason"] + "\n"
-                for correctness in evaluation["statement_correctness"]:
-                    if correctness["verdict"].lower() != "yes":
-                        suggestion += correctness["reason"] + "\n"
-            if suggestion:
-                self.history.append({"role": "system", "content": suggestion})
-            return suggestion
-        
-        # evaluation = _evaluate(resp)
-        # print(evaluation)
-        # while _suggest(evaluation):
-        #     resp = _redo()
-        #     evaluation = _evaluate(resp)
-        #     print(evaluation)
-            
         return resp
-
 
     def _extract_json_with_gpt(self, s):
         func = "def convert_to_json(response: str) -> str:"
