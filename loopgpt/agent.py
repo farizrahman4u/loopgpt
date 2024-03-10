@@ -16,7 +16,11 @@ from loopgpt.models import (
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
-from loopgpt.embeddings import OpenAIEmbeddingProvider, AzureOpenAIEmbeddingProvider
+from loopgpt.embeddings import (
+    OpenAIEmbeddingProvider,
+    AzureOpenAIEmbeddingProvider,
+    from_config as embedding_provider_from_config,
+)
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
 
@@ -563,6 +567,7 @@ class Agent:
             "constraints": self.constraints[:],
             "state": self.state,
             "model": self.model.config(),
+            "embedding_provider": self.embedding_provider.config(),
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
         }
@@ -585,14 +590,17 @@ class Agent:
 
     @classmethod
     def from_config(cls, config):
-        agent = cls()
+        model = model_from_config(config["model"])
+        embedding_provider = embedding_provider_from_config(
+            config["embedding_provider"]
+        )
+        agent = cls(model=model, embedding_provider=embedding_provider)
         agent.name = config["name"]
         agent.description = config["description"]
         agent.goals = config["goals"][:]
         agent.constraints = config["constraints"][:]
         agent.state = config["state"]
         agent.temperature = config["temperature"]
-        agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.progress = config.get("progress", [])
         agent.plan = config.get("plan", [])
