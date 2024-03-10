@@ -40,5 +40,5 @@ def set_aifunc_args(model, embedding_provider):
     aifunc.embedding_provider = embedding_provider
 
 
-# if "pytest" not in sys.modules:
-#     check_openai_key()
+if "pytest" not in sys.modules:
+    check_openai_key()
