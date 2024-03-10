@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Union
 from loopgpt.models.base import BaseModel
+from loopgpt.models.llama_ import LLamaModel
 
 try:
     from transformers import StoppingCriteria
@@ -17,14 +18,18 @@ except ImportError:
 
 
 class HuggingFaceModel(BaseModel):
-    def __init__(self, model="stabilityai/stablelm-tuned-alpha-7b", load_in_8bit=False):
+    def __init__(
+        self,
+        model="stabilityai/stablelm-tuned-alpha-7b",
+        load_in_8bit=False,
+        model_max_length=1024,
+    ):
         import torch
 
         try:
             from transformers import (
                 AutoModelForCausalLM,
                 AutoTokenizer,
-                StoppingCriteria,
                 StoppingCriteriaList,
             )
         except ImportError as e:
@@ -33,9 +38,12 @@ class HuggingFaceModel(BaseModel):
             ) from e
 
         super(HuggingFaceModel, self).__init__()
-        self.model = model
+        self.model_name = model
         self.load_in_8bit = load_in_8bit
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
+        self.model_max_length = model_max_length
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model, model_max_length=model_max_length
+        )
         self.model = AutoModelForCausalLM.from_pretrained(
             model,
             torch_dtype=torch.float16,
@@ -43,6 +51,7 @@ class HuggingFaceModel(BaseModel):
             device_map="auto",
             offload_folder="./offload",
         )
+        # self.model.to(torch.device("cuda"))
         self.stopping_criteria = StoppingCriteriaList([StopOnTokens()])
 
     def chat(
@@ -51,8 +60,12 @@ class HuggingFaceModel(BaseModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
     ) -> str:
+        for msg in messages:
+            print(msg)
         prompt = self.encode_messages(messages)
-        encoding = self.tokenizer(prompt, return_tensors="pt")
+        encoding = self.tokenizer(
+            prompt, return_tensors="pt", return_token_type_ids=False
+        )
         encoding.to(self.model.device)
 
         # Sampling args
@@ -77,37 +90,28 @@ class HuggingFaceModel(BaseModel):
         return completion
 
     def encode_messages(self, messages: List[Dict[str, str]]) -> str:
-        message_format = {
-            "system": "<|SYSTEM|>{0}",
-            "user": "<|USER|>{0}",
-            "assistant": "<|ASSISTANT|>{0}",
-        }
-
-        data = []
-        for message in messages:
-            data.append(message_format[message["role"]].format(message["content"]))
-        data.append(message_format["assistant"].format(""))
-
-        return "".join(data)
+        if self.model_name.startswith("meta-llama"):
+            messages = LLamaModel._convert_to_llama_dialogs(messages)[0]
+        return self.tokenizer.apply_chat_template(messages, tokenize=False)
 
     def count_tokens(self, messages: Union[List[Dict[str, str]], str]) -> int:
         data = self.encode_messages(messages)
-        encoding = self.tokenizer(data)
-        return len(encoding.input_ids)
+        return len(self.tokenizer.encode(data))
 
     def get_token_limit(self):
-        return 4096
+        return self.tokenizer.model_max_length
 
     def config(self):
         cfg = super().config()
         cfg.update(
             {
-                "model": self.model,
+                "model": self.model_name,
                 "load_in_8bit": self.load_in_8bit,
+                "model_max_length": self.model_max_length,
             }
         )
         return cfg
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["model"], config["load_in_8_bit"])
+        return cls(**config)

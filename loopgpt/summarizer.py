@@ -17,7 +17,7 @@ class Summarizer:
     @property
     def model(self):
         if self._model is None:
-            if getattr(self, "agent"):
+            if getattr(self, "agent", None):
                 model = self.agent.model
                 if type(model) == OpenAIModel:
                     if model.model == "gpt-3.5-turbo":
@@ -89,7 +89,7 @@ class Summarizer:
             [
                 {
                     "role": "system",
-                    "summary": text,
+                    "content": text,
                 }
             ],
         )
