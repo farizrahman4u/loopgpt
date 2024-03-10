@@ -20,7 +20,6 @@ def get_deployment_details(endpoint, model_id, api_version, api_key):
 
 def get_deployment_model(endpoint, model_id, api_version, api_key):
     details = get_deployment_details(endpoint, model_id, api_version, api_key)
-    print(details)
     model = details["model"]
 
     return {

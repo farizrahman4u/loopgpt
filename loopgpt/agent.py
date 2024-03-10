@@ -184,71 +184,74 @@ class Agent:
                     break
         return msgs, ntokens
 
-    def _get_compressed_history(self):
-        hist = self.history[:]
-        system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
-        assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs:
-            entry = hist[i].copy()
-            try:
-                respd = json.loads(entry["content"])
-                thoughts = respd.get("thoughts")
-                if thoughts:
-                    thoughts.pop("reasoning", None)
-                    thoughts.pop("speak", None)
-                    thoughts.pop("text", None)
-                    thoughts.pop("plan", None)
-                entry["content"] = json.dumps(respd, indent=2)
-                hist[i] = entry
-            except:
-                pass
-        user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
+    # def _get_compressed_history(self):
+    #     hist = self.history[:]
+    #     system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
+    #     assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
+    #     for i in assist_msgs:
+    #         entry = hist[i].copy()
+    #         try:
+    #             respd = json.loads(entry["content"])
+    #             thoughts = respd.get("thoughts")
+    #             if thoughts:
+    #                 thoughts.pop("reasoning", None)
+    #                 thoughts.pop("speak", None)
+    #                 thoughts.pop("text", None)
+    #                 thoughts.pop("plan", None)
+    #             entry["content"] = json.dumps(respd, indent=2)
+    #             hist[i] = entry
+    #         except:
+    #             pass
+    #     user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
+    #     hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
 
+    #     if self.additional_history:
+    #         hist += [
+    #             {
+    #                 "role": next(iter(message.keys())),
+    #                 "content": next(iter(message.values())),
+    #             }
+    #             for message in self.additional_history
+    #         ]
+    #     return hist
+
+    def _get_compressed_history(self):
+        history = self._get_non_user_messages(30)
+        maxtokens = self.model.get_token_limit()
+        while True:
+            message = [
+                {
+                    "role": "user",
+                    "content": (
+                        f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
+                        + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
+                        + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
+                        + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
+                        + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
+                        + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
+                    ),
+                }
+            ]
+            ntokens = self.model.count_tokens(message)
+            if ntokens < maxtokens:
+                break
+            else:
+                history.pop(0)
+
+        if len(history) == 0:
+            history = []
+        else:
+            history_summary = self.model.chat(message)
+            history = [{"role": "system", "content": history_summary}]
         if self.additional_history:
-            hist += [
+            history += [
                 {
                     "role": next(iter(message.keys())),
                     "content": next(iter(message.values())),
                 }
                 for message in self.additional_history
             ]
-        return hist
-
-    # def _get_compressed_history(self):
-    #     history = self._get_non_user_messages(30)
-    #     maxtokens = self.model.get_token_limit()
-    #     while True:
-    #         message = [
-    #             {
-    #                 "role": "user",
-    #                 "content": (
-    #                     f"Please summarize this conversation for me:\n{history}\n\nImportant Details and Results:"
-    #                     + "\n- Include key findings from the research and data collection phases.\n- Highlight important commands"
-    #                     + "executed and their results.\n\nKey Highlights:\n- Summarize the main points of the conversation in bullet points."
-    #                     + "\n- Focus on relevant information and filter out redundant exchanges.\n\nAdditional Context:\n- Provide any relevant links"
-    #                     + " or references mentioned during the conversation.\n\nPlease ensure the summary accurately captures the essential aspects of"
-    #                     + " the task and includes details that are crucial for understanding the context and progress.\n\nThank you!"
-    #                 ),
-    #             }
-    #         ]
-    #         ntokens = self.model.count_tokens(message)
-    #         if ntokens < maxtokens:
-    #             break
-    #         else:
-    #             history.pop(0)
-
-    #     if len(history) == 0:
-    #         history = []
-    #     else:
-    #         history_summary = self.model.chat(message)
-    #         history = [{"role": "system", "content": history_summary}]
-    #     if self.additional_history:
-    #         history += [
-    #             {"role": next(iter(message.keys())), "content": next(iter(message.values()))}
-    #             for message in self.additional_history
-    #         ]
-    #     return history
+        return history
 
     def get_full_message(self, message: Optional[str]):
         if not self.history:
