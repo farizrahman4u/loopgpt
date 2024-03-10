@@ -72,7 +72,7 @@ class Spinner(threading.Thread):
     def run(self):
         time.sleep(SPINNER_START_DELAY)
         frames = cycle("/-\\|")
-        if not self._hide_event.is_set():
+        if not self._hide_event.is_set() and not self._stop_event.is_set():
             self._hide_cursor()
         while not self._stop_event.is_set():
             if self._hide_event.is_set():

@@ -29,8 +29,6 @@ class Browser(BaseTool):
 
     """
 
-    is_source = True
-
     def __init__(self, browser_type="chrome"):
         super(Browser, self).__init__()
         if browser_type not in ("chrome", "firefox"):

@@ -14,8 +14,6 @@ class GoogleSearch(BaseTool):
         str: Search results.
     """
 
-    is_source = True
-
     def __init__(self, num_results=8, start_page=1):
         super(GoogleSearch, self).__init__()
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
@@ -46,7 +44,7 @@ class GoogleSearch(BaseTool):
         links_and_titles = "\n".join(links_and_titles_)
         results = "\n".join(results_)
 
-        return links_and_titles, links
+        return results, links
 
     def _google_search(self, query):
         from googleapiclient.discovery import build
@@ -78,7 +76,7 @@ class GoogleSearch(BaseTool):
         links_and_titles = "\n".join(links_and_titles_)
         results = "\n".join(results_)
 
-        return links_and_titles, links
+        return results, links
 
     def _add_to_memory(self, results):
         if getattr(self, "agent"):

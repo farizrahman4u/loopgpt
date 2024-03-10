@@ -83,7 +83,6 @@ class Agent:
         self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
         self.exec_history = []
-        self.suggestion = ""
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]
         else:
@@ -297,6 +296,7 @@ class Agent:
         try:
             assert max_tokens
         except:
+            print("Exception occurred due to this prompt:")
             print("================================")
             [print(msg["role"], "::", msg["content"]) for msg in full_prompt]
             print("================================")

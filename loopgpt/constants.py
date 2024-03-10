@@ -41,14 +41,6 @@ NEXT_PROMPT = (
     + "\n"
 )
 
-NEXT_PROMPT = (
-    "INSTRUCTIONS:\n"
-    + "1 - Only use available commands.\n"
-    + "2 - Plan and execute commands with supported arguments to achieve your goals.\n"
-    + "2 - If you have achieved all of your goals, execute the 'task_complete' command.\n"
-    + f"3 - {DEFAULT_RESPONSE_FORMAT}\n"
-)
-
 
 INIT_PROMPT = (
     "Do the following:\n"
