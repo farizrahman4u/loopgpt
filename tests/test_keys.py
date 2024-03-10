@@ -9,6 +9,9 @@ def test_add_key_prompt(monkeypatch):
 
     from loopgpt.utils.openai_key import check_openai_key
 
+    os.environ.pop("OPENAI_API_KEY", None)
+    os.environ.pop("AZURE_OPENAI_KEY", None)
+
     # Run the function
     check_openai_key()
 
