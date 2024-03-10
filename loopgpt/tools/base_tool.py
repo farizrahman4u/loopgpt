@@ -11,6 +11,7 @@ def camel_case_split(str):
 class BaseTool:
     def __init__(self, *args, **kwargs):
         self._agent = None
+        self.is_source = False
 
     @property
     def agent(self):

@@ -16,17 +16,19 @@ from loopgpt.models import (
 from loopgpt.tools import builtin_tools, from_config as tool_from_config
 from loopgpt.tools.code import ai_function
 from loopgpt.memory.local_memory import LocalMemory
-from loopgpt.embeddings import OpenAIEmbeddingProvider, AzureOpenAIEmbeddingProvider
+from loopgpt.embeddings import (
+    OpenAIEmbeddingProvider,
+    AzureOpenAIEmbeddingProvider,
+    from_config as embedding_provider_from_config,
+)
 from loopgpt.utils.spinner import spinner
 from loopgpt.loops import cli
 
 
 from typing import *
 from itertools import repeat
-from functools import wraps
 from contextlib import contextmanager
 
-import openai
 import json
 import time
 import ast
@@ -67,16 +69,6 @@ class Agent:
         temperature=0.8,
         tools=None,
     ):
-        if openai.api_type == "azure":
-            if model is None:
-                raise ValueError(
-                    "You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API"
-                )
-            if embedding_provider is None:
-                raise ValueError(
-                    "You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API"
-                )
-
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
         elif isinstance(model, str):
@@ -94,6 +86,7 @@ class Agent:
         self.sub_agents = {}
         self.memory = LocalMemory(embedding_provider=embedding_provider)
         self.history = []
+        self.exec_history = []
         if tools is None:
             tools = [tool_type() for tool_type in builtin_tools()]
         else:
@@ -103,7 +96,8 @@ class Agent:
         self.staging_response = None
         self.tool_response = None
         self.prompts = [INIT_PROMPT, NEXT_PROMPT]
-        self.prompt_gen = self.next_prompt()
+        self.init_prompt = INIT_PROMPT
+        self.next_prompt = NEXT_PROMPT
         self.prompt_template = DEFAULT_PROMPT_TEMPLATE
         self.progress = []
         self.plan = []
@@ -111,13 +105,6 @@ class Agent:
         self.state = AgentStates.START
         self.memory_query = None
         self.additional_history = None
-
-    def next_prompt(self):
-        if self.prompts:
-            yield from self.prompts
-            yield from repeat(self.prompts[-1])
-        else:
-            yield from repeat("")
 
     def _get_non_user_messages(self, n):
         msgs = [
@@ -128,11 +115,24 @@ class Agent:
         ]
         return msgs[-n - 1 :]
 
+    def _get_relevant_memory(self, user_input, n):
+        if self.memory_query:
+            memory_query = self.memory_query
+        else:
+            mem_source = self._get_non_user_messages(n)
+            memory_query = "\n".join(
+                [hist["content"] for hist in mem_source]
+                + ([user_input] if user_input else [])
+            )
+        # print(memory_query)
+        # print(self.memory.docs)
+        return self.memory.get(memory_query, 10)
+
     def get_full_prompt(self, user_input: str = ""):
         sections = re.findall(r"<(.*)>", self.prompt_template)
         user_prompt = [{"role": "user", "content": user_input}]
-        history = self.history[:]
-        # history = self._get_compressed_history() TODO: Set up different history compression strategies
+        # history = self.history[:]
+        history = self._get_compressed_history()
         relevant_memory = []
         for section in sections:
             if section == "HEADER":
@@ -142,16 +142,12 @@ class Agent:
                     "content": f"The current time and date is {time.strftime('%c')}",
                 }
             elif section.startswith("MEMORY"):
-                if self.memory_query:
-                    memory_query = self.memory_query
+                if ":" in section:
+                    section, n = section.split(":")
+                    n = int(n)
                 else:
                     n = None
-                    if ":" in section:
-                        section, n = section.split(":")
-                        n = int(n)
-                    mem_source = self._get_non_user_messages(n) + user_prompt
-                    memory_query = "\n".join([hist["content"] for hist in mem_source])
-                relevant_memory = self.memory.get(memory_query, 10)
+                relevant_memory = self._get_relevant_memory(user_input, n)
 
         def _msgs():
             updated_msgs = []
@@ -177,47 +173,51 @@ class Agent:
                     updated_msgs += user_prompt
             return updated_msgs
 
-        maxtokens = self.model.get_token_limit()
-        maxtokens = int(maxtokens - 1 / 4 * maxtokens)
+        maxtokens = self.model.get_token_limit() - 1000
         while True:
             msgs = _msgs()
             ntokens = self.model.count_tokens(msgs)
             if ntokens < maxtokens:
                 break
             else:
-                if len(relevant_memory) > 1:
-                    relevant_memory = relevant_memory[1:]
-                elif len(history) > 1:
+                if len(history) > 1:
                     history = history[1:]
-                elif len(relevant_memory) == 1:
-                    relevant_memory.pop(0)
-                elif len(history) == 1:
-                    history.pop(0)
+                elif relevant_memory:
+                    relevant_memory = relevant_memory[1:]
                 else:
                     break
         return msgs, ntokens
 
-    def _get_compressed_history(self):
-        hist = self.history[:]
-        system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
-        assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
-        for i in assist_msgs:
-            entry = hist[i].copy()
-            try:
-                respd = json.loads(entry["content"])
-                thoughts = respd.get("thoughts")
-                if thoughts:
-                    thoughts.pop("reasoning", None)
-                    thoughts.pop("speak", None)
-                    thoughts.pop("text", None)
-                    thoughts.pop("plan", None)
-                entry["content"] = json.dumps(respd, indent=2)
-                hist[i] = entry
-            except:
-                pass
-        user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
-        hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
-        return hist
+    # def _get_compressed_history(self):
+    #     hist = self.history[:]
+    #     system_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "system"]
+    #     assist_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "assistant"]
+    #     for i in assist_msgs:
+    #         entry = hist[i].copy()
+    #         try:
+    #             respd = json.loads(entry["content"])
+    #             thoughts = respd.get("thoughts")
+    #             if thoughts:
+    #                 thoughts.pop("reasoning", None)
+    #                 thoughts.pop("speak", None)
+    #                 thoughts.pop("text", None)
+    #                 thoughts.pop("plan", None)
+    #             entry["content"] = json.dumps(respd, indent=2)
+    #             hist[i] = entry
+    #         except:
+    #             pass
+    #     user_msgs = [i for i in range(len(hist)) if hist[i]["role"] == "user"]
+    #     hist = [hist[i] for i in range(len(hist)) if i not in user_msgs]
+
+    #     if self.additional_history:
+    #         hist += [
+    #             {
+    #                 "role": next(iter(message.keys())),
+    #                 "content": next(iter(message.values())),
+    #             }
+    #             for message in self.additional_history
+    #         ]
+    #     return hist
 
     def _get_compressed_history(self):
         history = self._get_non_user_messages(30)
@@ -249,39 +249,35 @@ class Agent:
             history = [{"role": "system", "content": history_summary}]
         if self.additional_history:
             history += [
-                {"role": role, "content": content}
-                for role, content in self.additional_history.items()
+                {
+                    "role": next(iter(message.keys())),
+                    "content": next(iter(message.values())),
+                }
+                for message in self.additional_history
             ]
         return history
 
     def get_full_message(self, message: Optional[str]):
-        return next(self.prompt_gen) + "\n\n" + (message or "")
+        if not self.history:
+            return self.init_prompt + "\n\n" + (message or "")
+        return self.next_prompt + "\n\n" + (message or "")
 
     def _default_response_callback(self, resp):
         try:
-            resp = self._load_json(resp)
+            resp = self.evaluate(resp)
             plan = resp.get("plan")
-            if plan and isinstance(plan, list):
-                if (
-                    len(plan) == 0
-                    or len(plan) == 1
-                    and len(plan[0].replace("-", "")) == 0
-                ):
-                    self.staging_tool = {"name": "task_complete", "args": {}}
+            if isinstance(resp, dict):
+                if "name" in resp:
+                    resp = {"command": resp}
+                if "command" in resp:
+                    self.staging_tool = resp["command"]
+                    self.exec_history.append(resp["command"])
                     self.staging_response = resp
-                    self.state = AgentStates.STOP
-            else:
-                if isinstance(resp, dict):
-                    if "name" in resp:
-                        resp = {"command": resp}
-                    if "command" in resp:
-                        self.staging_tool = resp["command"]
-                        self.staging_response = resp
-                        self.state = AgentStates.TOOL_STAGED
-                    else:
-                        self.state = AgentStates.IDLE
+                    self.state = AgentStates.TOOL_STAGED
                 else:
                     self.state = AgentStates.IDLE
+            else:
+                self.state = AgentStates.IDLE
 
             progress = resp.get("thoughts", {}).get("progress")
             if progress:
@@ -299,13 +295,28 @@ class Agent:
         except:
             raise
 
+    def _chat(self, message: Optional[str] = None):
+        message = self.get_full_message(message)
+        full_prompt, token_count = self.get_full_prompt(message)
+        token_limit = self.model.get_token_limit()
+        max_tokens = min(1000, max(token_limit - token_count, 0))
+        try:
+            assert max_tokens
+        except:
+            print("Exception occurred due to this prompt:")
+            print("================================")
+            [print(msg["role"], "::", msg["content"]) for msg in full_prompt]
+            print("================================")
+            raise
+        return self.model.chat(
+            full_prompt,
+            max_tokens=max_tokens,
+            temperature=self.temperature,
+        )
+
     @spinner
     def chat(
-        self,
-        message: Optional[str] = None,
-        run_tool=False,
-        response_callback=-1,
-        max_tokens=1000,
+        self, message: Optional[str] = None, run_tool=False, response_callback=-1
     ) -> Optional[Union[str, Dict]]:
         if response_callback == -1:
             response_callback = self._default_response_callback
@@ -314,7 +325,6 @@ class Agent:
                 "This agent has completed its tasks. It will not accept any more messages."
                 " You can do `agent.clear_state()` to start over with the same goals."
             )
-        message = self.get_full_message(message)
         if self.staging_tool:
             tool = self.staging_tool
             if run_tool:
@@ -347,29 +357,24 @@ class Agent:
                 # )
             self.staging_tool = None
             self.staging_response = None
-        full_prompt, token_count = self.get_full_prompt(message)
-        token_limit = self.model.get_token_limit()
-        max_tokens = min(max_tokens, max(token_limit - token_count, 0))
-        assert max_tokens
-        # print("================================")
-        # print(full_prompt)
-        # print("================================")
-        resp = self.model.chat(
-            full_prompt,
-            max_tokens=max_tokens,
-            temperature=self.temperature,
-        )
+
+        resp = self._chat(message)
+
+        # user message
+        self.history.append({"role": "user", "content": message})
+        # assistant message
+        self.history.append({"role": "assistant", "content": resp})
+
+        # process response
         if response_callback:
             resp = response_callback(resp)
+
         if self.state == AgentStates.START:
             self.state = AgentStates.IDLE
-        self.history.append({"role": "user", "content": message})
-        self.history.append(
-            {
-                "role": "assistant",
-                "content": json.dumps(resp) if isinstance(resp, dict) else str(resp),
-            }
-        )
+        return resp
+
+    def evaluate(self, resp):
+        resp = self._load_json(resp)
         return resp
 
     def _extract_json_with_gpt(self, s):
@@ -562,6 +567,7 @@ class Agent:
             "constraints": self.constraints[:],
             "state": self.state,
             "model": self.model.config(),
+            "embedding_provider": self.embedding_provider.config(),
             "temperature": self.temperature,
             "tools": [tool.config() for tool in self.tools.values()],
         }
@@ -584,14 +590,17 @@ class Agent:
 
     @classmethod
     def from_config(cls, config):
-        agent = cls()
+        model = model_from_config(config["model"])
+        embedding_provider = embedding_provider_from_config(
+            config["embedding_provider"]
+        )
+        agent = cls(model=model, embedding_provider=embedding_provider)
         agent.name = config["name"]
         agent.description = config["description"]
         agent.goals = config["goals"][:]
         agent.constraints = config["constraints"][:]
         agent.state = config["state"]
         agent.temperature = config["temperature"]
-        agent.model = model_from_config(config["model"])
         agent.tools = {tool.id: tool for tool in map(tool_from_config, config["tools"])}
         agent.progress = config.get("progress", [])
         agent.plan = config.get("plan", [])
@@ -693,13 +702,17 @@ class Agent:
         :type history: list
         """
         try:
-            self.additional_history = history
+            if self.additional_history:
+                cached = self.additional_history.copy()
+                self.additional_history += history
+            else:
+                cached = None
+                self.additional_history = history
             yield
         finally:
-            self.additional_history = None
+            self.additional_history = cached
 
 
-@wraps(Agent.__init__)
 def empty_agent(**agent_kwargs):
     """Create an empty agent. Always use this function to create a new agent for use in conjunction with AI functions.
     Creating agents with the :class:`Agent` class directly is reserved for CLI applications.
@@ -708,13 +721,15 @@ def empty_agent(**agent_kwargs):
     """
     agent = Agent(**agent_kwargs)
     agent.prompts = []
+    agent.init_prompt = ""
+    agent.next_prompt = ""
     agent.state = AgentStates.IDLE
     agent.tools = agent.tools if agent_kwargs.get("tools") else {}
     agent.goals = []
     agent.constraints = []
     agent.plan = []
     agent.progress = []
-    agent.temperature = 0.3
+    agent.temperature = 0
     agent._default_response_callback = lambda x: x
     return agent
 

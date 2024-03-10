@@ -2,7 +2,6 @@
 Adapted from Auto-GPT (https://github.com/Significant-Gravitas/Auto-GPT)
 """
 
-
 from bs4 import BeautifulSoup
 from loopgpt.tools.browser import Browser
 from loopgpt.summarizer import Summarizer

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 def check_openai_key():
-    if "OPENAI_API_KEY" not in os.environ:
+    if "OPENAI_API_KEY" not in os.environ and "AZURE_OPENAI_KEY" not in os.environ:
         yn = input(
             "OpenAI API key not found. Would you like to add your key to `.env` now? (y/n): "
         )

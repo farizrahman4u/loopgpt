@@ -54,7 +54,7 @@ class Browser(BaseTool):
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
         elif self.browser_type == "firefox":
             options.add_argument("TRACE")
-        options.add_argument("--headless")
+        options.headless = True
         self.options = options
 
     def _init_chrome_driver(self):

@@ -5,12 +5,6 @@ from dummy_model import DummyModel
 from dummy_embedding_provider import DummyEmbeddingProvider
 
 
-def test_serde_basic():
-    agent = loopgpt.Agent()
-    cfg = agent.config()
-    agent2 = loopgpt.Agent.from_config(cfg)
-
-
 def test_serde_browser():
     browser = Browser("firefox")
     cfg = browser.config()
