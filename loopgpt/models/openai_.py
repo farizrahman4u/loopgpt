@@ -6,14 +6,15 @@ from loopgpt.utils.openai_key import get_openai_key
 import tiktoken
 import time
 
-from openai.error import RateLimitError
-import openai
+from openai import RateLimitError
+from openai import OpenAI
 
 
 class OpenAIModel(BaseModel):
     def __init__(self, model: str = "gpt-3.5-turbo", api_key: Optional[str] = None):
         self.model = model
-        self.api_key = api_key
+        self.api_key = get_openai_key(api_key)
+        self.client = OpenAI(api_key=self.api_key)
 
     def chat(
         self,
@@ -21,17 +22,15 @@ class OpenAIModel(BaseModel):
         max_tokens: Optional[int] = None,
         temperature: float = 0.8,
     ) -> str:
-        api_key = get_openai_key(self.api_key)
         num_retries = 3
         for i in range(num_retries):
             try:
-                resp = openai.ChatCompletion.create(
+                resp = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
-                    api_key=api_key,
                     max_tokens=max_tokens,
                     temperature=temperature,
-                )["choices"][0]["message"]["content"]
+                ).choices[0].message.content
                 return resp
 
             except RateLimitError:

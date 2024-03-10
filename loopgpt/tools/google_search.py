@@ -45,7 +45,7 @@ class GoogleSearch(BaseTool):
         links_and_titles = "\n".join(links_and_titles_)
         results = "\n".join(results_)
 
-        return results, links
+        return links_and_titles, links
 
     def _google_search(self, query):
         from googleapiclient.discovery import build
@@ -77,7 +77,7 @@ class GoogleSearch(BaseTool):
         links_and_titles = "\n".join(links_and_titles_)
         results = "\n".join(results_)
 
-        return results, links
+        return links_and_titles, links
 
     def _add_to_memory(self, results):
         if getattr(self, "agent"):

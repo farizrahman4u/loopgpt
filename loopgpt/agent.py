@@ -25,7 +25,6 @@ from typing import *
 from itertools import repeat
 from contextlib import contextmanager
 
-import openai
 import json
 import time
 import ast
@@ -66,16 +65,6 @@ class Agent:
         temperature=0.8,
         tools=None,
     ):
-        if openai.api_type == "azure":
-            if model is None:
-                raise ValueError(
-                    "You must provide an AzureOpenAIModel to the `model` argument when using the OpenAI Azure API"
-                )
-            if embedding_provider is None:
-                raise ValueError(
-                    "You must provide a deployed embedding provider to the `embedding_provider` argument when using the OpenAI Azure API"
-                )
-
         if model is None:
             model = OpenAIModel("gpt-3.5-turbo")
         elif isinstance(model, str):
@@ -129,6 +118,8 @@ class Agent:
         else:
             mem_source = self._get_non_user_messages(n)
             memory_query = "\n".join([hist["content"] for hist in mem_source] + ([user_input] if user_input else []))
+        # print(memory_query)
+        # print(self.memory.docs)
         return self.memory.get(memory_query, 10)
 
     def get_full_prompt(self, user_input: str = ""):
@@ -297,10 +288,13 @@ class Agent:
         full_prompt, token_count = self.get_full_prompt(message)
         token_limit = self.model.get_token_limit()
         max_tokens = min(1000, max(token_limit - token_count, 0))
-        assert max_tokens
-        # print("================================")
-        # [print(msg["role"], "::", msg["content"]) for msg in full_prompt]
-        # print("================================")
+        try:
+            assert max_tokens
+        except:
+            print("================================")
+            [print(msg["role"], "::", msg["content"]) for msg in full_prompt]
+            print("================================")
+            raise
         return self.model.chat(
             full_prompt,
             max_tokens=max_tokens,
@@ -370,7 +364,6 @@ class Agent:
         from loopgpt.metrics.all import command_to_statements, check_statement_correctness, command_usefulness, context_precision
 
         resp = self._load_json(resp)
-        print(resp)
 
         runtime = {"model": self.model, "embedding_provider": self.embedding_provider}
 
@@ -381,7 +374,6 @@ class Agent:
 
             inexistent = command["name"] not in self.tools
             repeated = command in self.exec_history
-            print(self.exec_history)
             usefulness = command_usefulness(command, goal, **runtime)
             statements = command_to_statements(command, **runtime)
             statement_correctness = [check_statement_correctness(statement, context, **runtime) for statement in statements]
@@ -416,12 +408,12 @@ class Agent:
                 self.history.append({"role": "system", "content": suggestion})
             return suggestion
         
-        evaluation = _evaluate(resp)
-        print(evaluation)
-        while _suggest(evaluation):
-            resp = _redo()
-            evaluation = _evaluate(resp)
-            print(evaluation)
+        # evaluation = _evaluate(resp)
+        # print(evaluation)
+        # while _suggest(evaluation):
+        #     resp = _redo()
+        #     evaluation = _evaluate(resp)
+        #     print(evaluation)
             
         return resp
 

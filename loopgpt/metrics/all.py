@@ -32,6 +32,30 @@ def command_to_statements(command: Dict[str, str]) -> List[str]:
     """
 
 @loopgpt.aifunc()
+def extract_statements(text: str) -> List[str]:
+    """Extract statements from the given text.
+
+    Examples:
+
+    >>> extract_statements("Best Headphones: Sony WH-1000XM4, Bose QC35, Sennheiser HD 450BT")
+    [
+        "Sony WH-1000XM4, Bose QC35, Sennheiser HD 450BT are the best headphones.",
+    ]
+
+    >>> extract_statements({"name": "google_search", "args": {"query": "Battle of Waterloo"}})
+    []
+    
+    >>> extract_statements(
+    ...     "King Tutankhamun was the antepenultimate pharaoh of the 18th Dynasty of ancient Egypt. His death marked the cessation of the dynasty's royal line. Tutankhamun ascended to the throne around the age of nine and reigned until his death around the age of nineteen."
+    ... )
+    [
+        "King Tutankhamun was the antepenultimate pharaoh of the 18th Dynasty of ancient Egypt.",
+        "King Tutankhamun's death marked the end of the dynasty's royal line.",
+        "King Tutankhamun reigned from the age of nine until his death around the age of nineteen.",
+    ]
+    """
+
+@loopgpt.aifunc()
 def check_statement_correctness(statements: str, context: str) -> Dict[str, str]:
     """Verify if the statements can be attributed to the given context.
 
@@ -108,7 +132,7 @@ def command_usefulness(command: Dict[str, str], goal: str) -> Dict[str, str]:
 
 @loopgpt.aifunc()
 def context_precision(goal: str, context: str) -> Dict[str, str]:
-    """Verify if the information in the given context is useful for achieving the goal.
+    """Verify that the given context contains ALL of the information required for achieving the goal.
 
     Examples:
 

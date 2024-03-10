@@ -1,9 +1,9 @@
 import numpy as np
-import openai
 from loopgpt.embeddings.openai_ import OpenAIEmbeddingProvider
 from typing import Optional
 
 from loopgpt.utils.openai_key import get_openai_key
+from openai import AzureOpenAI
 
 
 class AzureOpenAIEmbeddingProvider(OpenAIEmbeddingProvider):
@@ -19,28 +19,26 @@ class AzureOpenAIEmbeddingProvider(OpenAIEmbeddingProvider):
         See :class:`AzureOpenAIModel <loopgpt.models.azure_openai.AzureOpenAIModel>` also.
     """
 
-    def __init__(self, deployment_id: str, api_key: Optional[str] = None):
-        # sanity check
-        assert (
-            openai.api_type == "azure"
-        ), "AzureOpenAIModel can only be used with Azure API"
-
-        self.deployment_id = deployment_id
-        self.api_key = api_key
+    def __init__(self, model: str, api_key: Optional[str] = None, api_version: Optional[str] = None, azure_endpoint: Optional[str] = None):
+        self.model = model
+        self.api_key = get_openai_key(api_key)
+        self.api_version = api_version
+        self.azure_endpoint = azure_endpoint
+        self.client = AzureOpenAI(api_key=self.api_key, api_version=api_version, azure_endpoint=azure_endpoint)
 
     def get(self, text: str):
-        api_key = get_openai_key(self.api_key)
         return np.array(
-            openai.Embedding.create(
-                input=[text], engine=self.deployment_id, api_key=api_key
-            )["data"][0]["embedding"],
+            self.client.embeddings.create(
+                input=[text], model=self.model
+            ).data[0].embedding,
             dtype=np.float32,
         )
 
     def config(self):
-        cfg = {"deployment_id": self.deployment_id, "api_key": self.api_key}
+        cfg = super().config()
+        cfg.update({"model": self.model, "api_key": self.api_key, "api_version": self.api_version, "azure_endpoint": self.azure_endpoint})
         return cfg
 
     @classmethod
     def from_config(cls, config):
-        return cls(config["deployment_id"], config["api_key"])
+        return cls(config["model"], config["api_key"], config["api_version"], config["azure_endpoint"])
